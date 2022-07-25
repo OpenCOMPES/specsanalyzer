@@ -1,4 +1,4 @@
-#specsanalyzer
+# specsanalyzer
 This is a package to import and convert MCP analyzer images from SPECS Phoibos analyzers into energy and emission angle/physical coordinates.
 
 ## Getting started
