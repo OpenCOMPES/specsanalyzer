@@ -464,3 +464,30 @@ def calculate_polynomial_coef_da(ek,ep,eshift,currentdamatrix):
     return dapolymatrix
 #the function now returns a matrix of the fit coeffiecients, given the physical energy scale
 #each line of the matrix is a set of coefficients for each of the dai corrections
+
+def zinner(ek,angle,dapolymatrix):
+    #poly(D1, Ek )*(Ang) + 10^-2*poly(D3, Ek )*(Ang)^3 + 10^-4*poly(D5, Ek )*(Ang)^5 + 10^-6*poly(D7, Ek )*(Ang)^7
+    result=0
+    for i in range(0,dapolymatrix.shape[0]):
+        #igor uses the fit poly 3, which should be a parabola
+        result=result+ 10**(-(2*i))*angle**(1+2*i)*np.polyval(dapolymatrix[i][:],ek)
+        
+    return result
+
+def zinner_diff(ek,angle,dapolymatrix):
+    #poly(D1, Ek ) + 3*10^-2*poly(D3, Ek )*(Ang)^2 + 5*10^-4*poly(D5, Ek )*(Ang)^4 + 7*10^-6*poly(D7, Ek )*(Ang)^6
+    result=0
+    for i in range(0,dapolymatrix.shape[0]):
+        #igor uses the fit poly 3, which should be a parabola
+        result=result+ (2*i+1)*10**(-(2*i))*angle**(2*i)*np.polyval(dapolymatrix[i][:],ek)
+        
+    return result
+def mcp_position_mm(ek,angle,ainner,dapolymatrix):
+    
+    mask=np.greater_equal(np.abs(angle),ainner)
+   
+    result=np.zeros(angle.shape)#ideally has to be evaluated on a mesh
+
+    result = np.where(mask, zinner(ek,angle,dapolymatrix), np.sign(angle)*zinner(ek,angle,dapolymatrix)+(abs(angle)-ainner)*zinner_diff(ek,angle,dapolymatrix))
+   
+    return result
