@@ -397,8 +397,70 @@ def GetParameters(infofile,calibfile):
 
     #Create a 3x3 matrix with our DAs value
 
-    Matrix=np.concatenate((Da1,Da3,Da5,Da7),axis=0)
+    currentdamatrix=np.concatenate((Da1,Da3,Da5,Da7),axis=0)
     #print("The matrix of Das parameters linked with the aInner and RR value is:")
-    return  Matrix
+    return  currentdamatrix
 
-#print(GetParameters(info))
+""" #FROM THE IGOR PROCEDURE; NECESSARY VARIABLES
+
+#PixelSize=0.00645, magnification=4.54, WF=4.2  // 03.07.14: Claude : adapted
+LensMode, Ek, Ep//, ErangeLow, ErangeHigh
+E_Offset_px, Ang_Offset_px, Ang_Centre_px, Binning=4, De1, aInner
+EkinLow, EkinHigh, AzimuthLow, AzimuthHigh
+	//Claude: 22.11.13
+Rotation_Angle=0
+//	For the edge correction
+Edge_pos, Edge_Slope
+Edge_correction
+//	For the smoothing
+Check_2D_Smooth
+n_size, passes
+//	For the Crop
+Crop
+E1, E2, Theta1, Theta2
+	
+// for Fourier Filtering
+Variable/G filter_Image = 0
+Variable/G filter_fx = 0.0793478
+Variable/G filter_fy = 0.076087
+Variable/G filter_wx = 0.0152
+Variable/G filter_wy = 0.0134
+Variable/G filter_A = 0.95
+	
+// for setN
+Variable/G setN = NaN
+	
+
+// Conversion factor for CCD counts
+Variable/G CCDcounts2ecounts = 1 """
+#main function to integrate
+#Calculate_Da_values() 
+#	Calculate_Polynomial_Coef_Da()  ->done
+#	Calculate_MatrixCorrection()   
+#	PhysicalUnits_Data(RawData, PhysicalUnitsData)
+
+
+#the function get the tabulated Da coefficients
+# given for points at (-5% 0% +5%) of the pass energy
+# this is range is defined in the array eShift
+def calculate_polynomial_coef_da(ek,ep,eshift,currentdamatrix):
+    
+    #get the Das from the damatrix
+    #da1=currentdamatrix[0][:]
+    #da3=currentdamatrix[1][:]
+    #da5=currentdamatrix[2][:]
+    #da7=currentdamatrix[3][:]
+
+    #calcualte the energy values for each da, given the eshift
+    da_energy=eshift*ep+ek*np.ones(eshift.shape)
+
+    #create the polinomial coeffiecient matrix, each is a third order polinomial 
+    
+    dapolymatrix=np.zeros(currentdamatrix.shape)
+
+    for i in range(0,currentdamatrix.shape[0]):
+        #igor uses the fit poly 3, which should be a parabola
+        dapolymatrix[i][:]=np.polyfit(da_energy, currentdamatrix[i][:], 2).transpose()
+    return dapolymatrix
+#the function now returns a matrix of the fit coeffiecients, given the physical energy scale
+#each line of the matrix is a set of coefficients for each of the dai corrections
