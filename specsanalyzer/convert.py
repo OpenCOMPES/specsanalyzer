@@ -270,7 +270,7 @@ def ParametersTable(file):
 #getparameters accepts as input the infofilename and calib2dfilename and returns an interpolated version of Da coeffiecients, not fully tested
 
 
-def LensMode(x):
+def LensMode(calibfile,x):
      
     if x == "LensMode:LowAngularDispersion\n":
         h = ParametersTable(calibfile)[0:128,0:5]
@@ -318,13 +318,13 @@ def GetParameters(infofile,calibfile):
     #Define an array with lenght depending on which LensMode we choose to stock Das and RR value after
 
     stepInt = 4
-    endInt = len(LensMode(x))
+    endInt = len(LensMode(calibfile,x))
     IntArray=np.arange(start,endInt,stepInt)
     
     RRList=[]    
     for b in IntArray:
         
-            RRList.append(LensMode(x)[b][4])
+            RRList.append(LensMode(calibfile,x)[b][4])
             
             
     #define an array with all the value of RR in the LensMode selected       
@@ -344,10 +344,10 @@ def GetParameters(infofile,calibfile):
     #The following Das array take the value for each Da depending on the LensMode selected and also the closest RR value
     
     Da1List=[]
-    
+    testlensmode=LensMode(calibfile,x)
     for l in DaArray:
-        if LensMode(x)[l][4] == RRCloseVal:
-            Da1 = LensMode(x)[l][1],LensMode(x)[l][2],LensMode(x)[l][3]
+        if testlensmode[l][4] == RRCloseVal:
+            Da1 = testlensmode[l][1],testlensmode[l][2],testlensmode[l][3]
             Da1List.append(Da1)
             
     Da1=np.array(Da1List)
@@ -356,8 +356,8 @@ def GetParameters(infofile,calibfile):
     Da3List=[]
     
     for j in DaArray:
-        if LensMode(x)[j][4] == RRCloseVal:
-            Da3 = LensMode(x)[j+1][1],LensMode(x)[j+1][2],LensMode(x)[j+1][3]
+        if testlensmode[j][4] == RRCloseVal:
+            Da3 = testlensmode[j+1][1],testlensmode[j+1][2],testlensmode[j+1][3]
             Da3List.append(Da3)
             
     Da3=np.array(Da3List)
@@ -367,8 +367,8 @@ def GetParameters(infofile,calibfile):
     Da5List=[]
     
     for j in DaArray:
-        if LensMode(x)[j][4] == RRCloseVal:
-            Da5 = LensMode(x)[j+2][1],LensMode(x)[j+2][2],LensMode(x)[j+2][3]
+        if testlensmode[j][4] == RRCloseVal:
+            Da5 = testlensmode[j+2][1],testlensmode[j+2][2],testlensmode[j+2][3]
             Da5List.append(Da5)
             
     Da5=np.array(Da5List)
@@ -379,8 +379,8 @@ def GetParameters(infofile,calibfile):
     Da7List=[]
     
     for j in DaArray:
-        if LensMode(x)[j][4] == RRCloseVal:
-            Da7 = LensMode(x)[j+3][1],LensMode(x)[j+3][2],LensMode(x)[j+3][3]
+        if testlensmode[j][4] == RRCloseVal:
+            Da7 = testlensmode[j+3][1],testlensmode[j+3][2],testlensmode[j+3][3]
             Da7List.append(Da7)
             
     Da7=np.array(Da7List)
@@ -388,8 +388,8 @@ def GetParameters(infofile,calibfile):
     aInnerVal=[]
 
     for j in DaArray:
-        if LensMode(x)[j][4] == RRCloseVal:
-            V=LensMode(x)[j][0]
+        if testlensmode[j][4] == RRCloseVal:
+            V=testlensmode[j][0]
             aInnerVal.append(V)
     aInner=aInnerVal[0]
     #print("Our aInner value depending on the RR value is:",aInner)
