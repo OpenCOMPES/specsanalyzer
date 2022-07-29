@@ -14,6 +14,7 @@ Concept description. TODO
 
    specsanalyzer/core
    specsanalyzer/convert
+   specsanalyzer/img_tools
    specsanalyzer/io
    specsanalyzer/metadata
 
