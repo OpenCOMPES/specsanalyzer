@@ -23,6 +23,9 @@ def convert_image(
 
 # TODO: populate
 
+    #This function will return the closest RR value with respect to our value
+    
+
 
 
 #preliminary functions written by Adrien, to be used until a suitable dictionary is created
@@ -266,6 +269,26 @@ def ParametersTable(file):
 #preliminary functions written by Adrien, to be used until a suitable dictionary is created
 #getparameters accepts as input the infofilename and calib2dfilename and returns an interpolated version of Da coeffiecients, not fully tested
 
+
+def LensMode(x):
+     
+    if x == "LensMode:LowAngularDispersion\n":
+        h = ParametersTable(calibfile)[0:128,0:5]
+    if x == "LensMode:MediumAngularDispersion":
+        h = ParametersTable(calibfile)[128:502,0:5]
+    if x == "LensMode:HighAngularDispersion\n":
+        h = ParametersTable(calibfile)[503:606,0:5]
+    if x == "LensMode:WideAngleMode\n":
+        h = ParametersTable(calibfile)[607:738,0:5]
+    return h
+    
+    
+def closest_valueRR(input_list, input_value):
+    arr = np.asarray(input_list)
+    i = (np.abs(arr - input_value)).argmin()  
+    return arr[i]
+
+
 def GetParameters(infofile,calibfile):
     
     g = open(infofile,'r')
@@ -288,21 +311,10 @@ def GetParameters(infofile,calibfile):
     x=p[3] #take the LensMode value
         
     
-     #this function return the aInner,Das and RR value depending on our LensMode
+    #this function return the aInner,Das and RR value depending on our LensMode
     
-    def LensMode(x):
-        
-        if x == "LensMode:LowAngularDispersion\n":
-           h = ParametersTable(calibfile)[0:128,0:5]
-        if x == "LensMode:MediumAngularDispersion":
-           h = ParametersTable(calibfile)[128:502,0:5]
-        if x == "LensMode:HighAngularDispersion\n":
-           h = ParametersTable(calibfile)[503:606,0:5]
-        if x == "LensMode:WideAngleMode\n":
-           h = ParametersTable(calibfile)[607:738,0:5]
-           return h
-       
-    print("Our aInner, Das, and RR parameters depending on the LensMode:",LensMode(x)) 
+      
+    #print("Our aInner, Das, and RR parameters depending on the LensMode:",LensMode(x)) 
     #Define an array with lenght depending on which LensMode we choose to stock Das and RR value after
 
     stepInt = 4
@@ -315,32 +327,14 @@ def GetParameters(infofile,calibfile):
             RRList.append(LensMode(x)[b][4])
             
             
-     #define an array with all the value of RR in the LensMode selected       
+    #define an array with all the value of RR in the LensMode selected       
     RRArray=np.array(RRList)
-    print("All the parameters RR value",RRArray)
-    
-    #This function will return the closest RR value with respect to our value
-    
-    def closest_valueRR(input_list, input_value):
-     
-      arr = np.asarray(input_list)
-     
-      i = (np.abs(arr - input_value)).argmin()  
-     
-      return arr[i]
-     
-    if __name__ == "__main__" :
-     
-       list1 = RRArray
+    #print("All the parameters RR value",RRArray)
+    #   
+    list1 = RRArray
 
-       num=RR
-     
-       val=closest_valueRR(list1,num)
-     
-       #print("The closest RR value to our value "+str(num)+" is",val)
-       
-       
-    RRCloseVal=val
+    num=RR
+    RRCloseVal=closest_valueRR(list1,num)
 
     stepDa=4
 
