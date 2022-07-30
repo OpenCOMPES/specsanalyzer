@@ -482,12 +482,10 @@ def zinner_diff(ek,angle,dapolymatrix):
         result=result+ (2*i+1)*10**(-(2*i))*angle**(2*i)*np.polyval(dapolymatrix[i][:],ek)
         
     return result
-def mcp_position_mm(ek,angle,ainner,dapolymatrix):
-    
-    mask=np.greater_equal(np.abs(angle),ainner)
-   
-    result=np.zeros(angle.shape)#ideally has to be evaluated on a mesh
 
+def mcp_position_mm(ek,angle,ainner,dapolymatrix):
+    mask=np.greater_equal(np.abs(angle),ainner)
+    result=np.zeros(angle.shape)#ideally has to be evaluated on a mesh
     result = np.where(mask, zinner(ek,angle,dapolymatrix), np.sign(angle)*zinner(ek,angle,dapolymatrix)+(abs(angle)-ainner)*zinner_diff(ek,angle,dapolymatrix))
    
     return result
