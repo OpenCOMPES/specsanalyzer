@@ -1,8 +1,6 @@
-import json
 import re
 import numpy as np
 import xarray as xr
-
 
 def convert_image(
     raw_image: np.ndarray,
@@ -26,427 +24,80 @@ def convert_image(
 
 # TODO: populate
 
-# This function will return the closest RR value with respect to our value
-# preliminary functions written by Adrien, to be used until a suitable dictionary is created
-# parameters_table accepts as input the calib2dfilename and returns a 4d matrix of
-# conversion parameters for various
-
-def parameters_table(file):
-    # Here we define the vectors that will contain the value of the file
+def get_scanparameters(infofilename,calib2dfilename):
+    # start building the dictionary from the info.txt
+    with open(infofilename) as fd:    
+        scanparameters = dict(get_pair(line) for line in fd)
     
-    h = open(file)
-    lines = h.readlines()
-    start = 0
-    end = 3
-    step = 1
-    
-    jArray = np.arange(start, end+step, step)
-    endn = 2
-    nArray = np.arange(start, endn+step, step)
-    endm = 1
-    mArray = np.arange(start, endm+step, step)
-    endl = 31
-    lArray = np.arange(start, endl+step, step)
-    ends = 51
-    sArray = np.arange(start, ends + step, step)
-    endw = 124
-    wArray = np.arange(start, endw + step, step)
-    endz = 32
-    zArray = np.arange(start, endz + step, step)
-    
-    # Here we take the aInner, Das and RR value for the Low angle mode
+    with open(calib2dfilename, "r")   as calibfile:    
+        calibfilelines=calibfile.readlines()
+        # from the header of the calib2d, get  
+        # eShift = -0.05 0 0.05 # Ep
+        # eRange = -0.066 0.066 # Ep
+        # eGrid  = 0.01 # Ep
+        # aGrid  = 1 # unit
+        # De1    = 0.0030
 
-    VLowAng = []
-
-    for line_index in lArray:
-
-        for j in jArray:
-            A = 7
-            h = 27 + A*line_index
-            Value = [lines[h + j]]
-
-            for line in Value:
-                name, equal, num1, num2, num3, diez, unit = line.split()
-                val = {}
-                val["name"] = name
-                val["equal"] = equal
-                val["num1"] = num1
-                val["num2"] = num2
-                val["num3"] = num3
-                val["diez"] = diez
-                val["unit"] = unit
-
-            M = 25 + A*line_index
-            Val = lines[M][22:27]
-            param = json.loads(Val)
-
-            N = 26 + A*line_index
-            Valu = [lines[N]]
-            for lin in Valu:
-                name, equal, num, diez, unit = lin.split()
-                Valu = {}
-                Valu["name"] = name
-                Valu["equal"] = equal
-                Valu["num"] = num
-                Valu["diez"] = diez
-                Valu["unit"] = unit
-
-            V = json.loads(num), json.loads(num1), json.loads(
-                num2), json.loads(num3), param
-            VLowAng.append(V)
-
-         # Here we take the aInner, Das and RR value for the med angle mode
-
-    VMedAng = []
-
-    for line_index in wArray:
-
-        for n in nArray:
-            A = 6
-            h = 259 + A*line_index
-            Value = [lines[h + n]]
-
-            value_as_dict = []
-            for line in Value:
-                name, equal, num1, num2, num3, diez, unit = line.split()
-                val = {}
-                val["name"] = name
-                val["equal"] = equal
-                val["num1"] = num1
-                val["num2"] = num2
-                val["num3"] = num3
-                val["diez"] = diez
-                val["unit"] = unit
-
-            M = 257 + A*line_index
-            Val = lines[M][25:30]
-            param = json.loads(Val)
-
-            N = 258 + A*line_index
-            Valu = [lines[N]]
-            Valu_as_dict = []
-            for lin in Valu:
-                name, equal, num, diez, unit = lin.split()
-                Valu = {}
-                Valu["name"] = name
-                Valu["equal"] = equal
-                Valu["num"] = num
-                Valu["diez"] = diez
-                Valu["unit"] = unit
-
-            V = json.loads(num), json.loads(num1), json.loads(
-                num2), json.loads(num3), param
-            VMedAng.append(V)
-
-        # Here we take the aInner, Das and RR value for the high angle mode
-
-    VHiAng = []
-
-    for line_index in sArray:
-
-        for m in mArray:
-            A = 5
-            h = 1019 + A*line_index
-            Value = [lines[h + m]]
-
-            value_as_dict = []
-            for line in Value:
-                name, equal, num1, num2, num3, diez, unit = line.split()
-                val = {}
-                val["name"] = name
-                val["equal"] = equal
-                val["num1"] = num1
-                val["num2"] = num2
-                val["num3"] = num3
-                val["diez"] = diez
-                val["unit"] = unit
-
-            M = 1017 + A*line_index
-            Val = lines[M][23:28]
-            param = json.loads(Val)
-
-            N = 1018 + A*line_index
-            Valu = [lines[N]]
-            Valu_as_dict = []
-            for lin in Valu:
-                name, equal, num, diez, unit = lin.split()
-                Valu = {}
-                Valu["name"] = name
-                Valu["equal"] = equal
-                Valu["num"] = num
-                Valu["diez"] = diez
-                Valu["unit"] = unit
-
-            V = json.loads(num), json.loads(num1), json.loads(
-                num2), json.loads(num3), param
-            VHiAng.append(V)
-
-    # Here we take the aInner, Das and RR value for the Wide angle mode
-
-    VWideAng = []
-
-    for line_index in zArray:
-
-        for j in jArray:
-            A = 7
-            h = 1287 + A*line_index
-            Value = [lines[h + j]]
-
-            value_as_dict = []
-            for line in Value:
-                name, equal, num1, num2, num3, diez, unit = line.split()
-                val = {}
-                val["name"] = name
-                val["equal"] = equal
-                val["num1"] = num1
-                val["num2"] = num2
-                val["num3"] = num3
-                val["diez"] = diez
-                val["unit"] = unit
-
-            M = 1285 + A*line_index
-            Val = lines[M][15:19]
-            param = json.loads(Val)
-
-            N = 1286 + A*line_index
-            Valu = [lines[N]]
-            Valu_as_dict = []
-            for lin in Valu:
-                name, equal, num, diez, unit = lin.split()
-                Valu = {}
-                Valu["name"] = name
-                Valu["equal"] = equal
-                Valu["num"] = num
-                Valu["diez"] = diez
-                Valu["unit"] = unit
-
-            V = json.loads(num), json.loads(num1), json.loads(
-                num2), json.loads(num3), param
-            VWideAng.append(V)
-    #These appear to be lists.. let's convert to array
-    lad=np.array(VLowAng)  #LowAngularDispersion
-    mad=np.array(VMedAng)  #MediumAngularDispersion
-    had=np.array(VHiAng)   #HighAngularDispersion
-    wam=np.array(VWideAng)  #WideAngleMode
-
-    print(lad.shape,mad.shape,had.shape,wam.shape)
-
-    print(np.concatenate((VLowAng, VMedAng, VHiAng, VWideAng), axis=0))
-    
-    # michele edit
-    rr_array_lad=get_rr_da(lines,'LowAngularDispersion')
-    rr_array_mad=get_rr_da(lines,'MediumAngularDispersion')
-    rr_array_had=get_rr_da(lines,'HighAngularDispersion')
-    rr_array_wam=get_rr_da(lines,'WideAngleMode')
-    
-    #this is the corre
-    
-    return np.concatenate((VLowAng, VMedAng, VHiAng, VWideAng), axis=0)
-# Here we return all the value depending on the LensMode in a matrix
-# preliminary functions written by Adrien, to be used until a suitable dictionary is created
-# getparameters accepts as input the infofilename and calib2dfilename and returns an interpolated
-# version of Da coeffiecients, not fully tested
-
-def lens_mode(calibfile, x):
-
-    if x == "LensMode:LowAngularDispersion\n":
-        h = parameters_table(calibfile)[0:128, 0:5]
-    if x == "LensMode:MediumAngularDispersion":
-        h = parameters_table(calibfile)[128:502, 0:5]
-    if x == "LensMode:HighAngularDispersion\n":
-        h = parameters_table(calibfile)[503:606, 0:5]
-    if x == "LensMode:WideAngleMode\n":
-        h = parameters_table(calibfile)[607:738, 0:5]
-    return h
-
-
-def closest_value_rr(input_list, input_value):
-    arr = np.asarray(input_list)
-    i = (np.abs(arr - input_value)).argmin()
-    return arr[i]
-
-
-def get_parameters(infofile, calibfile):
-
-    g = open(infofile)
-    p = g.readlines()
-
-    # We take the value of kinetic energy and pass energy from our file
-    KE = json.loads(p[13][14:20])
-    PE = json.loads(p[14][11:20])
-
-    # We calculate the retard ratio RR
-    RR = KE/PE
-    start = 0
-    x = p[3]  # take the LensMode value
- 
-    # this function return the aInner,Das and RR value depending on our LensMode
-    #print("Our aInner, Das, and RR parameters depending on the LensMode:",LensMode(x))
-    # Define an array with lenght depending on which LensMode we choose to stock Das and RR value after
-
-    stepInt = 4
-    endInt = len(lens_mode(calibfile, x))
-    IntArray = np.arange(start, endInt, stepInt)
-
-    RRList = []
-    for b in IntArray:
-
-        RRList.append(lens_mode(calibfile, x)[b][4])
-
-    # define an array with all the value of RR in the LensMode selected
-    RRArray = np.array(RRList)
-    #print("All the parameters RR value",RRArray)
-    #
-    list1 = RRArray
-
-    num = RR
-    RRCloseVal = closest_value_rr(list1, num)
-
-    stepDa = 4
-
-    DaArray = np.arange(start, endInt, stepDa)
-
-    # The following Das array take the value for each Da depending on the LensMode selected and also the closest RR value
-
-    Da1List = []
-    testlensmode = lens_mode(calibfile, x)
-    for l in DaArray:
-        if testlensmode[l][4] == RRCloseVal:
-            Da1 = testlensmode[l][1], testlensmode[l][2], testlensmode[l][3]
-            Da1List.append(Da1)
-
-    Da1 = np.array(Da1List)
-
-    Da3List = []
-
-    for j in DaArray:
-        if testlensmode[j][4] == RRCloseVal:
-            Da3 = testlensmode[j+1][1], testlensmode[j+1][2], testlensmode[j+1][3]
-            Da3List.append(Da3)
-
-    Da3 = np.array(Da3List)
-
-    Da5List = []
-
-    for j in DaArray:
-        if testlensmode[j][4] == RRCloseVal:
-            Da5 = testlensmode[j+2][1], testlensmode[j+2][2], testlensmode[j+2][3]
-            Da5List.append(Da5)
-
-    Da5 = np.array(Da5List)
-
-    Da7List = []
-
-    for j in DaArray:
-        if testlensmode[j][4] == RRCloseVal:
-            Da7 = testlensmode[j+3][1], testlensmode[j+3][2], testlensmode[j+3][3]
-            Da7List.append(Da7)
-
-    Da7 = np.array(Da7List)
-
-    aInnerVal = []
-
-    for j in DaArray:
-        if testlensmode[j][4] == RRCloseVal:
-            V = testlensmode[j][0]
-            aInnerVal.append(V)
-    aInner = aInnerVal[0]
-    #print("Our aInner value depending on the RR value is:",aInner)
-
-    # Create a 3x3 matrix with our DAs value
-
-    currentdamatrix = np.concatenate((Da1, Da3, Da5, Da7), axis=0)
-    #print("The matrix of Das parameters linked with the aInner and RR value is:")
-    
-    # michele edit, we also need a list of rr values correspondeing to the 
-    
-    
-    
-    
-    return currentdamatrix
-
-
-# main function to integrate
-# Calculate_Da_values()
-#	Calculate_Polynomial_Coef_Da()  ->done
-#	Calculate_MatrixCorrection()
-#	PhysicalUnits_Data(RawData, PhysicalUnitsData)
-
-
-# the function get the tabulated Da coefficients
-# given for points at (-5% 0% +5%) of the pass energy
-# this is range is defined in the array eShift
-def calculate_polynomial_coef_da(ek, ep, eshift, currentdamatrix):
-
-    # get the Das from the damatrix
-    # da1=currentdamatrix[0][:]
-    # da3=currentdamatrix[1][:]
-    # da5=currentdamatrix[2][:]
-    # da7=currentdamatrix[3][:]
-
-    # calcualte the energy values for each da, given the eshift
-    da_energy = eshift*ep+ek*np.ones(eshift.shape)
-
-    # create the polinomial coeffiecient matrix,
-    # each is a third order polinomial
-
-    dapolymatrix = np.zeros(currentdamatrix.shape)
-
-    for i in range(0, currentdamatrix.shape[0]):
-        # igor uses the fit poly 3, which should be a parabola
-        dapolymatrix[i][:] = np.polyfit(da_energy,
-                                        currentdamatrix[i][:], 2).transpose()
-    return dapolymatrix
-# the function now returns a matrix of the fit coeffiecients,
-# given the physical energy scale
-# each line of the matrix is a set of coefficients for each of the
-# dai corrections
-
-
-def zinner(ek,angle,dapolymatrix):
-    #poly(D1, Ek )*(Ang) + 10^-2*poly(D3, Ek )*(Ang)^3 + 
-    # 10^-4*poly(D5, Ek )*(Ang)^5 + 10^-6*poly(D7, Ek )*(Ang)^7
-    out = 0
-    for i in range(0,dapolymatrix.shape[0]):
-        out = out + ((10**(-2*i))*
-                     (angle**(1+2*i))*
-                     np.polyval(dapolymatrix[i][:],ek))
-    return out
-
-def zinner_diff(ek,angle,dapolymatrix):
-    # poly(D1, Ek ) + 3*10^-2*poly(D3, Ek )*(Ang)^2
-    # + 5*10^-4*poly(D5, Ek )*(Ang)^4 + 7*10^-6*poly(D7, Ek )*(Ang)^6
-    
-    out = 0
-    
-    for i in range(0,dapolymatrix.shape[0]):
         
-        out = out + ((10**(-2*i))*
-                     (2*(i+1))*
-                     (angle**(2*i))*
-                     np.polyval(dapolymatrix[i][:],ek))
+        # find the header line
+        head_string="SPECS Phoibos2D"
+        header_start_idx=[i for i, item in enumerate(calibfilelines)
+                          if re.search(head_string, item)]
         
-    return out
-
-
-def mcp_position_mm(ek,angle,ainner,dapolymatrix):
+        
+        for line_index in np.arange(header_start_idx[0]+1,header_start_idx[0]+13,1):
+            splitline=calibfilelines[line_index].split(" ")
+            
+            if splitline[0]=="eShift":
+                scanparameters["eShift"]=[float(splitline[2]),
+                                          float(splitline[3]),
+                                          float(splitline[4])]
+            if splitline[0]=="eRange":
+                scanparameters["eRange"]=[float(splitline[2]),
+                                          float(splitline[3])]
+            if splitline[0]=="eGrid":
+                scanparameters["eGrid"]=[float(splitline[3])]
+            if splitline[0]=="aGrid":
+                scanparameters["aGrid"]=[float(splitline[3])]
+            if splitline[0]=="De1":
+                scanparameters["De1"]=[float(splitline[5][:-2])]
+        
+        
+        # from the body of the calib2d, get: 
+        # these changes with the user selected parameters
+        # aRange = -15 15
+        
+           
+        mode_default_start_idx=[i for i, item in enumerate(calibfilelines)
+                          if (re.search("default", item)
+                              and re.search(scanparameters["LensMode"], item))]
+        
+        
+        for line_index in np.arange(mode_default_start_idx[0]+1,
+                                    mode_default_start_idx[0]+10,1):
+            
+            splitline=calibfilelines[line_index].split(" ")
+            if splitline[0]=="aRange":
+                scanparameters["aRange"]=[float(splitline[2]),
+                                          float(splitline[3])]
+        
+        
+        # DEFINE THE DETECTOR PARAMETERS; currently hard-coded and not IO
+        scanparameters['nx_pixel']=1376
+        scanparameters['ny_pixel']=1040
+        scanparameters['pixelsize']=0.00645
+        scanparameters['magnification']=4.54
+        scanparameters['wf'] = 4.2  # is this currently used?
+        
+    damatrix=get_damatrix_fromcalib2d(infofilename,calib2dfilename)
+    scanparameters['aInner']=damatrix[0][0]
+    scanparameters['damatrix']=damatrix[1:][:]   
     
-    mask=np.less_equal(np.abs(angle),ainner)
-   
-    # result=np.zeros(angle.shape)#ideally has to be evaluated on a mesh
-
-    ainner_vec=np.ones(angle.shape)*ainner
     
-    result = np.where(mask,
-                      zinner(ek,angle,dapolymatrix),
-                      np.sign(angle)*zinner(ek,angle,dapolymatrix)+
-                      (np.abs(angle)-ainner_vec)*
-                      zinner_diff(ek,angle,dapolymatrix))
-   
-    return result
+    return scanparameters
 
 
-def get_scanparameters_fromcalib2d(infofilename,calib2dfilename):
+def get_damatrix_fromcalib2d(infofilename,calib2dfilename):
     try:
         infofile=open(infofilename, "r")
         calibfile=open(calib2dfilename, "r")
@@ -473,9 +124,26 @@ def get_scanparameters_fromcalib2d(infofilename,calib2dfilename):
         # we need the second nearest rr 
         second_closest_rr_index=second_closest_rr(rr,rr_vec,closest_rr_index)
         
+        # compute the rr_factor, in igor done by a BinarySearchInterp
+        # find closest retardation ratio in table
+	    # rr_inf=BinarySearch(w_rr, rr)
+	    # fraction from this to next retardation ratio in table
+	    # rr_factor=BinarySearchInterp(w_rr, rr)-rr_inf
+        rr_index=np.arange(0,rr_vec.shape[0],1)
+        rr_factor=np.interp(rr,rr_vec,rr_index)-closest_rr_index
         
+        #print(rr_factor)
         
-        damatrix=rr_vec
+        damatrix_close=damatrix_full[closest_rr_index][:][:]
+        damatrix_second=damatrix_full[second_closest_rr_index][:][:]
+        #print(damatrix_close.shape)
+        #print(damatrix_second.shape)
+        
+        one_mat=np.ones(damatrix_close.shape)
+        rr_factor_mat=np.ones(damatrix_close.shape)*rr_factor
+        damatrix=(damatrix_close*(one_mat-rr_factor_mat)+
+                  damatrix_second*rr_factor_mat)
+        
         return damatrix
     except IOError:
         print("Error: File does not appear to exist.")
@@ -517,7 +185,7 @@ def bisection(array,value):
 
 def second_closest_rr(rr,rrvec,closest_rr_index):
     if closest_rr_index==0 :
-            second_closest_rr_index=1
+        second_closest_rr_index=1
     else:
         if closest_rr_index==(rrvec.size-1):
             second_closest_rr_index=closest_rr_index-1    
@@ -589,3 +257,100 @@ def get_rr_da(lines,modestring):
         da_matrix_full[i][:][:]=block_da_matrix[:][:]
          
     return rr_array, da_matrix_full
+
+
+# This function will return the closest RR value with respect to our value
+# preliminary functions written by Adrien, to be used until a suitable dictionary is created
+# parameters_table accepts as input the calib2dfilename and returns a 4d matrix of
+# conversion parameters for various
+
+# main function to integrate
+# Calculate_Da_values()
+#	Calculate_Polynomial_Coef_Da()  ->done
+#	Calculate_MatrixCorrection()
+#	PhysicalUnits_Data(RawData, PhysicalUnitsData)
+
+
+# the function get the tabulated Da coefficients
+# given for points at (-5% 0% +5%) of the pass energy
+# this is range is defined in the array eShift
+def calculate_polynomial_coef_da(scanparameters):
+
+    # get the Das from the damatrix
+    # da1=currentdamatrix[0][:]
+    # da3=currentdamatrix[1][:]
+    # da5=currentdamatrix[2][:]
+    # da7=currentdamatrix[3][:]
+
+    currentdamatrix=scanparameters['damatrix']
+    eshift=np.array(scanparameters['eShift'])
+    ek=float(scanparameters['KineticEnergy'])
+    ep=float(scanparameters['PassEnergy'])
+    
+    # calcualte the energy values for each da, given the eshift
+    da_energy = eshift*ep+ek*np.ones(eshift.shape)
+
+    # create the polinomial coeffiecient matrix,
+    # each is a third order polinomial
+
+    dapolymatrix = np.zeros(currentdamatrix.shape)
+
+    for i in range(0, currentdamatrix.shape[0]):
+        # igor uses the fit poly 3, which should be a parabola
+        dapolymatrix[i][:] = np.polyfit(da_energy,
+                                        currentdamatrix[i][:], 2).transpose()
+        
+    scanparameters['dapolymatrix']=dapolymatrix
+    return dapolymatrix
+# the function now returns a matrix of the fit coeffiecients,
+# given the physical energy scale
+# each line of the matrix is a set of coefficients for each of the
+# dai corrections
+
+
+def zinner(ek,angle,dapolymatrix):
+    #poly(D1, Ek )*(Ang) + 10^-2*poly(D3, Ek )*(Ang)^3 + 
+    # 10^-4*poly(D5, Ek )*(Ang)^5 + 10^-6*poly(D7, Ek )*(Ang)^7
+    out = 0
+    for i in range(0,dapolymatrix.shape[0]):
+        out = out + ((10**(-2*i))*
+                     (angle**(1+2*i))*
+                     np.polyval(dapolymatrix[i][:],ek))
+    return out
+
+def zinner_diff(ek,angle,dapolymatrix):
+    # poly(D1, Ek ) + 3*10^-2*poly(D3, Ek )*(Ang)^2
+    # + 5*10^-4*poly(D5, Ek )*(Ang)^4 + 7*10^-6*poly(D7, Ek )*(Ang)^6
+    
+    out = 0
+    
+    for i in range(0,dapolymatrix.shape[0]):
+        
+        out = out + ((10**(-2*i))*
+                     (2*(i+1))*
+                     (angle**(2*i))*
+                     np.polyval(dapolymatrix[i][:],ek))
+        
+    return out
+
+
+def mcp_position_mm(ek,angle,scanparameters):
+    
+    ainner=scanparameters['aInner']
+    dapolymatrix=scanparameters['dapolymatrix']
+    
+    mask=np.less_equal(np.abs(angle),ainner)
+   
+    # result=np.zeros(angle.shape)#ideally has to be evaluated on a mesh
+
+    ainner_vec=np.ones(angle.shape)*ainner
+    
+    result = np.where(mask,
+                      zinner(ek,angle,dapolymatrix),
+                      np.sign(angle)*zinner(ek,angle,dapolymatrix)+
+                      (np.abs(angle)-ainner_vec)*
+                      zinner_diff(ek,angle,dapolymatrix))
+   
+    return result
+
+
