@@ -56,7 +56,8 @@ def get_scanparameters(infofilename, calib2dfilename):
             if re.search(head_string, item)
         ]
 
-        for line_index in np.arange(header_start_idx[0]+1, header_start_idx[0]+13, 1):
+        for line_index in np.arange(header_start_idx[0]+1,
+                                    header_start_idx[0]+13, 1):
             splitline = calibfilelines[line_index].split(" ")
 
             if splitline[0] == "eShift":
@@ -140,7 +141,8 @@ def get_damatrix_fromcalib2d(infofilename, calib2dfilename):
 
         # now compare the distance with the neighboring indexes,
         # we need the second nearest rr
-        second_closest_rr_index = second_closest_rr(rr, rr_vec, closest_rr_index)
+        second_closest_rr_index = second_closest_rr(rr, rr_vec,
+                                                    closest_rr_index)
 
         # compute the rr_factor, in igor done by a BinarySearchInterp
         # find closest retardation ratio in table
@@ -482,7 +484,8 @@ def physical_unit_data(
     # evaluate the interpolating
     # function
 
-    coords = (angular_correction_matrix.flatten(), e_correction_expand.flatten())
+    coords = (angular_correction_matrix.flatten(),
+              e_correction_expand.flatten())
     # these coords seems to be pixels..
 
     x_bins = np.arange(0, raw_data.shape[0], 1)
