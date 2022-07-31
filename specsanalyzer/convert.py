@@ -4,10 +4,9 @@ import xarray as xr
 from scipy.interpolate import RegularGridInterpolator
 
 
-def convert_image(
-    raw_image_name,
-    infofilename,
-    calib2dfilename):
+def convert_image(raw_image_name, 
+                  infofilename,
+                  calib2dfilename):
       
     raw_data = np.loadtxt(raw_image_name, delimiter="\t")
     damatrix=get_damatrix_fromcalib2d(infofilename,calib2dfilename)
@@ -316,8 +315,9 @@ def zinner(ek,angle,dapolymatrix):
     #poly(D1, Ek )*(Ang) + 10^-2*poly(D3, Ek )*(Ang)^3 + 
     # 10^-4*poly(D5, Ek )*(Ang)^5 + 10^-6*poly(D7, Ek )*(Ang)^7
     out = 0
-    for i in range(0,dapolymatrix.shape[0]):
-        out = out + ((10**(-2*i))*
+    
+    for i in np.arange(0,dapolymatrix.shape[0],1):
+        out = out + ((10.0**(-2*i))*
                      (angle**(1+2*i))*
                      np.polyval(dapolymatrix[i][:],ek))
     return out
@@ -328,10 +328,10 @@ def zinner_diff(ek,angle,dapolymatrix):
     
     out = 0
     
-    for i in range(0,dapolymatrix.shape[0]):
+    for i in np.arange(0,dapolymatrix.shape[0],1):
         
-        out = out + ((10**(-2*i))*
-                     (2*(i+1))*
+        out = out + ((10.0**(-2*i))*
+                     (1+2*i)*
                      (angle**(2*i))*
                      np.polyval(dapolymatrix[i][:],ek))
         
@@ -348,18 +348,16 @@ def mcp_position_mm(ek,angle,scanparameters):
     # result=np.zeros(angle.shape)#ideally has to be evaluated on a mesh
 
     ainner_vec=np.ones(angle.shape)*ainner
-    
-    result = np.where(mask,
-                      zinner(ek,angle,dapolymatrix),
-                      np.sign(angle)*zinner(ek,angle,dapolymatrix)+
+    #result = np.where(mask,-10,10)
+    result = np.where(mask,zinner(ek,angle,dapolymatrix),
+                      np.sign(angle)*(zinner(ek,ainner_vec,dapolymatrix)+
                       (np.abs(angle)-ainner_vec)*
-                      zinner_diff(ek,angle,dapolymatrix))
-   
+                      zinner_diff(ek,ainner_vec,dapolymatrix))
+                      )
     return result
 
-
 def calculate_matrix_correction(scanparameters):
-        
+    
     ek=float(scanparameters["KineticEnergy"])
     ep=float(scanparameters["PassEnergy"])
     dapolymatrix=scanparameters["dapolymatrix"]
@@ -367,71 +365,56 @@ def calculate_matrix_correction(scanparameters):
     erange=scanparameters["eRange"]
     arange=scanparameters["aRange"]
     ainner=scanparameters["aInner"]
-	nx_pixel=scanparameters["nx_pixel"]
+    nx_pixel=scanparameters["nx_pixel"]
     ny_pixel=scanparameters["ny_pixel"]
-	pixelsize=scanparameters["pixelsize"]
-	binning=float(scanparameters["Binning"])*2
-	magnification=scanparameters["magnification"]
-	nx_bins=int(nx_pixel/binning)
-	ny_bins=int(ny_pixel/binning)
+    pixelsize=scanparameters["pixelsize"]
+    binning=float(scanparameters["Binning"])*2
+    magnification=scanparameters["magnification"]
+    nx_bins=int(nx_pixel/binning)
+    ny_bins=int(ny_pixel/binning)
+    ek_low = ek + erange[0]*ep
+    ek_high = ek + erange[1]*ep
+    
+    # assume an even number of pixels on the detector, seems reasonable
+    ek_axis = np.linspace(ek_low,ek_high,nx_bins)
+    
+    #we need the arange as well as 2d array
+    #arange was defined in the igor procedure Calculate_Da_values
+    #it seems to be a constant, written in the calib2d file header
+    #I decided to rename from "AzimuthLow"
+    angle_low = arange[0]*1.2
+    angle_high = arange[1]*1.2
 	
-	print(nx_bins,ny_bins)
-	# this assumes the erange to be a 2d array -> do we ever need that?
-	# erange was defined in the igor procedure Calculate_Da_values
-	# it seems to be a constant, written in the calib2d file header
-	ek_low = ek + erange[0]*ep
-	ek_high = ek + erange[1]*ep
-	print(ek_low,ek_high)
-	# assume an even number of pixels on the detector, seems reasonable
-	ek_axis = np.linspace(ek_low,ek_high,nx_bins)
-	
-	#we need the arange as well as 2d array
-	#arange was defined in the igor procedure Calculate_Da_values
-	#it seems to be a constant, written in the calib2d file header
-	#I decided to rename from "AzimuthLow"
-	angle_low = arange[0]*1.2
-	angle_high = arange[1]*1.2
-	print(angle_low,angle_high)
-	#check the effect of the additional range x1.2;
-	#this is present in the igor code
-	angle_axis =  np.linspace(angle_low,angle_high,ny_bins)
+    #check the effect of the additional range x1.2;
+    #this is present in the igor code
+    angle_axis =  np.linspace(angle_low,angle_high,ny_bins)
+    #the original program defines 2 waves, 
+    mcp_position_mm_matrix=np.zeros([nx_bins,ny_bins])
+    angular_correction_matrix=np.zeros([nx_bins,ny_bins])
+    e_correction=np.zeros(ek_axis.shape)
+    #let's create a meshgrid for vectorized evaluation
+    ek_mesh,angle_mesh=np.meshgrid(ek_axis,angle_axis)
+    mcp_position_mm_matrix=mcp_position_mm(ek_mesh,angle_mesh,scanparameters)
+    Ang_Offset_px=0 #add as optional input?
+    E_Offset_px=0 #add as optional input?	
+    angular_correction_matrix = (mcp_position_mm_matrix/magnification
+                                 /(pixelsize*binning)
+                                 + ny_bins/2
+                                 + Ang_Offset_px)
+    e_correction=((ek_axis-
+                   ek*np.ones(ek_axis.shape))
+                  /ep/de1/magnification/(pixelsize*binning)
+                  + nx_bins/2
+                  + E_Offset_px)
+    w_dyde=np.gradient(angular_correction_matrix,ek_axis,axis=1)
+    w_dyda=np.gradient(angular_correction_matrix,angle_axis,axis=0)
+    w_dxda=0
+    w_dxde=np.gradient(e_correction,ek_axis,axis=0)
+    jacobian_determinant=np.abs(w_dxde*w_dyda - w_dyde*w_dxda)
+    
+    return (ek_axis, angle_axis, angular_correction_matrix, e_correction, jacobian_determinant) 
+     
 
-	
- 	#the original program defines 2 waves, 
-	mcp_position_mm_matrix=np.zeros([nx_bins,ny_bins])
-	angular_correction_matrix=np.zeros([nx_bins,ny_bins])
-	e_correction=np.zeros(ek_axis.shape)
-	
-	#let's create a meshgrid for vectorized evaluation
-	ek_mesh,angle_mesh=np.meshgrid(ek_axis,angle_axis)
- 
-	mcp_position_mm_matrix=mcp_position_mm(ek_mesh,angle_mesh,scanparameters)
-	
-	Ang_Offset_px=0 #add as optional input?
-	E_Offset_px=0 #add as optional input?	
- 
-	angular_correction_matrix = ((mcp_position_mm_matrix
-                              /magnification)/(pixelsize*binning)
-                              + ny_bins/2 + Ang_Offset_px)
-	
-	e_correction=((ek_axis- ek*np.ones(ek_axis.shape))
-               /ep/de1/magnification/(pixelsize*binning)
-               + nx_bins/2
-               + E_Offset_px)
- 
-	w_dyde=np.gradient(angular_correction_matrix, axis=1)
-	w_dyda=np.gradient(angular_correction_matrix, axis=0)
-	w_dxda=0
-	w_dxde=np.gradient(e_correction, axis=0)
-	jacobian_determinant=np.abs(w_dxde*w_dyda - w_dyde*w_dxda)
- 
-	return (ek_axis,
-         angle_axis,
-         angular_correction_matrix,
-         e_correction,
-         jacobian_determinant)
- 
- 
 def physical_unit_data(raw_data,
                        angular_correction_matrix,
                        e_correction,
