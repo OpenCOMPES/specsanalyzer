@@ -9,6 +9,16 @@ def convert_image(
     infofilename,
     calib2dfilename,
 ):
+    """_summary_
+
+    Args:
+        raw_image_name (_type_): _description_
+        infofilename (_type_): _description_
+        calib2dfilename (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
 
     raw_data = np.loadtxt(raw_image_name, delimiter="\t")
     get_damatrix_fromcalib2d(infofilename, calib2dfilename)
@@ -36,6 +46,15 @@ def convert_image(
 
 
 def get_scanparameters(infofilename, calib2dfilename):
+    """_summary_
+
+    Args:
+        infofilename (_type_): _description_
+        calib2dfilename (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
     # start building the dictionary from the info.txt
     with open(infofilename) as fd:
         scanparameters = dict(get_pair(line) for line in fd)
@@ -117,6 +136,15 @@ def get_scanparameters(infofilename, calib2dfilename):
 
 
 def get_damatrix_fromcalib2d(infofilename, calib2dfilename):
+    """_summary_
+
+    Args:
+        infofilename (_type_): _description_
+        calib2dfilename (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
     try:
         infofile = open(infofilename)
         calibfile = open(calib2dfilename)
@@ -175,6 +203,14 @@ def get_damatrix_fromcalib2d(infofilename, calib2dfilename):
 
 
 def get_pair(line):
+    """_summary_
+
+    Args:
+        line (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
     key, sep, value = line.strip().partition(":")
     return key, value
 
@@ -212,6 +248,16 @@ def bisection(array, value):
 
 
 def second_closest_rr(rr, rrvec, closest_rr_index):
+    """_summary_
+
+    Args:
+        rr (_type_): _description_
+        rrvec (_type_): _description_
+        closest_rr_index (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
     if closest_rr_index == 0:
         second_closest_rr_index = 1
     else:
@@ -232,6 +278,16 @@ def second_closest_rr(rr, rrvec, closest_rr_index):
 
 
 def get_da_block(lines, blockstart, blocklenght):
+    """_summary_
+
+    Args:
+        lines (_type_): _description_
+        blockstart (_type_): _description_
+        blocklenght (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
     damatrix = np.zeros([5, 3])
     for p, q in enumerate(range(blockstart+1, blockstart+1+blocklenght, 1)):
 
@@ -248,6 +304,15 @@ def get_da_block(lines, blockstart, blocklenght):
 
 
 def get_rr_da(lines, modestring):
+    """_summary_
+
+    Args:
+        lines (_type_): _description_
+        modestring (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
     rr = []
 
     if modestring == "WideAngleMode":
@@ -295,24 +360,20 @@ def get_rr_da(lines, modestring):
     return rr_array, da_matrix_full
 
 
-# This function will return the closest RR value with respect to our value
-# preliminary functions written by Adrien, to be used until a suitable
-# dictionary is created
-# parameters_table accepts as input the calib2dfilename and returns
-# a 4d matrix of
-# conversion parameters for various
-
-# main function to integrate
-# Calculate_Da_values()
-# Calculate_Polynomial_Coef_Da()  ->done
-# Calculate_MatrixCorrection()
-# PhysicalUnits_Data(RawData, PhysicalUnitsData)
-
-
-# the function get the tabulated Da coefficients
-# given for points at (-5% 0% +5%) of the pass energy
-# this is range is defined in the array eShift
 def calculate_polynomial_coef_da(scanparameters):
+    """Given the da coeffiecients contained in the 
+    scanpareters, the program calculate the energy range based
+    on the eshift parameter and fits a second order polinomial
+    to the tabulated values. The polinomial coefficients
+    are packed in the dapolymatrix array (row0 da1, row1 da3, ..)
+    The dapolymatrix is also saved in the scanparameters dictionary
+
+    Args:
+        scanparameters (_dict_): scan parameter dictionary
+
+    Returns:
+        _np.array_: dapolymatrix, a matrix with polinomial 
+    """
 
     # get the Das from the damatrix
     # da1=currentdamatrix[0][:]
@@ -349,6 +410,16 @@ def calculate_polynomial_coef_da(scanparameters):
 
 
 def zinner(ek, angle, dapolymatrix):
+    """_summary_
+
+    Args:
+        ek (_type_): _description_
+        angle (_type_): _description_
+        dapolymatrix (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
     # poly(D1, Ek )*(Ang) + 10^-2*poly(D3, Ek )*(Ang)^3 +
     # 10^-4*poly(D5, Ek )*(Ang)^5 + 10^-6*poly(D7, Ek )*(Ang)^7
     out = 0
@@ -361,8 +432,16 @@ def zinner(ek, angle, dapolymatrix):
 
 
 def zinner_diff(ek, angle, dapolymatrix):
-    # poly(D1, Ek ) + 3*10^-2*poly(D3, Ek )*(Ang)^2
-    # + 5*10^-4*poly(D5, Ek )*(Ang)^4 + 7*10^-6*poly(D7, Ek )*(Ang)^6
+    """_summary_ poly(D1, Ek ) + 3*10^-2*poly(D3, Ek )*(Ang)^2 
+    + 5*10^-4*poly(D5, Ek )*(Ang)^4 + 7*10^-6*poly(D7, Ek )*(Ang)^6
+    Args:
+        ek (_type_): _description_
+        angle (_type_): _description_
+        dapolymatrix (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
 
     out = 0
 
@@ -377,6 +456,16 @@ def zinner_diff(ek, angle, dapolymatrix):
 
 
 def mcp_position_mm(ek, angle, scanparameters):
+    """_summary_
+
+    Args:
+        ek (_type_): _description_
+        angle (_type_): _description_
+        scanparameters (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
 
     ainner = scanparameters['aInner']
     dapolymatrix = scanparameters['dapolymatrix']
@@ -399,6 +488,14 @@ def mcp_position_mm(ek, angle, scanparameters):
 
 
 def calculate_matrix_correction(scanparameters):
+    """_summary_
+
+    Args:
+        scanparameters (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
 
     ek = float(scanparameters["KineticEnergy"])
     ep = float(scanparameters["PassEnergy"])
@@ -475,6 +572,17 @@ def physical_unit_data(
     e_correction,
     jacobian_determinant,
 ):
+    """_summary_
+
+    Args:
+        raw_data (_type_): _description_
+        angular_correction_matrix (_type_): _description_
+        e_correction (_type_): _description_
+        jacobian_determinant (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
 
     # create 2d matrix with the
     # ek coordinates
