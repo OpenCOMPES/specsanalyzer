@@ -407,16 +407,16 @@ def parse_calib2d_to_dict(filepath: str) -> dict:
     for elem in listf:
         if isinstance(elem, str):  # Initialize mode dict
             mode = elem
-            calib_dict[mode] = {}
+            calib_dict[mode] = {'rr': {}, 'default': {}}
             rr = None
         elif isinstance(elem, (int, float)):  # Initialize rr nested dict
             rr = elem
-            calib_dict[mode][rr] = {}
+            calib_dict[mode]['rr'][rr] = {}
         else:  # populate the dict
             if rr:
-                calib_dict[mode][rr].update(elem)
+                calib_dict[mode]['rr'][rr].update(elem)
             elif mode:
-                calib_dict[mode].update(elem)
+                calib_dict[mode]['default'].update(elem)
             else:
                 calib_dict.update(elem)
     return calib_dict
