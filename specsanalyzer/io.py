@@ -337,6 +337,7 @@ def get_pair_from_list(list_line: list) -> list:
         list: List of a tuple containing key value pair.
     """
     k, v = list_line[0], list_line[1]
+    k = k.strip()
     if "#" in v:
         v = v[:v.index("#")].strip()
 
@@ -344,7 +345,7 @@ def get_pair_from_list(list_line: list) -> list:
         try:
             v = [float(i) for i in v.split()]
         except ValueError:  # to handle one edge case
-            get_pair_from_list(list((k, v.strip("\"m"))))
+            return [(k, float(v.strip("\"m")))]
 
     else:
         try:
@@ -352,7 +353,7 @@ def get_pair_from_list(list_line: list) -> list:
         except ValueError:
             v = v.strip(" \" ")
 
-    return [(k.strip(), v)]
+    return [(k, v)]
 
 
 def read_calib2d(filepath: str) -> list:
