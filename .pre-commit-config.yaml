@@ -39,4 +39,4 @@ repos:
     rev: 1.0.0
     hooks:
     -   id: nb-ensure-clean
-    args: [--meta, ExecuteTime]
+        args: [--meta, ExecuteTime]
