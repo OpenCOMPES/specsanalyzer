@@ -324,3 +324,100 @@ def load_tiff(
             f"{len(coords)} and dimensions {len(dims)} provided,"
         )
         return xr.DataArray(data=data, coords=coords, dims=dims, attrs=attrs)
+
+
+def get_pair_from_list(list_line: list) -> list:
+    """Returns key value pair for the read function
+    where a line in the file contains '=' character.
+
+    Args:
+        list_line: list of splitted line from the file.
+
+    Returns:
+        list: List of a tuple containing key value pair.
+    """
+    k, v = list_line[0], list_line[1]
+    k = k.strip()
+    if "#" in v:
+        v = v[:v.index("#")].strip()
+
+    if len(v.split()) > 1:
+        try:
+            v = [float(i) for i in v.split()]
+        except ValueError:  # to handle one edge case
+            return [(k, float(v.strip("\"m")))]
+
+    else:
+        try:
+            v = float(v)
+        except ValueError:
+            v = v.strip(" \" ")
+
+    return [(k, v)]
+
+
+def read_calib2d(filepath: str) -> list:
+    """Reads the calib2d file into a convenient list for the parser
+    function containing useful and cleaned data.
+
+    Args:
+        filepath: Path to file to load.
+
+    Returns:
+        list: List containing dictionary, string and float objects.
+    """
+    with open(filepath) as f:
+        lines = f.readlines()
+
+    listf = []
+    for line in lines:
+
+        if line[0] == "\n" or line[0] == "#":
+            continue
+        line_list = line.strip("[]\n").split("=")
+        if len(line_list) > 1:
+            listf.append(dict(get_pair_from_list(line_list)))
+        else:
+            line_str = line_list[0]
+            if "defaults" in line_str:
+                listf.append(line_str.split()[0])
+            elif "@" in line_str:
+                listf.append(float(line_str.split("@")[1]))
+            else:
+                pass
+
+    return listf
+
+
+def parse_calib2d_to_dict(filepath: str) -> dict:
+    """Parses the given calib2d file into a nested dictionary structure
+    to provide parameters for image conversion.
+
+    Args:
+        filepath: Path to file to load.
+
+    Returns:
+        calib_dict: Populated nested dictionary parsed from the provided
+        calib2d file.
+    """
+    listf = read_calib2d(filepath)
+
+    calib_dict = {}
+    mode = None
+    rr = None
+    for elem in listf:
+        if isinstance(elem, str):  # Initialize mode dict
+            mode = elem
+            calib_dict[mode] = {'rr': {}, 'default': {}}
+            rr = None
+        elif isinstance(elem, (int, float)):  # Initialize rr nested dict
+            rr = elem
+            calib_dict[mode]['rr'][rr] = {}
+        else:  # populate the dict
+            if rr:
+                calib_dict[mode]['rr'][rr].update(elem)
+            elif mode:
+                calib_dict[mode]['default'].update(elem)
+            else:
+                calib_dict.update(elem)
+    return calib_dict
