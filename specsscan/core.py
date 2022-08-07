@@ -7,6 +7,7 @@ import xarray as xr
 from specsanalyzer import SpecsAnalyzer
 
 from .metadata import MetaHandler
+from .settings import parse_config
 
 # from typing import Any
 # from typing import List
@@ -27,16 +28,11 @@ class SpecsScan:
     ):
 
         # TODO: handle/load config dict/file
-        self._config = config
-        if not isinstance(self._config, dict):
-            self._config = {}
-        # Define defaults. TODO
-        # if "hist_mode" not in self._config.keys():
-        #    self._config["hist_mode"] = "numba"
+        self._config = parse_config(config)
 
         self._attributes = MetaHandler(meta=metadata)
 
-        self.spa = SpecsAnalyzer()
+        self.spa = SpecsAnalyzer(config=self._config["spa_params"])
 
     def __repr__(self):
         if self._config is None:
