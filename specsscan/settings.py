@@ -1,11 +1,23 @@
 import json
+import os
 from pathlib import Path
 from typing import Union
 
 import yaml
 
+import specsscan
 
-def parse_config(config: Union[dict, Path, str] = {}) -> dict:
+package_dir = os.path.dirname(specsscan.__file__)
+
+
+def parse_config(
+    config: Union[dict, Path, str] = {},
+    default_config: Union[
+        dict,
+        Path,
+        str,
+    ] = f"{package_dir}/config/default.yaml",
+) -> dict:
     """Handle config dictionary or files.
 
     Args:
@@ -19,16 +31,47 @@ def parse_config(config: Union[dict, Path, str] = {}) -> dict:
     """
 
     if isinstance(config, dict):
-        return config
-
-    if isinstance(config, str):
-        config_file = Path(config)
+        config_dict = config
     else:
-        config_file = Path(config)
+        if isinstance(config, str):
+            config_file = Path(config)
+        else:
+            config_file = config
+
+        if not isinstance(config_file, Path):
+            raise TypeError(
+                "config must be either a Path to a config file or a config dictionary!",
+            )
+
+        config_dict = load_config(config_file)
+
+    if isinstance(default_config, str):
+        default_file = Path(default_config)
+    else:
+        default_file = default_config
+    default_dict = load_config(default_file)
+
+    insert_default_config(config_dict, default_dict)
+
+    return config_dict
+
+
+def load_config(config_file: Path) -> dict:
+    """Loads config parameter files.
+
+    Args:
+        ...
+
+    Raises:
+        ...
+
+    Returns:
+        ...
+    """
 
     if not isinstance(config_file, Path):
         raise TypeError(
-            "config must be either a Path to a config file, or a config dictionary!",
+            "config_file must be a Path object!",
         )
 
     if config_file.suffix == ".json":
@@ -43,3 +86,29 @@ def parse_config(config: Union[dict, Path, str] = {}) -> dict:
         raise TypeError("config file must be of type json or yaml!")
 
     return config_dict
+
+
+def insert_default_config(config: dict, default_config: dict) -> dict:
+    """Inserts missing config parameters from a default config file.
+
+    Args:
+        ...
+
+    Raises:
+        ...
+
+    Returns:
+        ...
+    """
+
+    for k, v in default_config.items():
+        if isinstance(v, dict):
+            if k not in config.keys():
+                config[k] = v
+            else:
+                config[k] = insert_default_config(config[k], v)
+        else:
+            if k not in config.keys():
+                config[k] = v
+
+    return config
