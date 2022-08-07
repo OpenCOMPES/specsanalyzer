@@ -21,13 +21,16 @@ def parse_config(
     """Handle config dictionary or files.
 
     Args:
-        ...
+        config: config dictionary, file path or Path object.
+                Files can be json or yaml.
+        default_config: default config dictionary, file path Path object.
+                The loaded dictionary is completed with the default values.
 
     Raises:
-        ...
+        TypeError
 
     Returns:
-        ...
+        config_dict: loaded and possibly completed config dictionary.
     """
 
     if isinstance(config, dict):
@@ -60,13 +63,13 @@ def load_config(config_file: Path) -> dict:
     """Loads config parameter files.
 
     Args:
-        ...
+        config_file: Path object to the config file. Json or Yaml format are supported.
 
     Raises:
-        ...
+        TypeError
 
     Returns:
-        ...
+        config_dict: loaded config dictionary
     """
 
     if not isinstance(config_file, Path):
@@ -92,13 +95,11 @@ def insert_default_config(config: dict, default_config: dict) -> dict:
     """Inserts missing config parameters from a default config file.
 
     Args:
-        ...
-
-    Raises:
-        ...
+        config: the config dictionary
+        default_config: the default config dictionary.
 
     Returns:
-        ...
+        config: merged dictionary
     """
 
     for k, v in default_config.items():
