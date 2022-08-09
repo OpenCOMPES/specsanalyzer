@@ -5,7 +5,9 @@ from typing import Union
 import psutil
 import xarray as xr
 
+from . import io
 from .metadata import MetaHandler
+from .settings import parse_config
 
 # from typing import Any
 # from typing import List
@@ -25,13 +27,9 @@ class SpecsAnalyzer:
         config: Union[dict, Path, str] = {},
     ):
 
-        # TODO: handle/load config dict/file
-        self._config = config
-        if not isinstance(self._config, dict):
-            self._config = {}
-        # Define defaults. TODO
-        # if "hist_mode" not in self._config.keys():
-        #    self._config["hist_mode"] = "numba"
+        self._config = parse_config(config)
+
+        self._config['calib2d_dict'] = io.parse_calib2d_to_dict(self._config['calib2d_file'])
 
         self._attributes = MetaHandler(meta=metadata)
 
