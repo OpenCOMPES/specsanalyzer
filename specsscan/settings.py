@@ -78,13 +78,11 @@ def load_config(config_file: Path) -> dict:
         )
 
     if config_file.suffix == ".json":
-        config_dict = json.load(config_file)
+        with open(config_file) as stream:
+            config_dict = json.load(stream)
     elif config_file.suffix == ".yaml":
         with open(config_file) as stream:
-            try:
-                config_dict = yaml.safe_load(stream)
-            except yaml.YAMLError as exc:
-                print(exc)
+            config_dict = yaml.safe_load(stream)
     else:
         raise TypeError("config file must be of type json or yaml!")
 
