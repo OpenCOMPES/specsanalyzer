@@ -27,7 +27,6 @@ class SpecsScan:
         config: Union[dict, Path, str] = {},
     ):
 
-        # TODO: handle/load config dict/file
         self._config = parse_config(config)
 
         self._attributes = MetaHandler(meta=metadata)
