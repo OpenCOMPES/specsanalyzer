@@ -17,6 +17,7 @@ Concept description. TODO
    specsanalyzer/img_tools
    specsanalyzer/io
    specsanalyzer/metadata
+   specsanalyzer/settings
 
 .. toctree::
    :maxdepth: 2
