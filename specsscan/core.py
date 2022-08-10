@@ -2,19 +2,17 @@ from pathlib import Path
 from typing import Sequence
 from typing import Union
 
-import psutil
 import xarray as xr
 from specsanalyzer import SpecsAnalyzer
 
-from .metadata import MetaHandler
+from specsscan.metadata import MetaHandler
+from specsscan.settings import parse_config
 
 # from typing import Any
 # from typing import List
 # from typing import Tuple
 # import numpy as np
 # from .convert import convert_image
-
-N_CPU = psutil.cpu_count()
 
 
 class SpecsScan:
@@ -26,17 +24,14 @@ class SpecsScan:
         config: Union[dict, Path, str] = {},
     ):
 
-        # TODO: handle/load config dict/file
-        self._config = config
-        if not isinstance(self._config, dict):
-            self._config = {}
-        # Define defaults. TODO
-        # if "hist_mode" not in self._config.keys():
-        #    self._config["hist_mode"] = "numba"
+        self._config = parse_config(config)
 
         self._attributes = MetaHandler(meta=metadata)
 
-        self.spa = SpecsAnalyzer()
+        try:
+            self.spa = SpecsAnalyzer(config=self._config["spa_params"])
+        except KeyError:
+            self.spa = SpecsAnalyzer()
 
     def __repr__(self):
         if self._config is None:
