@@ -28,7 +28,7 @@ jobs:
         python -m pytest -sv tests
     - name: pycodestyle
       run: |
-        python -m pycodestyle --ignore=E501,E701,E731 specsanalyzer tests 
+        python -m pycodestyle --ignore=E501,E701,E731,W503 specsanalyzer tests 
     - name: pylint
       run: |
         python -m pylint --load-plugins=nomad.metainfo.pylint_plugin specsanalyzer tests 
