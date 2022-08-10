@@ -20,8 +20,7 @@ jobs:
       run: |
         git lfs pull
         python -m pip install --upgrade pip
-        pip install pycodestyle pylint mypy pytest
-        mypy --install-types
+        pip install pycodestyle pylint mypy pytest types-PyYAML
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: Install package
       run: |
