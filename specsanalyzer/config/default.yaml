@@ -1,0 +1,6 @@
+calib2d_file: "./config/phoibos150.calib2d"
+nx_pixel: 1376
+ny_pixel: 1024
+pixel_size: 0.00645
+magnification: 4.54
+apply_fft_filter: False

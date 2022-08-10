@@ -1,11 +1,14 @@
+import os
 from pathlib import Path
 from typing import Sequence
 from typing import Union
 
-import psutil
 import xarray as xr
 
-from .metadata import MetaHandler
+import specsanalyzer
+from specsanalyzer import io
+from specsanalyzer.metadata import MetaHandler
+from specsanalyzer.settings import parse_config
 
 # from typing import Any
 # from typing import List
@@ -13,7 +16,7 @@ from .metadata import MetaHandler
 # import numpy as np
 # from .convert import convert_image
 
-N_CPU = psutil.cpu_count()
+package_dir = os.path.dirname(specsanalyzer.__file__)
 
 
 class SpecsAnalyzer:
@@ -25,13 +28,16 @@ class SpecsAnalyzer:
         config: Union[dict, Path, str] = {},
     ):
 
-        # TODO: handle/load config dict/file
-        self._config = config
-        if not isinstance(self._config, dict):
-            self._config = {}
-        # Define defaults. TODO
-        # if "hist_mode" not in self._config.keys():
-        #    self._config["hist_mode"] = "numba"
+        self._config = parse_config(config)
+
+        try:
+            self._config["calib2d_dict"] = io.parse_calib2d_to_dict(
+                self._config["calib2d_file"],
+            )
+        except FileNotFoundError:  # default location relative to package directory
+            self._config["calib2d_dict"] = io.parse_calib2d_to_dict(
+                os.path.join(package_dir, self._config["calib2d_file"]),
+            )
 
         self._attributes = MetaHandler(meta=metadata)
 
