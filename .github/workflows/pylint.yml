@@ -33,7 +33,7 @@ jobs:
         python -m pycodestyle --ignore=E501,E701,E731,W503 specsanalyzer tests 
     - name: pylint
       run: |
-        python -m pylint --load-plugins=nomad.metainfo.pylint_plugin specsanalyzer tests 
+        python -m pylint specsanalyzer tests 
     - name: mypy
       run: |
         python -m mypy --ignore-missing-imports --follow-imports=silent --no-strict-optional specsanalyzer tests
