@@ -32,7 +32,7 @@ jobs:
     - name: pycodestyle
       continue-on-error: true
       run: |
-        python -m pycodestyle specsanalyzer tests 
+        python -m pycodestyle --ignore=E501 specsanalyzer tests 
     - name: pylint
       continue-on-error: true
       run: |
