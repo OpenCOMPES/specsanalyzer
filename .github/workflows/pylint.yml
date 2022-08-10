@@ -5,17 +5,14 @@ on: [push]
 jobs:
   build:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ["3.8", "3.9", "3.10"]
     steps:
     - uses: actions/checkout@v3
       with:
         lfs: true
-    - name: Set up Python ${{ matrix.python-version }}
+    - name: Set up Python 3.8
       uses: actions/setup-python@v3
       with:
-        python-version: ${{ matrix.python-version }}
+        python-version: 3.8
     - name: Install dependencies
       run: |
         git lfs pull
@@ -32,7 +29,7 @@ jobs:
     - name: pycodestyle
       continue-on-error: true
       run: |
-        python -m pycodestyle --ignore=E501 specsanalyzer tests 
+        python -m pycodestyle --ignore=E501,W503 specsanalyzer tests 
     - name: pylint
       continue-on-error: true
       run: |
