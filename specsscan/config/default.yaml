@@ -1,0 +1,3 @@
+data_path: "/mnt/topfloor/trARPES/"
+spa_params:
+  apply_fft_filter: false
