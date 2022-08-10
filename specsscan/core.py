@@ -2,20 +2,17 @@ from pathlib import Path
 from typing import Sequence
 from typing import Union
 
-import psutil
 import xarray as xr
 from specsanalyzer import SpecsAnalyzer
 
-from .metadata import MetaHandler
-from .settings import parse_config
+from specsscan.metadata import MetaHandler
+from specsscan.settings import parse_config
 
 # from typing import Any
 # from typing import List
 # from typing import Tuple
 # import numpy as np
 # from .convert import convert_image
-
-N_CPU = psutil.cpu_count()
 
 
 class SpecsScan:
@@ -31,7 +28,10 @@ class SpecsScan:
 
         self._attributes = MetaHandler(meta=metadata)
 
-        self.spa = SpecsAnalyzer(config=self._config["spa_params"])
+        try:
+            self.spa = SpecsAnalyzer(config=self._config["spa_params"])
+        except KeyError:
+            self.spa = SpecsAnalyzer()
 
     def __repr__(self):
         if self._config is None:
