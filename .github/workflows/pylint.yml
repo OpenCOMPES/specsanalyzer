@@ -1,0 +1,39 @@
+name: python
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        lfs: true
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v3
+      with:
+        python-version: 3.8
+    - name: Install dependencies
+      run: |
+        git lfs pull
+        python -m pip install --upgrade pip
+        pip install pycodestyle pylint mypy pytest types-PyYAML
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+    - name: Install package
+      run: |
+        python -m pip install .
+    - name: Test with pytest
+      continue-on-error: true
+      run: |
+        python -m pytest -sv tests
+    - name: pycodestyle
+      continue-on-error: true
+      run: |
+        python -m pycodestyle --ignore=E501,W503 specsanalyzer tests 
+    - name: pylint
+      continue-on-error: true
+      run: |
+        python -m pylint specsanalyzer tests 
+    - name: mypy
+      run: |
+        python -m mypy --ignore-missing-imports --follow-imports=silent --no-strict-optional specsanalyzer tests

@@ -48,11 +48,19 @@ def parse_config(
 
         config_dict = load_config(config_file)
 
-    if isinstance(default_config, str):
-        default_file = Path(default_config)
+    if isinstance(default_config, dict):
+        default_dict = default_config
     else:
-        default_file = default_config
-    default_dict = load_config(default_file)
+        if isinstance(default_config, str):
+            default_file = Path(default_config)
+        else:
+            default_file = default_config
+        if not isinstance(default_file, Path):
+            raise TypeError(
+                "default_config must be either a Path to a config file or a config\
+ dictionary!",
+            )
+        default_dict = load_config(default_file)
 
     insert_default_config(config_dict, default_dict)
 
