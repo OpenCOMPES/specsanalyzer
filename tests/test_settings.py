@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-import specsscan
+import specsscan.settings
 from specsscan.settings import insert_default_config
 from specsscan.settings import load_config
 from specsscan.settings import parse_config
