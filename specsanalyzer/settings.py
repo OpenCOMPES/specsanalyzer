@@ -5,9 +5,7 @@ from typing import Union
 
 import yaml
 
-import specsanalyzer
-
-package_dir = os.path.dirname(specsanalyzer.__file__)
+package_dir = os.path.dirname(__file__)
 
 
 def parse_config(
