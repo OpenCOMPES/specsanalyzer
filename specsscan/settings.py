@@ -5,9 +5,7 @@ from typing import Union
 
 import yaml
 
-import specsscan
-
-package_dir = os.path.dirname(specsscan.__file__)
+package_dir = os.path.dirname(__file__)
 
 
 def parse_config(
