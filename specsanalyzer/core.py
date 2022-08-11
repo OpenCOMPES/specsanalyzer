@@ -5,7 +5,6 @@ from typing import Union
 
 import xarray as xr
 
-import specsanalyzer
 from specsanalyzer import io
 from specsanalyzer.metadata import MetaHandler
 from specsanalyzer.settings import parse_config
@@ -16,7 +15,7 @@ from specsanalyzer.settings import parse_config
 # import numpy as np
 # from .convert import convert_image
 
-package_dir = os.path.dirname(specsanalyzer.__file__)
+package_dir = os.path.dirname(__file__)
 
 
 class SpecsAnalyzer:
@@ -25,7 +24,7 @@ class SpecsAnalyzer:
     def __init__(
         self,
         metadata: dict = {},
-        config: Union[dict, Path, str] = {},
+        config: Union[dict, str] = {},
     ):
 
         self._config = parse_config(config)
