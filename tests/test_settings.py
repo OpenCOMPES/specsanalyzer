@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-import specsscan
+import specsscan.settings
 from specsscan.settings import insert_default_config
 from specsscan.settings import load_config
 from specsscan.settings import parse_config
@@ -33,14 +33,14 @@ def test_load_dict():
 
 
 def test_load_config():
-    config_json = load_config(Path(f"{package_dir}/../tests/data/config.json"))
-    config_yaml = load_config(Path(f"{package_dir}/../tests/data/config.yaml"))
+    config_json = load_config(f"{package_dir}/../tests/data/config.json")
+    config_yaml = load_config(f"{package_dir}/../tests/data/config.yaml")
     assert config_json == config_yaml
 
 
 def test_load_config_raise():
     with pytest.raises(TypeError):
-        load_config("specsscan/requirements.txt")
+        load_config(f"{package_dir}/../requirements.txt")
 
 
 def test_insert_default_config():
