@@ -21,7 +21,7 @@ class SpecsScan:
     def __init__(
         self,
         metadata: dict = {},
-        config: Union[dict, Path, str] = {},
+        config: Union[dict, str] = {},
     ):
 
         self._config = parse_config(config)
@@ -40,6 +40,18 @@ class SpecsScan:
             s = print(self._config)
         # TODO Proper report with scan number, dimensions, configuration etc.
         return s if s is not None else ""
+
+    @property
+    def config(self):
+        return self._config
+
+    @config.setter
+    def config(self, config: Union[dict, str]):
+        self._config = parse_config(config)
+        try:
+            self.spa = SpecsAnalyzer(config=self._config["spa_params"])
+        except KeyError:
+            self.spa = SpecsAnalyzer()
 
     def load_scan(
         self,
