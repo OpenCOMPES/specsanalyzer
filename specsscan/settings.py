@@ -11,10 +11,9 @@ package_dir = os.path.dirname(specsscan.__file__)
 
 
 def parse_config(
-    config: Union[dict, Path, str] = {},
+    config: Union[dict, str] = {},
     default_config: Union[
         dict,
-        Path,
         str,
     ] = f"{package_dir}/config/default.yaml",
 ) -> dict:
@@ -36,45 +35,35 @@ def parse_config(
     if isinstance(config, dict):
         config_dict = config
     else:
-        if isinstance(config, str):
-            config_file = Path(config)
-        else:
-            config_file = config
+        config_dict = load_config(config)
 
-        if not isinstance(config_file, Path):
-            raise TypeError(
-                "config must be either a Path to a config file or a config dictionary!",
-            )
-
-        config_dict = load_config(config_file)
-
-    if isinstance(default_config, str):
-        default_file = Path(default_config)
+    if isinstance(default_config, dict):
+        default_dict = default_config
     else:
-        default_file = default_config
-    default_dict = load_config(default_file)
+        default_dict = load_config(default_config)
 
     insert_default_config(config_dict, default_dict)
 
     return config_dict
 
 
-def load_config(config_file: Path) -> dict:
+def load_config(config_path: str) -> dict:
     """Loads config parameter files.
 
     Args:
-        config_file: Path object to the config file. Json or Yaml format are supported.
+        config_path: path to the config file. Json or Yaml format are supported.
 
     Raises:
-        TypeError
+        TypeError, FileNotFoundError
 
     Returns:
         config_dict: loaded config dictionary
     """
 
-    if not isinstance(config_file, Path):
-        raise TypeError(
-            "config_file must be a Path object!",
+    config_file = Path(config_path)
+    if not config_file.is_file():
+        raise FileNotFoundError(
+            f"could not find the configuration file: {config_file}",
         )
 
     if config_file.suffix == ".json":
