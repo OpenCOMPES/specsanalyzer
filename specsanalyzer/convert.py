@@ -432,7 +432,12 @@ def get_rr_da(lens_mode, config_dict):
 #     return rr_array, da_matrix_full
 
 
-def calculate_polynomial_coef_da(scanparameters):
+def calculate_polynomial_coef_da(
+    da_matrix,
+    kinetic_energy,
+    pass_energy,
+    config_dict
+):
     """Given the da coeffiecients contained in the 
     scanpareters, the program calculate the energy range based
     on the eshift parameter and fits a second order polinomial
@@ -453,10 +458,11 @@ def calculate_polynomial_coef_da(scanparameters):
     # da5=currentdamatrix[2][:]
     # da7=currentdamatrix[3][:]
 
-    currentdamatrix = scanparameters['damatrix']
-    eshift = np.array(scanparameters['eShift'])
-    ek = float(scanparameters['KineticEnergy'])
-    ep = float(scanparameters['PassEnergy'])
+    eshift = np.array(config_dict[
+        "calib2d_dict"
+    ]["eShift"])
+    ek = kinetic_energy
+    ep = pass_energy
 
     # calcualte the energy values for each da, given the eshift
     da_energy = eshift*ep+ek*np.ones(eshift.shape)
@@ -464,16 +470,16 @@ def calculate_polynomial_coef_da(scanparameters):
     # create the polinomial coeffiecient matrix,
     # each is a third order polinomial
 
-    dapolymatrix = np.zeros(currentdamatrix.shape)
+    dapolymatrix = np.zeros(da_matrix.shape)
 
-    for i in range(0, currentdamatrix.shape[0]):
+    for i in range(0, da_matrix.shape[0]):
         # igor uses the fit poly 3, which should be a parabola
         dapolymatrix[i][:] = np.polyfit(
             da_energy,
-            currentdamatrix[i][:], 2,
+            da_matrix[i][:], 2,
         ).transpose()
 
-    scanparameters['dapolymatrix'] = dapolymatrix
+    # scanparameters['dapolymatrix'] = dapolymatrix
     return dapolymatrix
 # the function now returns a matrix of the fit coeffiecients,
 # given the physical energy scale
@@ -574,25 +580,42 @@ def calculate_matrix_correction(
     Returns:
         _type_: _description_
     """
-    scanparameters = get_scanparameters(
+    # scanparameters = get_scanparameters(
+    #     lens_mode,
+    #     kinetic_energy,
+    #     pass_energy,
+    #     config_dict
+    # )
+    damatrix = get_damatrix_fromcalib2d(
         lens_mode,
         kinetic_energy,
         pass_energy,
         config_dict
     )
-    calculate_polynomial_coef_da(scanparameters)
+    # scanparameters['aInner'] = damatrix[0][0]
+    damatrix = damatrix[1:][:]
+
+    dapolymatrix = calculate_polynomial_coef_da(damatrix, config_dict)
     # ek = kinetic_energy
     # ep = pass_energy
     # dapolymatrix = scanparameters["dapolymatrix"]
-    de1 = scanparameters["De1"]
-    erange = scanparameters["eRange"]
-    arange = scanparameters["aRange"]
+    # scanparameters["eShift"] = config_dict["calib2d_dict"]["eShift"]
+    # scanparameters["eGrid"] = list(config_dict["calib2d_dict"]["eGrid"])
+    # scanparameters["aGrid"] = list(config_dict["calib2d_dict"]["aGrid"])
+
+    de1 = list(config_dict["calib2d_dict"]["De1"])
+    erange = config_dict["calib2d_dict"]["eRange"]
     # ainner = scanparameters["aInner"]
-    nx_pixel = scanparameters["nx_pixel"]
-    ny_pixel = scanparameters["ny_pixel"]
-    pixelsize = scanparameters["pixelsize"]
+    arange = config_dict["calib2d_dict"][lens_mode][
+            "default"
+            ]["aRange"]
+    # DEFINE THE DETECTOR PARAMETERS; currently hard-coded and not IO
+    nx_pixel = config_dict["nx_pixel"]
+    ny_pixel = config_dict["ny_pixel"]
+    pixelsize = config_dict["pixel_size"]
     # binning = float(scanparameters["Binning"])*2
-    magnification = scanparameters["magnification"]
+    magnification = config_dict["magnification"]
+
     nx_bins = int(nx_pixel/binning)
     ny_bins = int(ny_pixel/binning)
     ek_low = kinetic_energy + erange[0]*pass_energy
@@ -619,7 +642,7 @@ def calculate_matrix_correction(
     ek_mesh, angle_mesh = np.meshgrid(ek_axis, angle_axis)
     mcp_position_mm_matrix = mcp_position_mm(
         ek_mesh, angle_mesh,
-        scanparameters,
+        dapolymatrix,
     )
     Ang_Offset_px = 0  # add as optional input?
     E_Offset_px = 0  # add as optional input?
