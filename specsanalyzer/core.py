@@ -7,6 +7,7 @@ import xarray as xr
 from specsanalyzer import io
 from specsanalyzer.convert import calculate_matrix_correction
 from specsanalyzer.convert import physical_unit_data
+from specsanalyzer.img_tools import crop_xarray
 from specsanalyzer.img_tools import fourier_filter_2d
 from specsanalyzer.metadata import MetaHandler
 from specsanalyzer.settings import parse_config
@@ -154,8 +155,20 @@ class SpecsAnalyzer:
         # TODO: annotate with metadata
         da = xr.DataArray(
             data=conv_img,
-            coords={ek_axis, angle_axis},
-            dims=list("Ekin", "Angle"),
+            coords={"Angle": angle_axis, "Ekin": ek_axis},
+            dims=["Angle", "Ekin"],
         )
+
+        # TODO discuss how to handle cropping. Can he store one set of cropping
+        # parameters in the config, or should we store one set per pass energy/
+        # lens mode/ kinetic energy in the dict?
+
+        crop = kwds.pop("crop", self._config["crop"])
+        if crop:
+            ek_min = kwds.pop("ek_min", self._config["ek_min"])
+            ek_max = kwds.pop("ek_max", self._config["ek_max"])
+            ang_min = kwds.pop("ang_min", self._config["ang_min"])
+            ang_max = kwds.pop("ang_max", self._config["ang_max"])
+            da = crop_xarray(da, ang_min, ang_max, ek_min, ek_max)
 
         return da
