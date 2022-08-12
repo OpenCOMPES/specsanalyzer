@@ -1,15 +1,14 @@
 import os
-from pathlib import Path
 from typing import Union
 
 import numpy as np
 import xarray as xr
 
-import specsanalyzer
 from specsanalyzer import io
 from specsanalyzer.convert import calculate_matrix_correction
 from specsanalyzer.convert import physical_unit_data
-from specsanalyzer.img_tools import fourier_filter_2D
+from specsanalyzer.img_tools import crop_xarray
+from specsanalyzer.img_tools import fourier_filter_2d
 from specsanalyzer.metadata import MetaHandler
 from specsanalyzer.settings import parse_config
 
@@ -19,7 +18,7 @@ from specsanalyzer.settings import parse_config
 # import numpy as np
 # from .convert import convert_image
 
-package_dir = os.path.dirname(specsanalyzer.__file__)
+package_dir = os.path.dirname(__file__)
 
 
 class SpecsAnalyzer:
@@ -28,7 +27,7 @@ class SpecsAnalyzer:
     def __init__(
         self,
         metadata: dict = {},
-        config: Union[dict, Path, str] = {},
+        config: Union[dict, str] = {},
     ):
 
         self._config = parse_config(config)
@@ -103,7 +102,7 @@ class SpecsAnalyzer:
                     "fft_filter_peaks",
                     self._config["fft_filter_peaks"],
                 )
-                img = fourier_filter_2D(raw_img, fft_filter_peaks)
+                img = fourier_filter_2d(raw_img, fft_filter_peaks)
             except KeyError:
                 img = raw_img
         else:
@@ -156,8 +155,20 @@ class SpecsAnalyzer:
         # TODO: annotate with metadata
         da = xr.DataArray(
             data=conv_img,
-            coords={ek_axis, angle_axis},
-            dims=list("Ekin", "Angle"),
+            coords={"Angle": angle_axis, "Ekin": ek_axis},
+            dims=["Angle", "Ekin"],
         )
+
+        # TODO discuss how to handle cropping. Can he store one set of cropping
+        # parameters in the config, or should we store one set per pass energy/
+        # lens mode/ kinetic energy in the dict?
+
+        crop = kwds.pop("crop", self._config["crop"])
+        if crop:
+            ek_min = kwds.pop("ek_min", self._config["ek_min"])
+            ek_max = kwds.pop("ek_max", self._config["ek_max"])
+            ang_min = kwds.pop("ang_min", self._config["ang_min"])
+            ang_max = kwds.pop("ang_max", self._config["ang_max"])
+            da = crop_xarray(da, ang_min, ang_max, ek_min, ek_max)
 
         return da

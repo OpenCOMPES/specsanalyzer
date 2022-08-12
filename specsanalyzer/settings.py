@@ -5,25 +5,22 @@ from typing import Union
 
 import yaml
 
-import specsanalyzer
-
-package_dir = os.path.dirname(specsanalyzer.__file__)
+package_dir = os.path.dirname(__file__)
 
 
 def parse_config(
-    config: Union[dict, Path, str] = {},
+    config: Union[dict, str] = {},
     default_config: Union[
         dict,
-        Path,
         str,
     ] = f"{package_dir}/config/default.yaml",
 ) -> dict:
     """Handle config dictionary or files.
 
     Args:
-        config: config dictionary, file path or Path object.
+        config: config dictionary or file path.
                 Files can be json or yaml.
-        default_config: default config dictionary, file path Path object.
+        default_config: default config dictionary or file path.
                 The loaded dictionary is completed with the default values.
 
     Raises:
@@ -36,53 +33,35 @@ def parse_config(
     if isinstance(config, dict):
         config_dict = config
     else:
-        if isinstance(config, str):
-            config_file = Path(config)
-        else:
-            config_file = config
-
-        if not isinstance(config_file, Path):
-            raise TypeError(
-                "config must be either a Path to a config file or a config dictionary!",
-            )
-
-        config_dict = load_config(config_file)
+        config_dict = load_config(config)
 
     if isinstance(default_config, dict):
         default_dict = default_config
     else:
-        if isinstance(default_config, str):
-            default_file = Path(default_config)
-        else:
-            default_file = default_config
-        if not isinstance(default_file, Path):
-            raise TypeError(
-                "default_config must be either a Path to a config file or a config\
- dictionary!",
-            )
-        default_dict = load_config(default_file)
+        default_dict = load_config(default_config)
 
     insert_default_config(config_dict, default_dict)
 
     return config_dict
 
 
-def load_config(config_file: Path) -> dict:
+def load_config(config_path: str) -> dict:
     """Loads config parameter files.
 
     Args:
-        config_file: Path object to the config file. Json or Yaml format are supported.
+        config_path: Path to the config file. Json or Yaml format are supported.
 
     Raises:
-        TypeError
+        TypeError, FileNotFoundError
 
     Returns:
         config_dict: loaded config dictionary
     """
 
-    if not isinstance(config_file, Path):
-        raise TypeError(
-            "config_file must be a Path object!",
+    config_file = Path(config_path)
+    if not config_file.is_file():
+        raise FileNotFoundError(
+            f"could not find the configuration file: {config_file}",
         )
 
     if config_file.suffix == ".json":

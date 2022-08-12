@@ -1,9 +1,8 @@
 import os
-from pathlib import Path
 
 import pytest
 
-import specsanalyzer
+import specsanalyzer.settings
 from specsanalyzer.settings import insert_default_config
 from specsanalyzer.settings import load_config
 from specsanalyzer.settings import parse_config
@@ -38,17 +37,17 @@ def test_load_dict():
 
 def test_load_config():
     config_json = load_config(
-        Path(f"{package_dir}/../tests/data/config/config.json"),
+        f"{package_dir}/../tests/data/config/config.json",
     )
     config_yaml = load_config(
-        Path(f"{package_dir}/../tests/data/config/config.yaml"),
+        f"{package_dir}/../tests/data/config/config.yaml",
     )
     assert config_json == config_yaml
 
 
 def test_load_config_raise():
     with pytest.raises(TypeError):
-        load_config("specsanalyzer/requirements.txt")
+        load_config(f"{package_dir}/../requirements.txt")
 
 
 def test_insert_default_config():
