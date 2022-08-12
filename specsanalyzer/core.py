@@ -1,13 +1,16 @@
-import os
-from pathlib import Path
-from typing import Sequence
-from typing import Union
+"""This is the specsanalyzer core class
 
-import xarray as xr
+"""
+import os
+from typing import Union
 
 from specsanalyzer import io
 from specsanalyzer.metadata import MetaHandler
 from specsanalyzer.settings import parse_config
+
+# from pathlib import Path
+# from typing import Sequence
+# import xarray as xr
 
 # from typing import Any
 # from typing import List
@@ -18,7 +21,7 @@ from specsanalyzer.settings import parse_config
 package_dir = os.path.dirname(__file__)
 
 
-class SpecsAnalyzer:
+class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
     """[summary]"""
 
     def __init__(
@@ -42,29 +45,19 @@ class SpecsAnalyzer:
 
     def __repr__(self):
         if self._config is None:
-            s = "No configuration available"
+            pretty_str = "No configuration available"
         else:
-            s = print(self._config)
+            for key in self._config:
+                pretty_str += print(f"{self._config[key]}\n")
         # TODO Proper report with scan number, dimensions, configuration etc.
-        return s if s is not None else ""
+        return pretty_str if pretty_str is not None else ""
 
-    def load_scan(
-        self,
-        scan: int,
-        path: Union[str, Path] = "",
-        cycles: Sequence = None,
-        **kwds,
-    ) -> xr.DataArray:
-        """Load scan with given scan number.
+    @property
+    def config(self):
+        """Get config"""
+        return self._config
 
-        Args:
-            ...
-
-        Raises:
-            ...
-
-        Returns:
-            ...
-        """
-
-    pass
+    @config.setter
+    def config(self, config: Union[dict, str]):
+        """Set config"""
+        self._config = parse_config(config)

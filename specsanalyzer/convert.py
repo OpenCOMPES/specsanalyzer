@@ -9,7 +9,7 @@ def convert_image(
     lens_mode: int,
     binning: int,
     calibration_dict: dict = {},
-    detector_voltage: int = np.NaN,
+    detector_voltage: float = np.NaN,
 ) -> xr.DataArray:
     """Converts raw image into physical unit coordinates.
 
