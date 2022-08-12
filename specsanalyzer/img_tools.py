@@ -86,8 +86,8 @@ following structure: pos_x, pos_y, sigma_x, sigma_y, amplitude. The error was {e
     # strip negative values
     for i in range(0, filtered.shape[0]):
         for j in range(0, filtered.shape[1]):
-            filtered[i,j] = filtered[i][j] if filtered[i][j] > 0 else 0
-    
+            filtered[i, j] = filtered[i][j] if filtered[i][j] > 0 else 0
+
     if ret == "filtered":
         return filtered
     if ret == "fft":
@@ -96,4 +96,4 @@ following structure: pos_x, pos_y, sigma_x, sigma_y, amplitude. The error was {e
         return mask
     if ret == "filtered_fft":
         return image_fft * mask
-    return filtered # default return
+    return filtered  # default return
