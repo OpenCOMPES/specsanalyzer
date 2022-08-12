@@ -5,6 +5,7 @@ import numpy as np
 
 
 def gauss2d(
+    # pylint: disable=invalid-name, too-many-arguments
     x: float,
     y: float,
     mx: float,
@@ -35,7 +36,7 @@ def gauss2d(
     )
 
 
-def fourier_filter_2D(
+def fourier_filter_2d(
     image: np.ndarray,
     peaks: Sequence,
     ret: str = "filtered",
@@ -73,20 +74,26 @@ def fourier_filter_2D(
                         peak["sigma_x"],
                         peak["sigma_y"],
                     )
-                except KeyError:
+                except KeyError as exc:
                     raise KeyError(
-                        "The peaks input is supposed to be a list of dicts with the\
-following structure: pos_x, pos_y, sigma_x, sigma_y, amplitude.",
+                        f"The peaks input is supposed to be a list of dicts with the\
+following structure: pos_x, pos_y, sigma_x, sigma_y, amplitude. The error was {exc}.",
                     )
 
     # apply mask to the FFT, and transform back
     filtered = np.fft.irfft2(image_fft * mask)
 
+    # strip negative values
+    for i in range(0, filtered.shape[0]):
+        for j in range(0, filtered.shape[1]):
+            filtered[i, j] = filtered[i][j] if filtered[i][j] > 0 else 0
+
     if ret == "filtered":
         return filtered
-    elif ret == "fft":
+    if ret == "fft":
         return image_fft
-    elif ret == "mask":
+    if ret == "mask":
         return mask
-    elif ret == "filtered_fft":
+    if ret == "filtered_fft":
         return image_fft * mask
+    return filtered  # default return
