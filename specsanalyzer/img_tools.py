@@ -77,9 +77,9 @@ def fourier_filter_2d(
                     )
                 except KeyError as exc:
                     raise KeyError(
-                        f"The peaks input is supposed to be a list of dicts with the\
-following structure: pos_x, pos_y, sigma_x, sigma_y, amplitude. The error was {exc}.",
-                    )
+                        "The peaks input is supposed to be a list of dicts with the\
+following structure: pos_x, pos_y, sigma_x, sigma_y, amplitude.",
+                    ) from exc
 
     # apply mask to the FFT, and transform back
     filtered = np.fft.irfft2(image_fft * mask)
