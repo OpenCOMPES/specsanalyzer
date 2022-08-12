@@ -1,5 +1,4 @@
 import os
-from pathlib import Path
 from typing import Union
 
 import numpy as np
@@ -8,7 +7,7 @@ import xarray as xr
 from specsanalyzer import io
 from specsanalyzer.convert import calculate_matrix_correction
 from specsanalyzer.convert import physical_unit_data
-from specsanalyzer.img_tools import fourier_filter_2D
+from specsanalyzer.img_tools import fourier_filter_2d
 from specsanalyzer.metadata import MetaHandler
 from specsanalyzer.settings import parse_config
 
@@ -102,7 +101,7 @@ class SpecsAnalyzer:
                     "fft_filter_peaks",
                     self._config["fft_filter_peaks"],
                 )
-                img = fourier_filter_2D(raw_img, fft_filter_peaks)
+                img = fourier_filter_2d(raw_img, fft_filter_peaks)
             except KeyError:
                 img = raw_img
         else:
