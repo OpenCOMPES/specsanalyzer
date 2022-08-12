@@ -101,7 +101,7 @@ following structure: pos_x, pos_y, sigma_x, sigma_y, amplitude.",
 
 
 def crop_xarray(
-    da: xr.DataArray,
+    data_array: xr.DataArray,
     x_min: float,
     x_max: float,
     y_min: float,
@@ -110,7 +110,7 @@ def crop_xarray(
     """Crops an xarray according to the provided coordinate boundaries.
 
     Args:
-        da: the input xarray DataArray
+        data_array: the input xarray DataArray
         x_min: the minimum position along the first element in the x-array dims list.
         x_max: the maximum position along the first element in the x-array dims list.
         y_min: the minimum position along the second element in the x-array dims list.
@@ -120,10 +120,10 @@ def crop_xarray(
         The cropped xarray DataArray.
     """
 
-    x_axis = da.coords[da.dims[0]]
-    y_axis = da.coords[da.dims[1]]
+    x_axis = data_array.coords[data_array.dims[0]]
+    y_axis = data_array.coords[data_array.dims[1]]
     x_mask = (x_axis >= x_min) & (x_axis <= x_max)
     y_mask = (y_axis >= y_min) & (y_axis <= y_max)
-    da_cropped = da.where(x_mask & y_mask, drop=True)
+    data_array_cropped = data_array.where(x_mask & y_mask, drop=True)
 
-    return da_cropped
+    return data_array_cropped
