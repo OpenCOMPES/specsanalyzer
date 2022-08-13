@@ -384,8 +384,10 @@ def calculate_matrix_correction(
         aInner,
         dapolymatrix,
     )
-    Ang_Offset_px = 0  # add as optional input?
-    E_Offset_px = 0  # add as optional input?
+
+    Ang_Offset_px = config_dict["Ang_Offset_px"]
+    E_Offset_px = config_dict["E_Offset_px"]
+
     angular_correction_matrix = (
         mcp_position_mm_matrix/magnification
         / (pixelsize*binning)
