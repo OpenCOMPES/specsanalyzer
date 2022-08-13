@@ -1,172 +1,5 @@
-import re
-
 import numpy as np
 from scipy.interpolate import RegularGridInterpolator
-
-
-def convert_image(
-    image,
-    pass_energy,
-    kinetic_energy,
-    lens_mode,
-    binning,
-    config_dict
-):
-    """_summary_
-
-    Args:
-        raw_image_name (_type_): _description_
-        infofilename (_type_): _description_
-        calib2dfilename (_type_): _description_
-
-    Returns:
-        _type_: _description_
-    """
-
-    # raw_data = np.loadtxt(raw_image_name, delimiter="\t")
-    # get_damatrix_fromcalib2d(infofilename, calib2dfilename)
-
-    scanparameters = get_scanparameters(
-        lens_mode,
-        kinetic_energy,
-        pass_energy,
-        config_dict
-    )
-    # calculate_polynomial_coef_da(scanparameters)
-
-    (
-        ek_axis, angle_axis, angular_correction_matrix, e_correction,
-        jacobian_determinant,
-    ) = calculate_matrix_correction(
-        lens_mode,
-        pass_energy,
-        kinetic_energy,
-        binning,
-        config_dict)
-
-    corrected_data = physical_unit_data(
-        image,
-        angular_correction_matrix,
-        e_correction,
-        jacobian_determinant,
-    )
-
-    return (
-        ek_axis,
-        angle_axis,
-        corrected_data,
-    )
-
-
-def get_scanparameters(
-    lens_mode,
-    kinetic_energy,
-    pass_energy,
-    config_dict
-):
-    """_summary_
-
-    Args:
-        infofilename (_type_): _description_
-        calib2dfilename (_type_): _description_
-
-    Returns:
-        _type_: _description_
-    """
-    # start building the dictionary from the info.txt
-    # with open(infofilename) as fd:
-    #     scanparameters = dict(get_pair(line) for line in fd)
-
-    # with open(calib2dfilename) as calibfile:
-    #     calibfilelines = calibfile.readlines()
-        # from the header of the calib2d, get
-        # eShift = -0.05 0 0.05 # Ep
-        # eRange = -0.066 0.066 # Ep
-        # eGrid  = 0.01 # Ep
-        # aGrid  = 1 # unit
-        # De1    = 0.0030
-
-        # find the header line
-    
-    scanparameters = {}
-
-    scanparameters["eShift"] = config_dict["calib2d_dict"]["eShift"]
-    scanparameters["eRange"] = config_dict["calib2d_dict"]["eRange"]
-    scanparameters["eGrid"] = list(config_dict["calib2d_dict"]["eGrid"])
-    scanparameters["aGrid"] = list(config_dict["calib2d_dict"]["aGrid"])
-    scanparameters["De1"] = list(config_dict["calib2d_dict"]["De1"])
-
-        # head_string = "SPECS Phoibos2D"
-        # header_start_idx = [
-        #     i for i, item in enumerate(calibfilelines)
-        #     if re.search(head_string, item)
-        # ]
-
-        # for line_index in np.arange(header_start_idx[0]+1,
-        #                             header_start_idx[0]+13, 1):
-        #     splitline = calibfilelines[line_index].split(" ")
-
-        #     if splitline[0] == "eShift":
-        #         scanparameters["eShift"] = [
-        #             float(splitline[2]),
-        #             float(splitline[3]),
-        #             float(splitline[4]),
-        #         ]
-        #     if splitline[0] == "eRange":
-        #         scanparameters["eRange"] = [
-        #             float(splitline[2]),
-        #             float(splitline[3]),
-        #         ]
-        #     if splitline[0] == "eGrid":
-        #         scanparameters["eGrid"] = [float(splitline[3])]
-        #     if splitline[0] == "aGrid":
-        #         scanparameters["aGrid"] = [float(splitline[3])]
-        #     if splitline[0] == "De1":
-        #         scanparameters["De1"] = [float(splitline[5][:-2])]
-
-        # from the body of the calib2d, get:
-        # these changes with the user selected parameters
-        # aRange = -15 15
-
-        # mode_default_start_idx = [
-        #     i for i, item in enumerate(calibfilelines)
-        #     if (
-        #         re.search("default", item)
-        #         and re.search(scanparameters["LensMode"], item)
-        #     )
-        # ]
-
-        # for line_index in np.arange(
-        #     mode_default_start_idx[0]+1,
-        #     mode_default_start_idx[0]+10, 1,
-        # ):
-
-        #     splitline = calibfilelines[line_index].split(" ")
-        #     if splitline[0] == "aRange":
-        #         scanparameters["aRange"] = [
-        #             float(splitline[2]),
-        #             float(splitline[3]),
-        #         ]
-    scanparameters["aRange"] = config_dict["calib2d_dict"][lens_mode][
-            "default"
-            ]["aRange"]
-    # DEFINE THE DETECTOR PARAMETERS; currently hard-coded and not IO
-    scanparameters['ny_pixel'] = config_dict["ny_pixel"]
-    scanparameters['nx_pixel'] = config_dict["nx_pixel"]
-    scanparameters['pixelsize'] = config_dict["pixel_size"]
-    scanparameters['magnification'] = config_dict["magnification"]
-    scanparameters['wf'] = 4.2  # is this currently used?
-
-    damatrix = get_damatrix_fromcalib2d(
-        lens_mode,
-        kinetic_energy,
-        pass_energy,
-        config_dict
-    )
-    scanparameters['aInner'] = damatrix[0][0]
-    scanparameters['damatrix'] = damatrix[1:][:]
-
-    return scanparameters
 
 
 def get_damatrix_fromcalib2d(
@@ -231,26 +64,12 @@ def get_damatrix_fromcalib2d(
         damatrix_close*(one_mat-rr_factor_mat) +
         damatrix_second*rr_factor_mat
     )
+    aInner = damatrix[0][0]
+    damatrix = damatrix[1:][:]
 
-    return damatrix
-    # except OSError:
-    #     print("Error: File does not appear to exist.")
-    #     return 0
+    return aInner, damatrix
 
 # Auxiliary function to load the info file
-
-
-def get_pair(line):
-    """_summary_
-
-    Args:
-        line (_type_): _description_
-
-    Returns:
-        _type_: _description_
-    """
-    key, sep, value = line.strip().partition(":")
-    return key, value
 
 # Auxiliary function to find the closest rr index
 # from https://stackoverflow.com/questions/2566412/
@@ -315,37 +134,11 @@ def second_closest_rr(rr, rrvec, closest_rr_index):
 # for a certain Angle mode
 
 
-def get_da_block(lines, blockstart, blocklenght):
-    """_summary_
-
-    Args:
-        lines (_type_): _description_
-        blockstart (_type_): _description_
-        blocklenght (_type_): _description_
-
-    Returns:
-        _type_: _description_
-    """
-    damatrix = np.zeros([5, 3])
-    for p, q in enumerate(range(blockstart+1, blockstart+1+blocklenght, 1)):
-
-        linesplit = lines[q].split(" ")
-
-        # print(linesplit)
-
-        if linesplit[0] == "aInner":
-            damatrix[p][:] = float(linesplit[2])
-        else:
-            for i, j in enumerate(range(2, 5, 1)):
-                damatrix[p][i] = float(linesplit[j])
-    return damatrix
-
-
 def get_rr_da(lens_mode, config_dict):
 
-    rr_array = np.array([
+    rr_array = np.array(
      list(config_dict["calib2d_dict"][lens_mode]["rr"])
-    ])
+    )
 
     dim1 = rr_array.shape[0]
     base_dict = config_dict["calib2d_dict"][
@@ -361,9 +154,9 @@ def get_rr_da(lens_mode, config_dict):
     da_matrix = np.zeros([dim1, dim2, dim3])
     for i in range(len(rr_array)):
         aInner = base_dict[rr_array[i]]["aInner"]
-        da_block = np.concatenate(  # Need to maintain order while looping over dict
-            (
-                [v] for k, v in base_dict[rr_array[i]] if k != "aInner"
+        da_block = np.concatenate(
+            tuple(
+                [[v] for k, v in base_dict[rr_array[i]].items() if k != "aInner"]
             )
         )
         da_matrix[i] = np.concatenate(
@@ -374,69 +167,12 @@ def get_rr_da(lens_mode, config_dict):
         )
     return rr_array, da_matrix
 
-    
-# def get_rr_da(lines, modestring):
-#     """_summary_
-
-#     Args:
-#         lines (_type_): _description_
-#         modestring (_type_): _description_
-
-#     Returns:
-#         _type_: _description_
-#     """
-#     rr = []
-
-#     if modestring == "WideAngleMode":
-#         lines_idx = [
-#             i for i, item in enumerate(lines)
-#             if (
-#                 re.search(modestring, item) and
-#                 not(re.search("Super", item))
-#             )
-#         ]
-#     else:
-#         lines_idx = [
-#             i for i, item in enumerate(lines)
-#             if re.search(modestring, item)
-#         ]
-
-#     block_start_list = []
-#     for i in lines_idx:
-#         wamline = lines[i]
-
-#         if (wamline.find("@") != -1):
-#             wamlinestrip = wamline[:-2].replace("]", "")
-#             wamlinestrip = wamlinestrip.replace("[", "")
-#             rr.append(float(wamlinestrip.split("@")[1]))
-#             block_start_list.append(i)
-
-#     # here we should have a get block function
-
-#     # maybe dangerous?
-#     if len(block_start_list) > 1:
-#         block_lenght = block_start_list[1]-block_start_list[0]-2
-#     else:
-#         block_lenght = 2
-
-#     rr_array = np.array(rr)
-#     # here we make a (rr lenght)x5x3 matrix
-#     da_matrix_full = np.zeros([rr_array.shape[0], 5, 3])
-
-#     for i, start_index in enumerate(block_start_list):
-
-#         block_da_matrix = get_da_block(lines, start_index, block_lenght)
-
-#         da_matrix_full[i][:][:] = block_da_matrix[:][:]
-
-#     return rr_array, da_matrix_full
-
 
 def calculate_polynomial_coef_da(
     da_matrix,
     kinetic_energy,
     pass_energy,
-    config_dict
+    eshift
 ):
     """Given the da coeffiecients contained in the 
     scanpareters, the program calculate the energy range based
@@ -457,10 +193,6 @@ def calculate_polynomial_coef_da(
     # da3=currentdamatrix[1][:]
     # da5=currentdamatrix[2][:]
     # da7=currentdamatrix[3][:]
-
-    eshift = np.array(config_dict[
-        "calib2d_dict"
-    ]["eShift"])
     ek = kinetic_energy
     ep = pass_energy
 
@@ -533,7 +265,7 @@ def zinner_diff(ek, angle, dapolymatrix):
     return out
 
 
-def mcp_position_mm(ek, angle, scanparameters):
+def mcp_position_mm(ek, angle, aInner, dapolymatrix):
     """_summary_
 
     Args:
@@ -545,14 +277,14 @@ def mcp_position_mm(ek, angle, scanparameters):
         _type_: _description_
     """
 
-    ainner = scanparameters['aInner']
-    dapolymatrix = scanparameters['dapolymatrix']
+    # ainner = scanparameters['aInner']
+    # dapolymatrix = scanparameters['dapolymatrix']
 
-    mask = np.less_equal(np.abs(angle), ainner)
+    mask = np.less_equal(np.abs(angle), aInner)
 
     # result=np.zeros(angle.shape)#ideally has to be evaluated on a mesh
 
-    ainner_vec = np.ones(angle.shape)*ainner
+    ainner_vec = np.ones(angle.shape)*aInner
     # result = np.where(mask,-10,10)
     result = np.where(
         mask, zinner(ek, angle, dapolymatrix),
@@ -586,16 +318,22 @@ def calculate_matrix_correction(
     #     pass_energy,
     #     config_dict
     # )
-    damatrix = get_damatrix_fromcalib2d(
+    eshift = np.array(config_dict[
+        "calib2d_dict"
+    ]["eShift"])
+
+    aInner, damatrix = get_damatrix_fromcalib2d(
         lens_mode,
         kinetic_energy,
         pass_energy,
         config_dict
     )
-    # scanparameters['aInner'] = damatrix[0][0]
-    damatrix = damatrix[1:][:]
 
-    dapolymatrix = calculate_polynomial_coef_da(damatrix, config_dict)
+    dapolymatrix = calculate_polynomial_coef_da(
+        damatrix,
+        kinetic_energy,
+        pass_energy,
+        eshift)
     # ek = kinetic_energy
     # ep = pass_energy
     # dapolymatrix = scanparameters["dapolymatrix"]
@@ -603,7 +341,7 @@ def calculate_matrix_correction(
     # scanparameters["eGrid"] = list(config_dict["calib2d_dict"]["eGrid"])
     # scanparameters["aGrid"] = list(config_dict["calib2d_dict"]["aGrid"])
 
-    de1 = list(config_dict["calib2d_dict"]["De1"])
+    de1 = [config_dict["calib2d_dict"]["De1"]]
     erange = config_dict["calib2d_dict"]["eRange"]
     # ainner = scanparameters["aInner"]
     arange = config_dict["calib2d_dict"][lens_mode][
@@ -641,7 +379,9 @@ def calculate_matrix_correction(
     # let's create a meshgrid for vectorized evaluation
     ek_mesh, angle_mesh = np.meshgrid(ek_axis, angle_axis)
     mcp_position_mm_matrix = mcp_position_mm(
-        ek_mesh, angle_mesh,
+        ek_mesh,
+        angle_mesh,
+        aInner,
         dapolymatrix,
     )
     Ang_Offset_px = 0  # add as optional input?
@@ -674,7 +414,7 @@ def calculate_matrix_correction(
 
 
 def physical_unit_data(
-    raw_data,
+    image,
     angular_correction_matrix,
     e_correction,
     jacobian_determinant,
@@ -703,13 +443,13 @@ def physical_unit_data(
               e_correction_expand.flatten())
     # these coords seems to be pixels..
 
-    x_bins = np.arange(0, raw_data.shape[0], 1)
-    y_bins = np.arange(0, raw_data.shape[1], 1)
+    x_bins = np.arange(0, image.shape[0], 1)
+    y_bins = np.arange(0, image.shape[1], 1)
 
     # create interpolation function
     my_interpolating_function = RegularGridInterpolator(
         (x_bins, y_bins),
-        raw_data,
+        image,
         method='nearest',
         bounds_error=False,
         fill_value=33,
