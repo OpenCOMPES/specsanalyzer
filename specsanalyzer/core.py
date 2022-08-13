@@ -163,12 +163,12 @@ class SpecsAnalyzer:
         # parameters in the config, or should we store one set per pass energy/
         # lens mode/ kinetic energy in the dict?
 
-        crop = kwds.pop("crop", self._config["crop"])
-        if crop:
-            ek_min = kwds.pop("ek_min", self._config["ek_min"])
-            ek_max = kwds.pop("ek_max", self._config["ek_max"])
-            ang_min = kwds.pop("ang_min", self._config["ang_min"])
-            ang_max = kwds.pop("ang_max", self._config["ang_max"])
-            da = crop_xarray(da, ang_min, ang_max, ek_min, ek_max)
+        # crop = kwds.pop("crop", self._config["crop"])
+        # if crop:
+        #     ek_min = kwds.pop("ek_min", self._config["ek_min"])
+        #     ek_max = kwds.pop("ek_max", self._config["ek_max"])
+        #     ang_min = kwds.pop("ang_min", self._config["ang_min"])
+        #     ang_max = kwds.pop("ang_max", self._config["ang_max"])
+        #     da = crop_xarray(da, ang_min, ang_max, ek_min, ek_max)
 
         return da
