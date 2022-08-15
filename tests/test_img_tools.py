@@ -34,12 +34,12 @@ def test_fourier_filter_2d():
 
     config = parse_config(f"{test_dir}/data/config/config.yaml")
     peaks = config["fft_filter_peaks"]
-    with open(f"{test_dir}/data/Scan1232.tsv") as file:
+    with open(f"{test_dir}/data/dataFHI/Scan1232.tsv") as file:
         tsv_data = np.loadtxt(file, delimiter="\t")
 
     filtered = fourier_filter_2d(tsv_data, peaks)
 
-    with open(f"{test_dir}/data/Scan1232_filtered.tsv") as file:
+    with open(f"{test_dir}/data/dataFHI/Scan1232_filtered.tsv") as file:
         ref = np.loadtxt(file, delimiter="\t")
     ref = ref.T
 
