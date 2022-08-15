@@ -1,8 +1,13 @@
+import os
+
 import numpy as np
 import xarray as xr
 
 from specsanalyzer.img_tools import crop_xarray
 from specsanalyzer.img_tools import fourier_filter_2d
+from specsanalyzer.settings import parse_config
+
+test_dir = os.path.dirname(__file__)
 
 bins2d = (95, 34)
 array2d = np.random.normal(size=bins2d)
@@ -26,6 +31,19 @@ def test_fourier_filter_2d():
         fourier_filter_2d(array2d, []),
         atol=1e-10,
     )
+
+    config = parse_config(f"{test_dir}/data/config/config.yaml")
+    peaks = config["fft_filter_peaks"]
+    with open(f"{test_dir}/data/Scan1232.tsv") as file:
+        tsv_data = np.loadtxt(file, delimiter="\t")
+
+    filtered = fourier_filter_2d(tsv_data, peaks)
+
+    with open(f"{test_dir}/data/Scan1232_filtered.tsv") as file:
+        ref = np.loadtxt(file, delimiter="\t")
+    ref = ref.T
+
+    np.testing.assert_allclose(ref, filtered, atol=3.5)
 
 
 def test_fourier_filter_2d_raises():

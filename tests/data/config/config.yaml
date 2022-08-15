@@ -7,33 +7,33 @@ Ang_Offset_px: 0
 E_Offset_px: 0
 apply_fft_filter: True
 fft_filter_peaks:
-  - amplitude: 1
-    pos_x: 79
+  - amplitude: .95
+    pos_x: 77.9131
     pos_y: 0
-    sigma_x: 8
-    sigma_y: 8
-  - amplitude: 1
-    pos_x: 176
+    sigma_x: 13.7216
+    sigma_y: 20.9152
+  - amplitude: .95
+    pos_x: 178.087
     pos_y: 0
-    sigma_x: 8
-    sigma_y: 8
-  - amplitude: 1
+    sigma_x: 13.7216
+    sigma_y: 20.9152
+  - amplitude: .95
     pos_x: 0
-    pos_y: 109
-    sigma_x: 5
-    sigma_y: 8
-  - amplitude: 1
-    pos_x: 78
-    pos_y: 109
-    sigma_x: 5
-    sigma_y: 5
-  - amplitude: 1
-    pos_x: 175
-    pos_y: 108
-    sigma_x: 5
-    sigma_y: 5
-  - amplitude: 1
-    pos_x: 254
-    pos_y: 109
-    sigma_x: 5
-    sigma_y: 8
+    pos_y: 109.183
+    sigma_x: 13.7216
+    sigma_y: 20.9152
+  - amplitude: .95
+    pos_x: 77.9131
+    pos_y: 109.183
+    sigma_x: 13.7216
+    sigma_y: 20.9152
+  - amplitude: .95
+    pos_x: 178.087
+    pos_y: 109.183
+    sigma_x: 13.7216
+    sigma_y: 20.9152
+  - amplitude: .95
+    pos_x: 256
+    pos_y: 109.183
+    sigma_x: 13.7216
+    sigma_y: 20.9152
