@@ -50,7 +50,7 @@ class SpecsAnalyzer:
             s = "No configuration available"
         else:
             s = print(self._config)
-        # TODO Proper report with scan number, dimensions, configuration etc.
+            # TODO Proper report with scan number, dimensions, configuration etc.
         return s if s is not None else ""
 
     def convert_image(
@@ -172,3 +172,14 @@ class SpecsAnalyzer:
         #     da = crop_xarray(da, ang_min, ang_max, ek_min, ek_max)
 
         return da
+
+    def return_config(
+        self
+    ) -> dict:
+        # returns the config file for debuggin
+        if self._config is None:
+            s = "No configuration available"
+        else:
+            s = self._config
+            # TODO Proper report with scan number, dimensions, configuration etc.
+        return s if s is not None else ""
