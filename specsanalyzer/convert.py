@@ -8,7 +8,7 @@ def get_damatrix_fromcalib2d(
     pass_energy,
     config_dict
 ):
-    """_summary_
+    """This function returns a matrix of coefficients
 
     Args:
         infofilename (_type_): _description_
@@ -17,14 +17,6 @@ def get_damatrix_fromcalib2d(
     Returns:
         _type_: _description_
     """
-    # try:
-    # infofile = open(infofilename)
-    # calibfile = open(calib2dfilename)
-
-    # now read the infofile and return a dictionary
-    # infodict = dict(get_pair(line) for line in infofile)
-    # now from the retardatio ratio and lens mode go through the calib file
-    # and get the good stuff
     ek = kinetic_energy
     ep = pass_energy
     rr = ek/ep
@@ -76,12 +68,15 @@ def get_damatrix_fromcalib2d(
 # find-nearest-value-in-numpy-array
 
 
+
 def bisection(array, value):
     '''Given an ``array`` , and given a ``value`` , returns an index
     j such that ``value`` is between array[j]
     and array[j+1]. ``array`` must be monotonic
     increasing. j=-1 or j=len(array) is returned
-    to indicate that ``value`` is out of range below and above respectively.'''
+    to indicate that ``value`` is out of range below and above respectively.
+    This should mimick the function BinarySearch in igor pro 6'''
+
     n = len(array)
     if (value < array[0]):
         return -1
@@ -115,7 +110,10 @@ def second_closest_rr(rr, rrvec, closest_rr_index):
     Returns:
         _type_: _description_
     """
-    if closest_rr_index == 0:
+
+
+    # commented, modified to correclty match igor bahaviour
+    """ if closest_rr_index == 0:
         second_closest_rr_index = 1
     else:
         if closest_rr_index == (rrvec.size-1):
@@ -123,15 +121,22 @@ def second_closest_rr(rr, rrvec, closest_rr_index):
         else:
             # we are not at the edges, compare the neighbors and get the
             # closest
+
+            #######modified to exatly match igor behaviour, 
+
             if (rr < rrvec[closest_rr_index]):
                 second_closest_rr_index = closest_rr_index-1
             else:
-                second_closest_rr_index = closest_rr_index+1
+                second_closest_rr_index = closest_rr_index+1 """
+    
+    if closest_rr_index == (rrvec.size-1):
+        # we are the edge: the behaviour is to not change the index
+        second_closest_rr_index=closest_rr_index
+    else:
+        second_closest_rr_index=closest_rr_index+1
 
     return second_closest_rr_index
 
-# this function should get both the rr array, and the corresponding Da matrices
-# for a certain Angle mode
 
 
 def get_rr_da(lens_mode, config_dict):
