@@ -181,5 +181,4 @@ class SpecsAnalyzer:
             s = "No configuration available"
         else:
             s = self._config
-            # TODO Proper report with scan number, dimensions, configuration etc.
         return s if s is not None else ""
