@@ -270,7 +270,7 @@ def zinner_diff(ek, angle, dapolymatrix):
     return out
 
 
-def mcp_position_mm(ek, angle, aInner, dapolymatrix):
+def mcp_position_mm(ek, angle, a_inner, dapolymatrix):
     """_summary_
 
     Args:
@@ -285,18 +285,18 @@ def mcp_position_mm(ek, angle, aInner, dapolymatrix):
     # ainner = scanparameters['aInner']
     # dapolymatrix = scanparameters['dapolymatrix']
 
-    mask = np.less_equal(np.abs(angle), aInner)
+    mask = np.less_equal(np.abs(angle), a_inner)
 
     # result=np.zeros(angle.shape)#ideally has to be evaluated on a mesh
 
-    ainner_vec = np.ones(angle.shape)*aInner
+    a_inner_vec = np.ones(angle.shape)*a_inner
     # result = np.where(mask,-10,10)
     result = np.where(
         mask, zinner(ek, angle, dapolymatrix),
         np.sign(angle)*(
-            zinner(ek, ainner_vec, dapolymatrix) +
-            (np.abs(angle)-ainner_vec) *
-            zinner_diff(ek, ainner_vec, dapolymatrix)
+            zinner(ek, a_inner_vec, dapolymatrix) +
+            (np.abs(angle)-a_inner_vec) *
+            zinner_diff(ek, a_inner_vec, dapolymatrix)
         ),
     )
     return result
@@ -418,6 +418,20 @@ def calculate_matrix_correction(
         ek_axis, angle_axis, angular_correction_matrix,
         e_correction, jacobian_determinant,
     )
+
+
+def calculate_jacobian(
+    angular_correction_matrix,
+    e_correction,
+    ek_axis,
+    angle_axis
+):
+    w_dyde = np.gradient(angular_correction_matrix, ek_axis, axis=1)
+    w_dyda = np.gradient(angular_correction_matrix, angle_axis, axis=0)
+    w_dxda = 0
+    w_dxde = np.gradient(e_correction, ek_axis, axis=0)
+    jacobian_determinant = np.abs(w_dxde*w_dyda - w_dyde*w_dxda)
+    return jacobian_determinant
 
 
 def physical_unit_data(
