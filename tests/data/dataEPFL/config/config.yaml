@@ -6,6 +6,7 @@ magnification: 4.54
 Ang_Offset_px: 0
 E_Offset_px: 0
 apply_fft_filter: False
+work_function: 4.2
 fft_filter_peaks:
   - amplitude: .95
     pos_x: 77.9131

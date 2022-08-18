@@ -17,19 +17,27 @@ def get_damatrix_fromcalib2d(
     Returns:
         _type_: _description_
     """
-    ek = kinetic_energy
-    ep = pass_energy
-    rr = ek/ep
+    # retardation ratio
+
+    #
+    # 
+    work_function = config_dict["work_function"]
+
+    rr = (kinetic_energy-work_function)/pass_energy
+
+    # now we have a dilemma: in igor the rr was calculated including the work function,
+    # depending on the settings, one might have or not have the work function included in the 
+    # labview data acquisition.. 
+
 
     # given the lens mode get all the retardatio ratios available
-    # calibfilelines = calibfile.readlines()
     rr_vec, damatrix_full = get_rr_da(lens_mode, config_dict)
     closest_rr_index = bisection(rr_vec, rr)
-
+    
     # return as the closest rr index the smallest in case of -1 output
     if closest_rr_index == -1:
         closest_rr_index = 0
-
+    print("closest_rr_index= ", closest_rr_index)
     # now compare the distance with the neighboring indexes,
     # we need the second nearest rr
     second_closest_rr_index = second_closest_rr(rr, rr_vec,
@@ -43,7 +51,7 @@ def get_damatrix_fromcalib2d(
     rr_index = np.arange(0, rr_vec.shape[0], 1)
     rr_factor = np.interp(rr, rr_vec, rr_index)-closest_rr_index
 
-    # print(rr_factor)
+    print("rr_factor= ", rr_factor)
 
     damatrix_close = damatrix_full[closest_rr_index][:][:]
     damatrix_second = damatrix_full[second_closest_rr_index][:][:]
@@ -112,7 +120,7 @@ def second_closest_rr(rr, rrvec, closest_rr_index):
     """
 
 
-    # commented, modified to correclty match igor bahaviour
+    # commented, modified to correctly match igor bahaviour
     """ if closest_rr_index == 0:
         second_closest_rr_index = 1
     else:
@@ -198,11 +206,9 @@ def calculate_polynomial_coef_da(
     # da3=currentdamatrix[1][:]
     # da5=currentdamatrix[2][:]
     # da7=currentdamatrix[3][:]
-    ek = kinetic_energy
-    ep = pass_energy
 
     # calcualte the energy values for each da, given the eshift
-    da_energy = eshift*ep+ek*np.ones(eshift.shape)
+    da_energy = eshift*pass_energy+kinetic_energy*np.ones(eshift.shape)
 
     # create the polinomial coeffiecient matrix,
     # each is a third order polinomial
@@ -235,8 +241,7 @@ def zinner(ek, angle, dapolymatrix):
     Returns:
         _type_: _description_
     """
-    # poly(D1, Ek )*(Ang) + 10^-2*poly(D3, Ek )*(Ang)^3 +
-    # 10^-4*poly(D5, Ek )*(Ang)^5 + 10^-6*poly(D7, Ek )*(Ang)^7
+ 
     out = 0
 
     for i in np.arange(0, dapolymatrix.shape[0], 1):
@@ -281,16 +286,14 @@ def mcp_position_mm(ek, angle, a_inner, dapolymatrix):
     Returns:
         _type_: _description_
     """
-
-    # ainner = scanparameters['aInner']
-    # dapolymatrix = scanparameters['dapolymatrix']
+ 
 
     mask = np.less_equal(np.abs(angle), a_inner)
 
-    # result=np.zeros(angle.shape)#ideally has to be evaluated on a mesh
+ 
 
     a_inner_vec = np.ones(angle.shape)*a_inner
-    # result = np.where(mask,-10,10)
+ 
     result = np.where(
         mask, zinner(ek, angle, dapolymatrix),
         np.sign(angle)*(
@@ -323,6 +326,7 @@ def calculate_matrix_correction(
     #     pass_energy,
     #     config_dict
     # )
+
     eshift = np.array(config_dict[
         "calib2d_dict"
     ]["eShift"])
@@ -339,20 +343,15 @@ def calculate_matrix_correction(
         kinetic_energy,
         pass_energy,
         eshift)
-    # ek = kinetic_energy
-    # ep = pass_energy
-    # dapolymatrix = scanparameters["dapolymatrix"]
-    # scanparameters["eShift"] = config_dict["calib2d_dict"]["eShift"]
-    # scanparameters["eGrid"] = list(config_dict["calib2d_dict"]["eGrid"])
-    # scanparameters["aGrid"] = list(config_dict["calib2d_dict"]["aGrid"])
-
+ 
     de1 = [config_dict["calib2d_dict"]["De1"]]
     erange = config_dict["calib2d_dict"]["eRange"]
     # ainner = scanparameters["aInner"]
     arange = config_dict["calib2d_dict"][lens_mode][
             "default"
             ]["aRange"]
-    # DEFINE THE DETECTOR PARAMETERS; currently hard-coded and not IO
+
+ 
     nx_pixel = config_dict["nx_pixel"]
     ny_pixel = config_dict["ny_pixel"]
     pixelsize = config_dict["pixel_size"]
