@@ -37,3 +37,4 @@ fft_filter_peaks:
     pos_y: 109.183
     sigma_x: 13.7216
     sigma_y: 20.9152
+binning: 4

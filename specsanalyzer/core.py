@@ -110,6 +110,9 @@ class SpecsAnalyzer:
 
         # TODO check valid lens modes
 
+
+        
+
         try:
             ek_axis = self._correction_matrix_dict[lens_mode][pass_energy][
                 kinetic_energy
@@ -127,6 +130,7 @@ class SpecsAnalyzer:
                 pass_energy
             ][kinetic_energy]["jacobian_determinant"]
         except KeyError:
+            print("New correction matrix")
             (
                 ek_axis,
                 angle_axis,
@@ -140,6 +144,7 @@ class SpecsAnalyzer:
                 binning,
                 self._config,
             )
+
             # TODO: make this function compatible, call the function
             # calculate_polynomial_coef_da inside.
             # TODO: store result in dictionary.

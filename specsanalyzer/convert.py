@@ -413,6 +413,16 @@ def calculate_matrix_correction(
     w_dxde = np.gradient(e_correction, ek_axis, axis=0)
     jacobian_determinant = np.abs(w_dxde*w_dyda - w_dyde*w_dxda)
 
+
+    # attempt to update the dictionary
+    # config_dict[""].update(elem)
+
+    #  ek_axis = self._correction_matrix_dict[lens_mode][pass_energy][
+    #             kinetic_energy
+#             ]["ek_axis"]
+    #         angle_axis = self._correction_matrix_dict[lens_mode][pass_energy][
+     #            kinetic_energy
+    #         ]["angle_axis"]
     return (
         ek_axis, angle_axis, angular_correction_matrix,
         e_correction, jacobian_determinant,
