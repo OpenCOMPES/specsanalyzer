@@ -16,6 +16,7 @@ default_config_keys = [
     "nx_pixel",
     "ny_pixel",
     "pixel_size",
+    "binning",
     "magnification",
     "apply_fft_filter",
 ]
