@@ -6,7 +6,7 @@ import xarray as xr
 
 from specsanalyzer import io
 from specsanalyzer.convert import calculate_matrix_correction
-from specsanalyzer.convert import physical_unit_data_5
+from specsanalyzer.convert import physical_unit_data_6
 from specsanalyzer.img_tools import crop_xarray
 from specsanalyzer.img_tools import fourier_filter_2d
 from specsanalyzer.metadata import MetaHandler
@@ -146,14 +146,14 @@ class SpecsAnalyzer:
             # calculate_polynomial_coef_da inside.
             # TODO: store result in dictionary.
 
-        # conv_img = physical_unit_data(
-        #     img,
-        #     angular_correction_matrix,
-        #     e_correction,
-        #     jacobian_determinant,
-        # )
+        #conv_img = physical_unit_data_6(
+        #    img,
+        #    angular_correction_matrix,
+        #    e_correction,
+        #    jacobian_determinant,
+        #)
 
-        conv_img = physical_unit_data_5(
+        conv_img = physical_unit_data_6(
             img,
             angular_correction_matrix,
             e_correction,
