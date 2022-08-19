@@ -360,11 +360,21 @@ def calculate_matrix_correction(
 
     nx_bins = int(nx_pixel/binning)
     ny_bins = int(ny_pixel/binning)
+    
+    
     ek_low = kinetic_energy + erange[0]*pass_energy
     ek_high = kinetic_energy + erange[1]*pass_energy
 
+    
+
+    # in igor we have 
+    # setscale/P x, EkinLow, (EkinHigh-EkinLow)/nx_pixel, "eV",
+    # setscale/P y, AzimuthLow*1.2, (AzimuthHigh-AzimuthLow)*1.2/ny_pixel
+    
+    # is the behaviour of arange more similar??
+    
     # assume an even number of pixels on the detector, seems reasonable
-    ek_axis = np.linspace(ek_low, ek_high, nx_bins)
+    ek_axis = np.linspace(ek_low, ek_high, nx_bins, endpoint=False)
 
     # we need the arange as well as 2d array
     # arange was defined in the igor procedure Calculate_Da_values
@@ -375,7 +385,11 @@ def calculate_matrix_correction(
 
     # check the effect of the additional range x1.2;
     # this is present in the igor code
-    angle_axis = np.linspace(angle_low, angle_high, ny_bins)
+
+    angle_axis = np.linspace(angle_low, angle_high, ny_bins, endpoint=False)
+    
+    
+    
     # the original program defines 2 waves,
     mcp_position_mm_matrix = np.zeros([nx_bins, ny_bins])
     angular_correction_matrix = np.zeros([nx_bins, ny_bins])
@@ -392,12 +406,15 @@ def calculate_matrix_correction(
     Ang_Offset_px = config_dict["Ang_Offset_px"]
     E_Offset_px = config_dict["E_Offset_px"]
 
+
+    
     angular_correction_matrix = (
         mcp_position_mm_matrix/magnification
         / (pixelsize*binning)
         + ny_bins/2
         + Ang_Offset_px
     )
+
     e_correction = (
         (
             ek_axis -
@@ -407,11 +424,20 @@ def calculate_matrix_correction(
         + nx_bins/2
         + E_Offset_px
     )
-    w_dyde = np.gradient(angular_correction_matrix, ek_axis, axis=1)
-    w_dyda = np.gradient(angular_correction_matrix, angle_axis, axis=0)
-    w_dxda = 0
-    w_dxde = np.gradient(e_correction, ek_axis, axis=0)
-    jacobian_determinant = np.abs(w_dxde*w_dyda - w_dyde*w_dxda)
+
+    # calculate Jacobian determinant
+
+    # w_dyde = np.gradient(angular_correction_matrix, ek_axis, axis=1)
+    # w_dyda = np.gradient(angular_correction_matrix, angle_axis, axis=0)
+    # w_dxda = 0
+    # w_dxde = np.gradient(e_correction, ek_axis, axis=0)
+
+    jacobian_determinant = calculate_jacobian(
+                           angular_correction_matrix,
+                           e_correction,
+                           ek_axis,
+                           angle_axis
+    )
 
 
     # attempt to update the dictionary
