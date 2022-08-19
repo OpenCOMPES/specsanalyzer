@@ -339,19 +339,19 @@ def get_pair_from_list(list_line: list) -> list:
     k, v = list_line[0], list_line[1]
     k = k.strip()
     if "#" in v:
-        v = v[:v.index("#")].strip()
+        v = v[: v.index("#")].strip()
 
     if len(v.split()) > 1:
         try:
             v = [float(i) for i in v.split()]
         except ValueError:  # to handle one edge case
-            return [(k, float(v.strip("\"m")))]
+            return [(k, float(v.strip('"m')))]
 
     else:
         try:
             v = float(v)
         except ValueError:
-            v = v.strip(" \" ")
+            v = v.strip(' " ')
 
     return [(k, v)]
 
@@ -408,16 +408,16 @@ def parse_calib2d_to_dict(filepath: str) -> dict:
     for elem in listf:
         if isinstance(elem, str):  # Initialize mode dict
             mode = elem
-            calib_dict[mode] = {'rr': {}, 'default': {}}
+            calib_dict[mode] = {"rr": {}, "default": {}}
             rr = None
         elif isinstance(elem, (int, float)):  # Initialize rr nested dict
             rr = elem
-            calib_dict[mode]['rr'][rr] = {}
+            calib_dict[mode]["rr"][rr] = {}
         else:  # populate the dict
             if rr:
-                calib_dict[mode]['rr'][rr].update(elem)
+                calib_dict[mode]["rr"][rr].update(elem)
             elif mode:
-                calib_dict[mode]['default'].update(elem)
+                calib_dict[mode]["default"].update(elem)
             else:
                 calib_dict.update(elem)
     return calib_dict
