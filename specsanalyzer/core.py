@@ -6,7 +6,7 @@ import xarray as xr
 
 from specsanalyzer import io
 from specsanalyzer.convert import calculate_matrix_correction
-from specsanalyzer.convert import physical_unit_data
+from specsanalyzer.convert import physical_unit_data_5
 from specsanalyzer.img_tools import crop_xarray
 from specsanalyzer.img_tools import fourier_filter_2d
 from specsanalyzer.metadata import MetaHandler
@@ -110,9 +110,6 @@ class SpecsAnalyzer:
 
         # TODO check valid lens modes
 
-
-        
-
         try:
             ek_axis = self._correction_matrix_dict[lens_mode][pass_energy][
                 kinetic_energy
@@ -149,12 +146,22 @@ class SpecsAnalyzer:
             # calculate_polynomial_coef_da inside.
             # TODO: store result in dictionary.
 
-        conv_img = physical_unit_data(
+        # conv_img = physical_unit_data(
+        #     img,
+        #     angular_correction_matrix,
+        #     e_correction,
+        #     jacobian_determinant,
+        # )
+
+        conv_img = physical_unit_data_5(
             img,
             angular_correction_matrix,
             e_correction,
             jacobian_determinant,
+            ek_axis,
+            angle_axis
         )
+
         # TODO: make function compatible, check interpolation functions.
         # TODO generate xarray
         # TODO: annotate with metadata
