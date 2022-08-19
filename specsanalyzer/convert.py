@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.interpolate import RegularGridInterpolator
-
+from scipy.interpolate import interp2d
 
 def get_damatrix_fromcalib2d(
     lens_mode,
@@ -344,6 +344,7 @@ def calculate_matrix_correction(
         pass_energy,
         eshift)
  
+    # de1 = [config_dict["calib2d_dict"]["De1"]]
     de1 = [config_dict["calib2d_dict"]["De1"]]
     erange = config_dict["calib2d_dict"]["eRange"]
     # ainner = scanparameters["aInner"]
@@ -364,8 +365,7 @@ def calculate_matrix_correction(
     
     ek_low = kinetic_energy + erange[0]*pass_energy
     ek_high = kinetic_energy + erange[1]*pass_energy
-
-    
+    # ek_step=(ek_high-ek_low)/nx_bins
 
     # in igor we have 
     # setscale/P x, EkinLow, (EkinHigh-EkinLow)/nx_pixel, "eV",
@@ -375,19 +375,20 @@ def calculate_matrix_correction(
     
     # assume an even number of pixels on the detector, seems reasonable
     ek_axis = np.linspace(ek_low, ek_high, nx_bins, endpoint=False)
-
+    # ek_axis = np.arange(ek_low, ek_high, ek_step)
     # we need the arange as well as 2d array
     # arange was defined in the igor procedure Calculate_Da_values
     # it seems to be a constant, written in the calib2d file header
     # I decided to rename from "AzimuthLow"
     angle_low = arange[0]*1.2
     angle_high = arange[1]*1.2
+    # angle_step=(angle_high-angle_low)/ny_bins
 
     # check the effect of the additional range x1.2;
     # this is present in the igor code
 
     angle_axis = np.linspace(angle_low, angle_high, ny_bins, endpoint=False)
-    
+    # angle_axis = np.arange(angle_low, angle_high, angle_step)
     
     
     # the original program defines 2 waves,
@@ -425,6 +426,8 @@ def calculate_matrix_correction(
         + E_Offset_px
     )
 
+    print(1/ pass_energy/float(de1[0])/magnification/(pixelsize*binning))
+    print(pass_energy,de1,magnification,pixelsize,binning)
     # calculate Jacobian determinant
 
     # w_dyde = np.gradient(angular_correction_matrix, ek_axis, axis=1)
@@ -503,16 +506,29 @@ def physical_unit_data(
     y_bins = np.arange(0, image.shape[1], 1)
 
     # create interpolation function
-    my_interpolating_function = RegularGridInterpolator(
+    angular_interpolation_function = RegularGridInterpolator(
         (x_bins, y_bins),
         image,
-        method='nearest',
+        # method='nearest',
+        method= 'linear',
         bounds_error=False,
-        fill_value=33,
+        fill_value=0,
     )
+    
+    
+    #angular_interpolation_function = interp2d(
+    #    x_bins, 
+    #    y_bins,
+    #    image,
+    #    # method='nearest',
+    #    kind= 'linear',
+    #    bounds_error=False,
+    #    fill_value=0
+    #)
+    
     corrected_data = (
         np.reshape(
-            my_interpolating_function(coords),
+            angular_interpolation_function(coords),
             angular_correction_matrix.shape,
         ) *
         jacobian_determinant
