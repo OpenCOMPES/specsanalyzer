@@ -4,6 +4,7 @@ from scipy import interpolate
 import xarray as xr
 from numba import jit, prange
 from scipy.ndimage import map_coordinates
+from scipy.interpolate import interpn
 
 
 def get_damatrix_fromcalib2d(
@@ -522,6 +523,8 @@ def physical_unit_data(
 
     return corrected_data
 
+# fails due to memory allocation
+
 
 def physical_unit_data_2(
     image,
@@ -589,9 +592,10 @@ def physical_unit_data_2(
     #     jacobian_determinant
     # )
 
+    # this seems wrong.. but it does not accept non-regularly spaced outputs
     corrected_data = angular_interpolation_function(
-        coords[0],
-        coords[1],
+        e_correction,
+        angular_correction_matrix[:, 0]
     )*jacobian_determinant
 
     return corrected_data
@@ -691,7 +695,8 @@ def bilinear_interpolation(x_in, y_in, f_in, x_out, y_out):
 
     return f_out
 
-# both bilinear seem to work on 2 regular grids
+# this seems to fail to memory allocation problems
+# one should try
 
 
 def physical_unit_data_4(
@@ -737,9 +742,9 @@ def physical_unit_data_4(
         x_bins,
         y_bins,
         image,
-        e_correction_expand,
-        angular_correction_matrix
-    )*jacobian_determinant
+        e_correction_expand.flatten(),
+        angular_correction_matrix.flatten()
+    ).reshape(angular_correction_matrix.shape)*jacobian_determinant
 
     return corrected_data
 
@@ -789,5 +794,60 @@ def physical_unit_data_5(
                                       coords,
                                       order=1).reshape(angular_correction_matrix.shape)
                       * jacobian_determinant)
+
+    return corrected_data
+
+
+# wrapper for regular grid interpolator
+def physical_unit_data_6(
+    image,
+    angular_correction_matrix,
+    e_correction,
+    jacobian_determinant,
+    ek_axis,
+    angle_axis
+):
+    """_summary_
+
+    Args:
+        raw_data (_type_): _description_
+        angular_correction_matrix (_type_): _description_
+        e_correction (_type_): _description_
+        jacobian_determinant (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
+
+    # create 2d matrix with the
+    # ek coordinates
+    e_correction_expand = np.ones(angular_correction_matrix.shape)*e_correction
+
+    # Create a list of e and angle coordinates where to
+    # evaluate the interpolating
+    # function
+
+    coords = ((angular_correction_matrix,
+               e_correction_expand))
+
+    # these coords seems to be pixels..
+
+    x_bins = np.arange(0, image.shape[0], 1)
+    y_bins = np.arange(0, image.shape[1], 1)
+
+    print("x_bins-shape",  x_bins.shape)
+    print("y_bins-shape",  y_bins.shape)
+    print("image-shape",  image.shape)
+
+    points = (x_bins, y_bins)
+
+    corrected_data = (interpn(
+        points,
+        image,
+        coords,
+        method='splinef2d',
+        bounds_error=False,
+        fill_value=0)
+        * jacobian_determinant)
 
     return corrected_data
