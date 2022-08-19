@@ -1,6 +1,10 @@
 import numpy as np
 from scipy.interpolate import RegularGridInterpolator
-from scipy.interpolate import interp2d
+from scipy import interpolate
+import xarray as xr
+from numba import jit, prange
+from scipy.ndimage import map_coordinates
+
 
 def get_damatrix_fromcalib2d(
     lens_mode,
@@ -20,20 +24,19 @@ def get_damatrix_fromcalib2d(
     # retardation ratio
 
     #
-    # 
+    #
     work_function = config_dict["work_function"]
 
     rr = (kinetic_energy-work_function)/pass_energy
 
     # now we have a dilemma: in igor the rr was calculated including the work function,
-    # depending on the settings, one might have or not have the work function included in the 
-    # labview data acquisition.. 
-
+    # depending on the settings, one might have or not have the work function included in the
+    # labview data acquisition..
 
     # given the lens mode get all the retardatio ratios available
     rr_vec, damatrix_full = get_rr_da(lens_mode, config_dict)
     closest_rr_index = bisection(rr_vec, rr)
-    
+
     # return as the closest rr index the smallest in case of -1 output
     if closest_rr_index == -1:
         closest_rr_index = 0
@@ -74,7 +77,6 @@ def get_damatrix_fromcalib2d(
 # Auxiliary function to find the closest rr index
 # from https://stackoverflow.com/questions/2566412/
 # find-nearest-value-in-numpy-array
-
 
 
 def bisection(array, value):
@@ -119,7 +121,6 @@ def second_closest_rr(rr, rrvec, closest_rr_index):
         _type_: _description_
     """
 
-
     # commented, modified to correctly match igor bahaviour
     """ if closest_rr_index == 0:
         second_closest_rr_index = 1
@@ -136,27 +137,26 @@ def second_closest_rr(rr, rrvec, closest_rr_index):
                 second_closest_rr_index = closest_rr_index-1
             else:
                 second_closest_rr_index = closest_rr_index+1 """
-    
+
     if closest_rr_index == (rrvec.size-1):
         # we are the edge: the behaviour is to not change the index
-        second_closest_rr_index=closest_rr_index
+        second_closest_rr_index = closest_rr_index
     else:
-        second_closest_rr_index=closest_rr_index+1
+        second_closest_rr_index = closest_rr_index+1
 
     return second_closest_rr_index
-
 
 
 def get_rr_da(lens_mode, config_dict):
 
     rr_array = np.array(
-     list(config_dict["calib2d_dict"][lens_mode]["rr"])
+        list(config_dict["calib2d_dict"][lens_mode]["rr"])
     )
 
     dim1 = rr_array.shape[0]
     base_dict = config_dict["calib2d_dict"][
         lens_mode
-        ]["rr"]
+    ]["rr"]
     dim2 = len(base_dict[rr_array[0]])
 
     try:
@@ -241,7 +241,7 @@ def zinner(ek, angle, dapolymatrix):
     Returns:
         _type_: _description_
     """
- 
+
     out = 0
 
     for i in np.arange(0, dapolymatrix.shape[0], 1):
@@ -286,14 +286,11 @@ def mcp_position_mm(ek, angle, a_inner, dapolymatrix):
     Returns:
         _type_: _description_
     """
- 
 
     mask = np.less_equal(np.abs(angle), a_inner)
 
- 
-
     a_inner_vec = np.ones(angle.shape)*a_inner
- 
+
     result = np.where(
         mask, zinner(ek, angle, dapolymatrix),
         np.sign(angle)*(
@@ -343,16 +340,15 @@ def calculate_matrix_correction(
         kinetic_energy,
         pass_energy,
         eshift)
- 
+
     # de1 = [config_dict["calib2d_dict"]["De1"]]
     de1 = [config_dict["calib2d_dict"]["De1"]]
     erange = config_dict["calib2d_dict"]["eRange"]
     # ainner = scanparameters["aInner"]
     arange = config_dict["calib2d_dict"][lens_mode][
-            "default"
-            ]["aRange"]
+        "default"
+    ]["aRange"]
 
- 
     nx_pixel = config_dict["nx_pixel"]
     ny_pixel = config_dict["ny_pixel"]
     pixelsize = config_dict["pixel_size"]
@@ -361,18 +357,17 @@ def calculate_matrix_correction(
 
     nx_bins = int(nx_pixel/binning)
     ny_bins = int(ny_pixel/binning)
-    
-    
+
     ek_low = kinetic_energy + erange[0]*pass_energy
     ek_high = kinetic_energy + erange[1]*pass_energy
     # ek_step=(ek_high-ek_low)/nx_bins
 
-    # in igor we have 
+    # in igor we have
     # setscale/P x, EkinLow, (EkinHigh-EkinLow)/nx_pixel, "eV",
     # setscale/P y, AzimuthLow*1.2, (AzimuthHigh-AzimuthLow)*1.2/ny_pixel
-    
+
     # is the behaviour of arange more similar??
-    
+
     # assume an even number of pixels on the detector, seems reasonable
     ek_axis = np.linspace(ek_low, ek_high, nx_bins, endpoint=False)
     # ek_axis = np.arange(ek_low, ek_high, ek_step)
@@ -389,8 +384,7 @@ def calculate_matrix_correction(
 
     angle_axis = np.linspace(angle_low, angle_high, ny_bins, endpoint=False)
     # angle_axis = np.arange(angle_low, angle_high, angle_step)
-    
-    
+
     # the original program defines 2 waves,
     mcp_position_mm_matrix = np.zeros([nx_bins, ny_bins])
     angular_correction_matrix = np.zeros([nx_bins, ny_bins])
@@ -407,8 +401,6 @@ def calculate_matrix_correction(
     Ang_Offset_px = config_dict["Ang_Offset_px"]
     E_Offset_px = config_dict["E_Offset_px"]
 
-
-    
     angular_correction_matrix = (
         mcp_position_mm_matrix/magnification
         / (pixelsize*binning)
@@ -426,8 +418,8 @@ def calculate_matrix_correction(
         + E_Offset_px
     )
 
-    print(1/ pass_energy/float(de1[0])/magnification/(pixelsize*binning))
-    print(pass_energy,de1,magnification,pixelsize,binning)
+    print(1 / pass_energy/float(de1[0])/magnification/(pixelsize*binning))
+    print(pass_energy, de1, magnification, pixelsize, binning)
     # calculate Jacobian determinant
 
     # w_dyde = np.gradient(angular_correction_matrix, ek_axis, axis=1)
@@ -436,12 +428,11 @@ def calculate_matrix_correction(
     # w_dxde = np.gradient(e_correction, ek_axis, axis=0)
 
     jacobian_determinant = calculate_jacobian(
-                           angular_correction_matrix,
-                           e_correction,
-                           ek_axis,
-                           angle_axis
+        angular_correction_matrix,
+        e_correction,
+        ek_axis,
+        angle_axis
     )
-
 
     # attempt to update the dictionary
     # config_dict[""].update(elem)
@@ -450,7 +441,7 @@ def calculate_matrix_correction(
     #             kinetic_energy
 #             ]["ek_axis"]
     #         angle_axis = self._correction_matrix_dict[lens_mode][pass_energy][
-     #            kinetic_energy
+    #            kinetic_energy
     #         ]["angle_axis"]
     return (
         ek_axis, angle_axis, angular_correction_matrix,
@@ -502,30 +493,25 @@ def physical_unit_data(
               e_correction_expand.flatten())
     # these coords seems to be pixels..
 
-    x_bins = np.arange(0, image.shape[0], 1)
-    y_bins = np.arange(0, image.shape[1], 1)
+    #x_bins = np.arange(0, image.shape[0], 1)
+    #y_bins = np.arange(0, image.shape[1], 1)
 
+    x_bins = np.arange(0, image.shape[1], 1)
+    y_bins = np.arange(0, image.shape[0], 1)
+
+    print("x_bins-shape",  x_bins.shape)
+    print("y_bins-shape",  y_bins.shape)
+    print("image-shape",  image.shape)
     # create interpolation function
     angular_interpolation_function = RegularGridInterpolator(
         (x_bins, y_bins),
         image,
         # method='nearest',
-        method= 'linear',
+        method='linear',
         bounds_error=False,
         fill_value=0,
     )
-    
-    
-    #angular_interpolation_function = interp2d(
-    #    x_bins, 
-    #    y_bins,
-    #    image,
-    #    # method='nearest',
-    #    kind= 'linear',
-    #    bounds_error=False,
-    #    fill_value=0
-    #)
-    
+
     corrected_data = (
         np.reshape(
             angular_interpolation_function(coords),
@@ -533,5 +519,275 @@ def physical_unit_data(
         ) *
         jacobian_determinant
     )
+
+    return corrected_data
+
+
+def physical_unit_data_2(
+    image,
+    angular_correction_matrix,
+    e_correction,
+    jacobian_determinant
+):
+    """_summary_
+
+    Args:
+        raw_data (_type_): _description_
+        angular_correction_matrix (_type_): _description_
+        e_correction (_type_): _description_
+        jacobian_determinant (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
+
+    # create 2d matrix with the
+    # ek coordinates
+    e_correction_expand = np.ones(angular_correction_matrix.shape)*e_correction
+
+    # Create a list of e and angle coordinates where to
+    # evaluate the interpolating
+    # function
+
+    coords = (angular_correction_matrix.flatten(),
+              e_correction_expand.flatten())
+    # these coords seems to be pixels..
+
+    #x_bins = np.arange(0, image.shape[0], 1)
+    #y_bins = np.arange(0, image.shape[1], 1)
+
+    x_bins = np.arange(0, image.shape[1], 1)
+    y_bins = np.arange(0, image.shape[0], 1)
+
+    print("x_bins-shape",  x_bins.shape)
+    print("y_bins-shape",  y_bins.shape)
+    print("image-shape",  image.shape)
+    # create interpolation function
+    # angular_interpolation_function = RegularGridInterpolator(
+    #     (x_bins, y_bins),
+    #     image,
+    # method='nearest',
+    #     method= 'linear',
+    #     bounds_error=False,
+    #     fill_value=0,
+    # )
+
+    angular_interpolation_function = interpolate.interp2d(
+        x_bins,
+        y_bins,
+        image,
+        kind='linear'
+        # bounds_error=False,
+        # fill_value=0
+    )
+
+    # corrected_data = (
+    #     np.reshape(
+    #         angular_interpolation_function(coords),
+    #         angular_correction_matrix.shape,
+    #     ) *
+    #     jacobian_determinant
+    # )
+
+    corrected_data = angular_interpolation_function(
+        coords[0],
+        coords[1],
+    )*jacobian_determinant
+
+    return corrected_data
+
+
+def physical_unit_data_3(
+    image,
+    angular_correction_matrix,
+    e_correction,
+    jacobian_determinant,
+    ek_axis,
+    angle_axis
+):
+    """_summary_
+
+    Args:
+        raw_data (_type_): _description_
+        angular_correction_matrix (_type_): _description_
+        e_correction (_type_): _description_
+        jacobian_determinant (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
+
+    # create 2d matrix with the
+    # ek coordinates
+    e_correction_expand = np.ones(angular_correction_matrix.shape)*e_correction
+
+    # Create a list of e and angle coordinates where to
+    # evaluate the interpolating
+    # function
+
+    coords = (angular_correction_matrix.flatten(),
+              e_correction_expand.flatten())
+    # these coords seems to be pixels..
+
+    x_bins = np.arange(0, image.shape[0], 1)
+    y_bins = np.arange(0, image.shape[1], 1)
+
+    print("x_bins-shape",  x_bins.shape)
+    print("y_bins-shape",  y_bins.shape)
+    print("image-shape",  image.shape)
+
+    # make the xarray
+    image_xr = xr.DataArray(image, dims=["x", "y"],
+                            coords={"x": x_bins, "y": y_bins}
+                            )
+
+    angle_xr = xr.DataArray(angular_correction_matrix,
+                            dims=["angle", "energy"],
+                            coords={"energy": ek_axis, "angle": angle_axis}
+                            )
+
+    energy_xr = xr.DataArray(e_correction,
+                             dims=["energy"],
+                             coords={"energy": ek_axis}
+                             )
+
+    corrected_data = (image_xr.interp(x=angle_xr, y=energy_xr).to_numpy() *
+                      jacobian_determinant)
+
+    return corrected_data
+
+
+# numba accelerated bilinear interpolation..
+# https://stackoverflow.com/questions/8661537/
+# how-to-perform-bilinear-interpolation-in-python
+
+@jit(nopython=True, fastmath=True, nogil=True, cache=True, parallel=True)
+def bilinear_interpolation(x_in, y_in, f_in, x_out, y_out):
+    f_out = np.zeros((y_out.size, x_out.size))
+
+    for i in prange(f_out.shape[1]):
+        idx = np.searchsorted(x_in, x_out[i])
+
+        x1 = x_in[idx-1]
+        x2 = x_in[idx]
+        x = x_out[i]
+
+        for j in prange(f_out.shape[0]):
+            idy = np.searchsorted(y_in, y_out[j])
+            y1 = y_in[idy-1]
+            y2 = y_in[idy]
+            y = y_out[j]
+
+            f11 = f_in[idy-1, idx-1]
+            f21 = f_in[idy-1, idx]
+            f12 = f_in[idy, idx-1]
+            f22 = f_in[idy, idx]
+
+            f_out[j, i] = ((f11 * (x2 - x) * (y2 - y) +
+                            f21 * (x - x1) * (y2 - y) +
+                            f12 * (x2 - x) * (y - y1) +
+                            f22 * (x - x1) * (y - y1)) /
+                           ((x2 - x1) * (y2 - y1)))
+
+    return f_out
+
+# both bilinear seem to work on 2 regular grids
+
+
+def physical_unit_data_4(
+    image,
+    angular_correction_matrix,
+    e_correction,
+    jacobian_determinant,
+    ek_axis,
+    angle_axis
+):
+    """_summary_
+
+    Args:
+        raw_data (_type_): _description_
+        angular_correction_matrix (_type_): _description_
+        e_correction (_type_): _description_
+        jacobian_determinant (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
+
+    # create 2d matrix with the
+    # ek coordinates
+    e_correction_expand = np.ones(angular_correction_matrix.shape)*e_correction
+
+    # Create a list of e and angle coordinates where to
+    # evaluate the interpolating
+    # function
+
+    coords = (angular_correction_matrix.flatten(),
+              e_correction_expand.flatten())
+    # these coords seems to be pixels..
+
+    x_bins = np.arange(0, image.shape[0], 1)
+    y_bins = np.arange(0, image.shape[1], 1)
+
+    print("x_bins-shape",  x_bins.shape)
+    print("y_bins-shape",  y_bins.shape)
+    print("image-shape",  image.shape)
+
+    corrected_data = bilinear_interpolation(
+        x_bins,
+        y_bins,
+        image,
+        e_correction_expand,
+        angular_correction_matrix
+    )*jacobian_determinant
+
+    return corrected_data
+
+
+# both bilinear seem to work on 2 regular grids
+def physical_unit_data_5(
+    image,
+    angular_correction_matrix,
+    e_correction,
+    jacobian_determinant,
+    ek_axis,
+    angle_axis
+):
+    """_summary_
+
+    Args:
+        raw_data (_type_): _description_
+        angular_correction_matrix (_type_): _description_
+        e_correction (_type_): _description_
+        jacobian_determinant (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
+
+    # create 2d matrix with the
+    # ek coordinates
+    e_correction_expand = np.ones(angular_correction_matrix.shape)*e_correction
+
+    # Create a list of e and angle coordinates where to
+    # evaluate the interpolating
+    # function
+
+    coords = np.array((angular_correction_matrix.flatten(),
+                      e_correction_expand.flatten()))
+    print(coords.shape)
+    # these coords seems to be pixels..
+
+    x_bins = np.arange(0, image.shape[0], 1)
+    y_bins = np.arange(0, image.shape[1], 1)
+
+    print("x_bins-shape",  x_bins.shape)
+    print("y_bins-shape",  y_bins.shape)
+    print("image-shape",  image.shape)
+
+    corrected_data = (map_coordinates(image,
+                                      coords,
+                                      order=1).reshape(angular_correction_matrix.shape)
+                      * jacobian_determinant)
 
     return corrected_data
