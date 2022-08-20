@@ -399,7 +399,7 @@ def read_calib2d(filepath: str) -> List[Any]:
     return listf
 
 
-def parse_calib2d_to_dict(filepath: str) -> dict:
+def parse_calib2d_to_dict(filepath: str) -> Dict[Any, Any]:
     """Parses the given calib2d file into a nested dictionary structure
     to provide parameters for image conversion.
 
