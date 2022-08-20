@@ -2,6 +2,8 @@
 
 """
 import os
+from typing import Any
+from typing import Dict
 from typing import Union
 
 import numpy as np
@@ -29,8 +31,8 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
 
     def __init__(
         self,
-        metadata: dict = {},
-        config: Union[dict, str] = {},
+        metadata: Dict[Any, Any] = {},
+        config: Union[Dict[Any, Any], str] = {},
     ):
 
         self._config = parse_config(config)
@@ -46,7 +48,7 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
 
         self._attributes = MetaHandler(meta=metadata)
 
-        self._correction_matrix_dict = {}
+        self._correction_matrix_dict: Dict[Any, Any] = {}
 
     def __repr__(self):
         if self._config is None:
