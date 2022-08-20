@@ -2,6 +2,9 @@
 
 """
 from pathlib import Path
+from typing import Any
+from typing import Dict
+from typing import List
 from typing import Sequence
 from typing import Union
 
@@ -63,13 +66,13 @@ def recursive_parse_metadata(
             dictionary[key] = recursive_parse_metadata(value)
 
     else:
-        dictionary = node[...]
+        entry = node[...]
         try:
-            dictionary = dictionary.item()
+            dictionary = entry.item()
             if isinstance(dictionary, (bytes, bytearray)):
                 dictionary = dictionary.decode()
         except ValueError:
-            pass
+            dictionary = entry
 
     return dictionary
 
@@ -333,7 +336,7 @@ def load_tiff(
     return xr.DataArray(data=data, coords=coords, dims=dims, attrs=attrs)
 
 
-def get_pair_from_list(list_line: list) -> list:
+def get_pair_from_list(list_line: List[Any]) -> List[Any]:
     """Returns key value pair for the read function
     where a line in the file contains '=' character.
 
@@ -363,7 +366,7 @@ def get_pair_from_list(list_line: list) -> list:
     return [(k, v)]
 
 
-def read_calib2d(filepath: str) -> list:
+def read_calib2d(filepath: str) -> List[Any]:
     """Reads the calib2d file into a convenient list for the parser
     function containing useful and cleaned data.
 
@@ -376,7 +379,7 @@ def read_calib2d(filepath: str) -> list:
     with open(filepath, encoding="utf-8") as file:
         lines = file.readlines()
 
-    listf = []
+    listf: List[Any] = []
     for line in lines:
 
         if line[0] == "\n" or line[0] == "#":
@@ -409,7 +412,7 @@ def parse_calib2d_to_dict(filepath: str) -> dict:
     """
     listf = read_calib2d(filepath)
 
-    calib_dict = {}
+    calib_dict: Dict[Any, Any] = {}
     mode = None
     retardation_ratio = None
     for elem in listf:

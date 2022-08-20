@@ -1,3 +1,5 @@
+"""Helper functions for tests
+"""
 import numpy as np
 import xarray as xr
 
