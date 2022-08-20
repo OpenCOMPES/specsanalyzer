@@ -5,6 +5,8 @@ import xarray as xr
 from numba import jit, prange
 from scipy.ndimage import map_coordinates
 from scipy.interpolate import interpn
+from interpolation.splines import eval_linear
+from interpolation.splines import UCGrid, CGrid, nodes
 
 
 def get_damatrix_fromcalib2d(
@@ -132,7 +134,7 @@ def second_closest_rr(rr, rrvec, closest_rr_index):
             # we are not at the edges, compare the neighbors and get the
             # closest
 
-            #######modified to exatly match igor behaviour, 
+            # modified to exatly match igor behaviour,
 
             if (rr < rrvec[closest_rr_index]):
                 second_closest_rr_index = closest_rr_index-1
@@ -188,7 +190,7 @@ def calculate_polynomial_coef_da(
     pass_energy,
     eshift
 ):
-    """Given the da coeffiecients contained in the 
+    """Given the da coeffiecients contained in the
     scanpareters, the program calculate the energy range based
     on the eshift parameter and fits a second order polinomial
     to the tabulated values. The polinomial coefficients
@@ -199,7 +201,7 @@ def calculate_polynomial_coef_da(
         scanparameters (_dict_): scan parameter dictionary
 
     Returns:
-        _np.array_: dapolymatrix, a matrix with polinomial 
+        _np.array_: dapolymatrix, a matrix with polinomial
     """
 
     # get the Das from the damatrix
@@ -253,7 +255,7 @@ def zinner(ek, angle, dapolymatrix):
 
 
 def zinner_diff(ek, angle, dapolymatrix):
-    """_summary_ poly(D1, Ek ) + 3*10^-2*poly(D3, Ek )*(Ang)^2 
+    """_summary_ poly(D1, Ek ) + 3*10^-2*poly(D3, Ek )*(Ang)^2
     + 5*10^-4*poly(D5, Ek )*(Ang)^4 + 7*10^-6*poly(D7, Ek )*(Ang)^6
     Args:
         ek (_type_): _description_
@@ -494,8 +496,8 @@ def physical_unit_data(
               e_correction_expand.flatten())
     # these coords seems to be pixels..
 
-    #x_bins = np.arange(0, image.shape[0], 1)
-    #y_bins = np.arange(0, image.shape[1], 1)
+    # x_bins = np.arange(0, image.shape[0], 1)
+    # y_bins = np.arange(0, image.shape[1], 1)
 
     x_bins = np.arange(0, image.shape[1], 1)
     y_bins = np.arange(0, image.shape[0], 1)
@@ -556,8 +558,8 @@ def physical_unit_data_2(
               e_correction_expand.flatten())
     # these coords seems to be pixels..
 
-    #x_bins = np.arange(0, image.shape[0], 1)
-    #y_bins = np.arange(0, image.shape[1], 1)
+    # x_bins = np.arange(0, image.shape[0], 1)
+    # y_bins = np.arange(0, image.shape[1], 1)
 
     x_bins = np.arange(0, image.shape[1], 1)
     y_bins = np.arange(0, image.shape[0], 1)
@@ -848,6 +850,67 @@ def physical_unit_data_6(
         method='splinef2d',
         bounds_error=False,
         fill_value=0)
+        * jacobian_determinant)
+
+    return corrected_data
+
+
+# Using the interpolation package
+# in theory, numba implementation
+# https://www.econforge.org/interpolation.py/
+
+
+def physical_unit_data_7(
+    image,
+    angular_correction_matrix,
+    e_correction,
+    jacobian_determinant,
+    ek_axis,
+    angle_axis
+):
+    """_summary_
+
+    Args:
+        raw_data (_type_): _description_
+        angular_correction_matrix (_type_): _description_
+        e_correction (_type_): _description_
+        jacobian_determinant (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
+
+    # create 2d matrix with the
+    # ek coordinates
+    e_correction_expand = np.ones(angular_correction_matrix.shape)*e_correction
+
+    
+
+    x_bins = np.arange(0, image.shape[0], 1)
+    y_bins = np.arange(0, image.shape[1], 1)
+    image_x_pts = image.shape[0]
+    image_y_pts = image.shape[1]
+    
+
+    # uniform cartesian grid
+    grid = UCGrid((0.0, float(image_x_pts-1), image_x_pts),
+                  (0.0, float(image_y_pts-1), image_y_pts-1))
+    # get grid points
+    # gp = nodes(grid)
+
+    # coordinates for evaluation
+    coords = (angular_correction_matrix.flatten(),
+              e_correction_expand.flatten())
+
+    print("x_bins-shape",  x_bins.shape)
+    print("y_bins-shape",  y_bins.shape)
+    print("image-shape",  image.shape)
+    print("UCgrid ", grid)
+
+    corrected_data=(eval_linear(
+        grid,
+        image,
+        coords).reshape(angular_correction_matrix.shape)
         * jacobian_determinant)
 
     return corrected_data
