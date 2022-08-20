@@ -171,9 +171,9 @@ def load_h5(faddr: str, mode: str = "r") -> xr.DataArray:
         xarray = xr.DataArray(data, dims=bin_names, coords=coords)
 
         try:
-            for axis in bin_axes:
-                xarray[bin_names[axis]].attrs["unit"] = h5_file["axes"][
-                    axis
+            for name in bin_names:
+                xarray[bin_names[name]].attrs["unit"] = h5_file["axes"][
+                    name
                 ].attrs["unit"]
             xarray.attrs["units"] = h5_file["binned"]["BinnedData"].attrs[
                 "units"
