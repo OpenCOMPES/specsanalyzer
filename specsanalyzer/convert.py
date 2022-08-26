@@ -47,7 +47,7 @@ def get_damatrix_fromcalib2d(
     # return as the closest rr index the smallest in case of -1 output
     if closest_rr_index == -1:
         closest_rr_index = 0
-    print("closest_rr_index= ", closest_rr_index)
+    # print("closest_rr_index= ", closest_rr_index)
     # now compare the distance with the neighboring indexes,
     # we need the second nearest rr
     second_closest_rr_index = second_closest_rr(rr, rr_vec,
@@ -61,7 +61,7 @@ def get_damatrix_fromcalib2d(
     rr_index = np.arange(0, rr_vec.shape[0], 1)
     rr_factor = np.interp(rr, rr_vec, rr_index)-closest_rr_index
 
-    print("rr_factor= ", rr_factor)
+    # print("rr_factor= ", rr_factor)
 
     damatrix_close = damatrix_full[closest_rr_index][:][:]
     damatrix_second = damatrix_full[second_closest_rr_index][:][:]
@@ -425,12 +425,12 @@ def calculate_matrix_correction(
         + E_Offset_px
     )
 
-    print(1 / pass_energy/float(de1[0])/magnification/(pixelsize*binning))
-    print("pass_energy: ", pass_energy,
-    "de1: ", de1,
-    "magnification: ", magnification,
-    "pixelsize: ", pixelsize, 
-    "binning: ", binning)
+    # print(1 / pass_energy/float(de1[0])/magnification/(pixelsize*binning))
+    # print("pass_energy: ", pass_energy,
+    # "de1: ", de1,
+    # "magnification: ", magnification,
+    # "pixelsize: ", pixelsize, 
+    # "binning: ", binning)
     # calculate Jacobian determinant
 
     # w_dyde = np.gradient(angular_correction_matrix, ek_axis, axis=1)
@@ -509,17 +509,16 @@ def physical_unit_data(
     # x_bins = np.arange(0, image.shape[0], 1)
     # y_bins = np.arange(0, image.shape[1], 1)
 
-    x_bins = np.arange(0, image.shape[1], 1)
-    y_bins = np.arange(0, image.shape[0], 1)
+    x_bins = np.arange(0, image.shape[0], 1)
+    y_bins = np.arange(0, image.shape[1], 1)
 
-    print("x_bins-shape",  x_bins.shape)
-    print("y_bins-shape",  y_bins.shape)
-    print("image-shape",  image.shape)
+    # print("x_bins-shape",  x_bins.shape)
+    # print("y_bins-shape",  y_bins.shape)
+    # print("image-shape",  image.shape)
     # create interpolation function
     angular_interpolation_function = RegularGridInterpolator(
         (x_bins, y_bins),
         image,
-        # method='nearest',
         method='linear',
         bounds_error=False,
         fill_value=0,
@@ -647,9 +646,9 @@ def physical_unit_data_3(
     x_bins = np.arange(0, image.shape[0], 1)
     y_bins = np.arange(0, image.shape[1], 1)
 
-    print("x_bins-shape",  x_bins.shape)
-    print("y_bins-shape",  y_bins.shape)
-    print("image-shape",  image.shape)
+    # print("x_bins-shape",  x_bins.shape)
+    # print("y_bins-shape",  y_bins.shape)
+    # print("image-shape",  image.shape)
 
     # make the xarray
     image_xr = xr.DataArray(image, dims=["x", "y"],
@@ -788,15 +787,15 @@ def physical_unit_data_5(
 
     coords = np.array((angular_correction_matrix.flatten(),
                       e_correction_expand.flatten()))
-    print(coords.shape)
+    # print(coords.shape)
     # these coords seems to be pixels..
 
     x_bins = np.arange(0, image.shape[0], 1)
     y_bins = np.arange(0, image.shape[1], 1)
 
-    print("x_bins-shape",  x_bins.shape)
-    print("y_bins-shape",  y_bins.shape)
-    print("image-shape",  image.shape)
+    # print("x_bins-shape",  x_bins.shape)
+    # print("y_bins-shape",  y_bins.shape)
+    # print("image-shape",  image.shape)
 
     corrected_data = (map_coordinates(image,
                                       coords,
@@ -843,9 +842,9 @@ def physical_unit_data_6(
     x_bins = np.arange(0, image.shape[0], 1)
     y_bins = np.arange(0, image.shape[1], 1)
 
-    print("x_bins-shape",  x_bins.shape)
-    print("y_bins-shape",  y_bins.shape)
-    print("image-shape",  image.shape)
+    # print("x_bins-shape",  x_bins.shape)
+    # print("y_bins-shape",  y_bins.shape)
+    # print("image-shape",  image.shape)
 
     points = (x_bins, y_bins)
 
@@ -853,7 +852,7 @@ def physical_unit_data_6(
         points,
         image,
         coords,
-        method='splinef2d',
+        method='linear',
         bounds_error=False,
         fill_value=0)
         * jacobian_determinant)
@@ -907,15 +906,15 @@ def physical_unit_data_7(
     # Modify for coords for the eval_linear function
     coords=np.transpose(coords)
     coords=np.array(coords,order="C")
-    print("numba type of coords = ", nb.typeof(coords))
+    # print("numba type of coords = ", nb.typeof(coords))
 
     # pre-allocate result
     corrected_data=np.zeros(angular_correction_matrix.shape)
 
-    print("x_bins-shape",  x_bins.shape)
-    print("y_bins-shape",  y_bins.shape)
-    print("image-shape",  image.shape)
-    print("UCgrid ", grid)
+    # print("x_bins-shape",  x_bins.shape)
+    # print("y_bins-shape",  y_bins.shape)
+    # print("image-shape",  image.shape)
+    # print("UCgrid ", grid)
 
     corrected_data=(eval_linear(
         grid,
