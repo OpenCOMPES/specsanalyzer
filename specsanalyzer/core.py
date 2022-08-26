@@ -12,6 +12,8 @@ from specsanalyzer.img_tools import fourier_filter_2d
 from specsanalyzer.metadata import MetaHandler
 from specsanalyzer.settings import parse_config
 
+
+import specsanalyzer.convert
 # from typing import Any
 # from typing import List
 # from typing import Tuple
@@ -146,20 +148,22 @@ class SpecsAnalyzer:
             # calculate_polynomial_coef_da inside.
             # TODO: store result in dictionary.
 
-        # conv_img = physical_unit_data_6(
-        #    img,
-        #    angular_correction_matrix,
-        #    e_correction,
-        #    jacobian_determinant,
+
+        
+        # conv_img = specsanalyzer.convert.physical_unit_data_9(
+        #     img,
+        #     angular_correction_matrix,
+        #     e_correction,
+        #     jacobian_determinant,
         # )
 
-        conv_img = physical_unit_data_7(
-            img,
-            angular_correction_matrix,
-            e_correction,
-            jacobian_determinant,
-            ek_axis,
-            angle_axis
+        conv_img = specsanalyzer.convert.physical_unit_data_7(
+           img,
+           angular_correction_matrix,
+           e_correction,
+           jacobian_determinant,
+           ek_axis,
+           angle_axis
         )
 
         # TODO: make function compatible, check interpolation functions.

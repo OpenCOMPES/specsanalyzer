@@ -1,13 +1,17 @@
+from pyexpat.errors import XML_ERROR_UNKNOWN_ENCODING
 import numpy as np
+
 from scipy.interpolate import RegularGridInterpolator
 from scipy import interpolate
-import xarray as xr
-from numba import jit, prange
 from scipy.ndimage import map_coordinates
-from scipy.interpolate import interpn
+from scipy.interpolate import interpn, RectBivariateSpline, griddata, LinearNDInterpolator
+
+
 from interpolation.splines import eval_linear
 from interpolation.splines import UCGrid, CGrid, nodes
-
+import xarray as xr
+from numba import jit, prange
+import numba as nb
 
 def get_damatrix_fromcalib2d(
     lens_mode,
@@ -422,7 +426,11 @@ def calculate_matrix_correction(
     )
 
     print(1 / pass_energy/float(de1[0])/magnification/(pixelsize*binning))
-    print(pass_energy, de1, magnification, pixelsize, binning)
+    print("pass_energy: ", pass_energy,
+    "de1: ", de1,
+    "magnification: ", magnification,
+    "pixelsize: ", pixelsize, 
+    "binning: ", binning)
     # calculate Jacobian determinant
 
     # w_dyde = np.gradient(angular_correction_matrix, ek_axis, axis=1)
@@ -466,6 +474,8 @@ def calculate_jacobian(
     return jacobian_determinant
 
 
+
+# original function using regular grid interpolator
 def physical_unit_data(
     image,
     angular_correction_matrix,
@@ -526,8 +536,7 @@ def physical_unit_data(
     return corrected_data
 
 # fails due to memory allocation
-
-
+# interpolate.interp2d
 def physical_unit_data_2(
     image,
     angular_correction_matrix,
@@ -602,7 +611,7 @@ def physical_unit_data_2(
 
     return corrected_data
 
-
+# Using xarray internal interpolation functions
 def physical_unit_data_3(
     image,
     angular_correction_matrix,
@@ -666,7 +675,6 @@ def physical_unit_data_3(
 # numba accelerated bilinear interpolation..
 # https://stackoverflow.com/questions/8661537/
 # how-to-perform-bilinear-interpolation-in-python
-
 @jit(nopython=True, fastmath=True, nogil=True, cache=True, parallel=True)
 def bilinear_interpolation(x_in, y_in, f_in, x_out, y_out):
     f_out = np.zeros((y_out.size, x_out.size))
@@ -697,10 +705,7 @@ def bilinear_interpolation(x_in, y_in, f_in, x_out, y_out):
 
     return f_out
 
-# this seems to fail to memory allocation problems
-# one should try
-
-
+# numba bilinear interpolation
 def physical_unit_data_4(
     image,
     angular_correction_matrix,
@@ -749,9 +754,10 @@ def physical_unit_data_4(
     ).reshape(angular_correction_matrix.shape)*jacobian_determinant
 
     return corrected_data
+# this seems to fail to memory allocation problems
 
 
-# both bilinear seem to work on 2 regular grids
+# map_coordinates function
 def physical_unit_data_5(
     image,
     angular_correction_matrix,
@@ -800,7 +806,7 @@ def physical_unit_data_5(
     return corrected_data
 
 
-# wrapper for regular grid interpolator
+# interpn, wrapper for regular grid interpolator simailar to original version
 def physical_unit_data_6(
     image,
     angular_correction_matrix,
@@ -858,8 +864,6 @@ def physical_unit_data_6(
 # Using the interpolation package
 # in theory, numba implementation
 # https://www.econforge.org/interpolation.py/
-
-
 def physical_unit_data_7(
     image,
     angular_correction_matrix,
@@ -884,23 +888,29 @@ def physical_unit_data_7(
     # ek coordinates
     e_correction_expand = np.ones(angular_correction_matrix.shape)*e_correction
 
-    
-
-    x_bins = np.arange(0, image.shape[0], 1)
-    y_bins = np.arange(0, image.shape[1], 1)
+    x_bins = np.arange(0, image.shape[0], 1).astype("float")
+    y_bins = np.arange(0, image.shape[1], 1).astype("float")
     image_x_pts = image.shape[0]
     image_y_pts = image.shape[1]
     
 
     # uniform cartesian grid
-    grid = UCGrid((0.0, float(image_x_pts-1), image_x_pts),
-                  (0.0, float(image_y_pts-1), image_y_pts-1))
+    grid = UCGrid((np.min(x_bins), np.max(x_bins), image_x_pts),
+                  (np.min(y_bins), np.max(y_bins), image_y_pts))
     # get grid points
     # gp = nodes(grid)
 
+
     # coordinates for evaluation
-    coords = (angular_correction_matrix.flatten(),
-              e_correction_expand.flatten())
+    coords = np.array((np.transpose(angular_correction_matrix.flatten()),
+              np.transpose(e_correction_expand.flatten())))
+    # Modify for coords for the eval_linear function
+    coords=np.transpose(coords)
+    coords=np.array(coords,order="C")
+    print("numba type of coords = ", nb.typeof(coords))
+
+    # pre-allocate result
+    corrected_data=np.zeros(angular_correction_matrix.shape)
 
     print("x_bins-shape",  x_bins.shape)
     print("y_bins-shape",  y_bins.shape)
@@ -914,3 +924,156 @@ def physical_unit_data_7(
         * jacobian_determinant)
 
     return corrected_data
+
+
+# LAURENZ SUGGESTIONS
+# scipy.interpolate.RectBivariateSpline
+def physical_unit_data_8(
+    image,
+    angular_correction_matrix,
+    e_correction,
+    jacobian_determinant,
+):
+    """_summary_
+
+    Args:
+        raw_data (_type_): _description_
+        angular_correction_matrix (_type_): _description_
+        e_correction (_type_): _description_
+        jacobian_determinant (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
+
+    # create 2d matrix with the
+    # ek coordinates
+    e_correction_expand = np.ones(angular_correction_matrix.shape)*e_correction
+
+    # Create a list of e and angle coordinates where to
+    # evaluate the interpolating
+    # function
+
+    # coords = (angular_correction_matrix.flatten(),
+    #          e_correction_expand.flatten())
+    # these coords seems to be pixels..
+
+    # x_bins = np.arange(0, image.shape[0], 1)
+    # y_bins = np.arange(0, image.shape[1], 1)
+
+    x_bins = np.arange(0, image.shape[0], 1)
+    y_bins = np.arange(0, image.shape[1], 1)
+
+    print("x_bins-shape",  x_bins.shape)
+    print("y_bins-shape",  y_bins.shape)
+    print("image-shape",  image.shape)
+    # create interpolation function
+    angular_interpolation_function = RectBivariateSpline(x_bins, y_bins, image)
+    # define new coordinates
+   
+    x_bins_new= np.sort(angular_correction_matrix,axis=None)
+    y_bins_new= np.sort(e_correction_expand,axis=None)
+
+    # print(x_bins_new.shape) 
+    # print(y_bins_new.shape) 
+    
+    corrected_data = angular_interpolation_function(x_bins_new,y_bins_new)
+    
+    
+    """ (
+        np.reshape(
+            angular_interpolation_function(x_bins_new,y_bins_new),
+            angular_correction_matrix.shape,
+        ) *
+        jacobian_determinant
+    )
+ """
+    return corrected_data
+#I get an error like
+# MemoryError                               Traceback (most recent call last)
+# MemoryError: Unable to allocate 57.8 GiB for an array with shape (88064, 88064) and data type float64
+
+
+# LAURENZ SUGGESTIONS
+# scipy.interpolate.griddata
+# this seems a wrapper for the NearestNDInterpolator,  
+# LinearNDInterpolator ,
+# CloughTocher2DInterpolator functions
+# depending on the method paramter
+# this cannot work as the coordinates where we want to interpolate are not an uniform grid..
+# let's try directly the linearND
+# this also does not seem to work on our regualry spaced grid..seems to give problems with the 
+# triangulatio function, the example on the scipy uses a rando x and y distribution of input points..
+def physical_unit_data_9(
+    image,
+    angular_correction_matrix,
+    e_correction,
+    jacobian_determinant,
+):
+    """_summary_
+
+    Args:
+        raw_data (_type_): _description_
+        angular_correction_matrix (_type_): _description_
+        e_correction (_type_): _description_
+        jacobian_determinant (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
+
+    # create 2d matrix with the
+    # ek coordinates
+    
+    e_correction_expand = np.ones(angular_correction_matrix.shape)*e_correction
+
+
+    
+    # x_bins = np.arange(0, image.shape[0], 1)
+    # y_bins = np.arange(0, image.shape[1], 1)
+
+    x_bins = np.arange(0, image.shape[0], 1)
+    y_bins = np.arange(0, image.shape[1], 1)
+
+    print("x_bins-shape",  x_bins.shape)
+    print("y_bins-shape",  y_bins.shape)
+    print("image-shape",  image.shape)
+    # create interpolation function
+
+    meshcoords=list(zip(x_bins, y_bins))
+
+    angular_interpolation_function = LinearNDInterpolator( meshcoords, image)
+    
+    # define new coordinates
+    # Create a list of e and angle coordinates where to
+    # evaluate the interpolating
+    # function
+
+    x_bins_new = angular_correction_matrix.flatten(),
+    y_bins_new = e_correction_expand.flatten()
+    
+    corrected_data= angular_interpolation_function(angular_correction_matrix,e_correction_expand)
+
+    # corrected_data = (
+    #     np.reshape(
+    #         angular_interpolation_function(e_correction_expand,angular_correction_matrix),
+    #         angular_correction_matrix.shape,
+    #     ) *
+    #     jacobian_determinant
+    # )
+    
+    
+    """ (
+        np.reshape(
+            angular_interpolation_function(x_bins_new,y_bins_new),
+            angular_correction_matrix.shape,
+        ) *
+        jacobian_determinant
+    )
+ """
+    return corrected_data
+
+
+
+
+#scipy.interpolate.LinearNDInterpolator
