@@ -129,7 +129,7 @@ class SpecsAnalyzer:
                 pass_energy
             ][kinetic_energy]["jacobian_determinant"]
         except KeyError:
-            print("New correction matrix")
+            # print("New correction matrix")
             (
                 ek_axis,
                 angle_axis,
@@ -150,14 +150,14 @@ class SpecsAnalyzer:
 
 
         
-        # conv_img = specsanalyzer.convert.physical_unit_data_9(
+        # conv_img = specsanalyzer.convert.physical_unit_data(
         #     img,
         #     angular_correction_matrix,
         #     e_correction,
         #     jacobian_determinant,
         # )
 
-        conv_img = specsanalyzer.convert.physical_unit_data_7(
+        conv_img = specsanalyzer.convert.physical_unit_data_6(
            img,
            angular_correction_matrix,
            e_correction,
