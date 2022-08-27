@@ -1,3 +1,5 @@
+"""This is a code that performs several tests for the convert functions
+"""
 import numpy as np
 
 # import pytest
@@ -8,8 +10,8 @@ import numpy as np
 # from specsanalyzer.convert import calculate_polynomial_coef_da
 # from specsanalyzer.convert import mcp_position_mm
 
-# test based on the file 000.tsv of scan 9159, EPFL data, 
-# manually imported the igor data in 
+# test based on the file 000.tsv of scan 9159, EPFL data,
+# manually imported the igor data in
 # '../tests/data/dataEPFL/igor_result_000'
 
 
@@ -17,7 +19,6 @@ def test_rr():
     return "hello"
 
 
-
-
 def test_convert():
+    """Test dummy"""
     np.testing.assert_allclose(1, 1)
