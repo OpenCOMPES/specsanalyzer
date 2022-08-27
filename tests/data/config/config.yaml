@@ -3,6 +3,7 @@ nx_pixel: 1376
 ny_pixel: 1024
 pixel_size: 0.00645
 magnification: 4.54
+work_function: 4.58
 Ang_Offset_px: 0
 E_Offset_px: 0
 apply_fft_filter: True
