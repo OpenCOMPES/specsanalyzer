@@ -1,4 +1,9 @@
+"""This is the specsanalyzer core class
+
+"""
 import os
+from typing import Any
+from typing import Dict
 from typing import Union
 
 import numpy as np
@@ -21,13 +26,13 @@ from specsanalyzer.settings import parse_config
 package_dir = os.path.dirname(__file__)
 
 
-class SpecsAnalyzer:
+class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
     """[summary]"""
 
     def __init__(
         self,
-        metadata: dict = {},
-        config: Union[dict, str] = {},
+        metadata: Dict[Any, Any] = {},
+        config: Union[Dict[Any, Any], str] = {},
     ):
 
         self._config = parse_config(config)
@@ -43,15 +48,26 @@ class SpecsAnalyzer:
 
         self._attributes = MetaHandler(meta=metadata)
 
-        self._correction_matrix_dict = {}
+        self._correction_matrix_dict: Dict[Any, Any] = {}
 
     def __repr__(self):
         if self._config is None:
-            s = "No configuration available"
+            pretty_str = "No configuration available"
         else:
-            s = print(self._config)
+            for key in self._config:
+                pretty_str += print(f"{self._config[key]}\n")
         # TODO Proper report with scan number, dimensions, configuration etc.
-        return s if s is not None else ""
+        return pretty_str if pretty_str is not None else ""
+
+    @property
+    def config(self):
+        """Get config"""
+        return self._config
+
+    @config.setter
+    def config(self, config: Union[dict, str]):
+        """Set config"""
+        self._config = parse_config(config)
 
     def convert_image(
         self,
@@ -163,12 +179,12 @@ class SpecsAnalyzer:
         # parameters in the config, or should we store one set per pass energy/
         # lens mode/ kinetic energy in the dict?
 
-        # crop = kwds.pop("crop", self._config["crop"])
-        # if crop:
-        #     ek_min = kwds.pop("ek_min", self._config["ek_min"])
-        #     ek_max = kwds.pop("ek_max", self._config["ek_max"])
-        #     ang_min = kwds.pop("ang_min", self._config["ang_min"])
-        #     ang_max = kwds.pop("ang_max", self._config["ang_max"])
-        #     da = crop_xarray(da, ang_min, ang_max, ek_min, ek_max)
+        crop = kwds.pop("crop", self._config["crop"])
+        if crop:
+            ek_min = kwds.pop("ek_min", self._config["ek_min"])
+            ek_max = kwds.pop("ek_max", self._config["ek_max"])
+            ang_min = kwds.pop("ang_min", self._config["ang_min"])
+            ang_max = kwds.pop("ang_max", self._config["ang_max"])
+            da = crop_xarray(da, ang_min, ang_max, ek_min, ek_max)
 
         return da
