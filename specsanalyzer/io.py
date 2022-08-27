@@ -1,4 +1,10 @@
+"""This module contains file input/output functions for the specsanalyzer module
+
+"""
 from pathlib import Path
+from typing import Any
+from typing import Dict
+from typing import List
 from typing import Sequence
 from typing import Union
 
@@ -37,10 +43,10 @@ def recursive_write_metadata(h5group: h5py.Group, node: dict):
             try:
                 h5group.create_dataset(key, data=str(item))
                 print(f"Saved {key} as string.")
-            except BaseException:
+            except BaseException as exc:
                 raise Exception(
                     f"Unknown error occured, cannot save {item} of type {type(item)}.",
-                )
+                ) from exc
 
 
 def recursive_parse_metadata(
@@ -60,13 +66,13 @@ def recursive_parse_metadata(
             dictionary[key] = recursive_parse_metadata(value)
 
     else:
-        dictionary = node[...]
+        entry = node[...]
         try:
-            dictionary = dictionary.item()
+            dictionary = entry.item()
             if isinstance(dictionary, (bytes, bytearray)):
                 dictionary = dictionary.decode()
         except ValueError:
-            pass
+            dictionary = entry
 
     return dictionary
 
@@ -85,12 +91,12 @@ def to_h5(data: xr.DataArray, faddr: str, mode: str = "w"):
 
     Returns:
     """
-    with h5py.File(faddr, mode) as h5File:
+    with h5py.File(faddr, mode) as h5_file:
 
         print(f"saving data to {faddr}")
 
         # Saving data, make a single dataset
-        dataset = h5File.create_dataset("binned/BinnedData", data=data.data)
+        dataset = h5_file.create_dataset("binned/BinnedData", data=data.data)
         try:
             dataset.attrs["units"] = data.attrs["units"]
             dataset.attrs["long_name"] = data.attrs["long_name"]
@@ -98,27 +104,27 @@ def to_h5(data: xr.DataArray, faddr: str, mode: str = "w"):
             pass
 
         # Saving axes
-        axesGroup = h5File.create_group("axes")
-        axesNumber = 0
-        for binName in data.dims:
-            axis = axesGroup.create_dataset(
-                f"ax{axesNumber}",
-                data=data.coords[binName],
+        axes_group = h5_file.create_group("axes")
+        axes_number = 0
+        for bin_name in data.dims:
+            axis = axes_group.create_dataset(
+                f"ax{axes_number}",
+                data=data.coords[bin_name],
             )
-            axis.attrs["name"] = binName
+            axis.attrs["name"] = bin_name
             try:
-                axis.attrs["unit"] = data.coords[binName].attrs["unit"]
+                axis.attrs["unit"] = data.coords[bin_name].attrs["unit"]
             except KeyError:
                 pass
-            axesNumber += 1
+            axes_number += 1
 
         if "metadata" in data.attrs and isinstance(
             data.attrs["metadata"],
             dict,
         ):
-            metaGroup = h5File.create_group("metadata")
+            meta_group = h5_file.create_group("metadata")
 
-            recursive_write_metadata(metaGroup, data.attrs["metadata"])
+            recursive_write_metadata(meta_group, data.attrs["metadata"])
 
     print("Saving complete!")
 
@@ -137,21 +143,24 @@ def load_h5(faddr: str, mode: str = "r") -> xr.DataArray:
         # Reading data array
         try:
             data = h5_file["binned"]["BinnedData"]
-        except KeyError:
+        except KeyError as exc:
             raise Exception(
-                "Wrong Data Format, the BinnedData were not found.",
-            )
+                "Wrong Data Format, the BinnedData were not found. "
+                f"The error was{exc}.",
+            ) from exc
 
         # Reading the axes
-        binAxes = []
-        binNames = []
+        bin_axes = []
+        bin_names = []
 
         try:
             for axis in h5_file["axes"]:
-                binAxes.append(h5_file["axes"][axis])
-                binNames.append(h5_file["axes"][axis].attrs["name"])
-        except KeyError:
-            raise Exception("Wrong Data Format, the axes were not found.")
+                bin_axes.append(h5_file["axes"][axis])
+                bin_names.append(h5_file["axes"][axis].attrs["name"])
+        except KeyError as exc:
+            raise Exception(
+                f"Wrong Data Format, the axes were not found. The error was {exc}",
+            ) from exc
 
         # load metadata
         metadata = None
@@ -159,16 +168,16 @@ def load_h5(faddr: str, mode: str = "r") -> xr.DataArray:
             metadata = recursive_parse_metadata(h5_file["metadata"])
 
         coords = {}
-        for name, vals in zip(binNames, binAxes):
+        for name, vals in zip(bin_names, bin_axes):
             coords[name] = vals
 
-        xarray = xr.DataArray(data, dims=binNames, coords=coords)
+        xarray = xr.DataArray(data, dims=bin_names, coords=coords)
 
         try:
-            for name in binNames:
-                xarray[name].attrs["unit"] = h5_file["axes"][axis].attrs[
-                    "unit"
-                ]
+            for name in bin_names:
+                xarray[bin_names[name]].attrs["unit"] = h5_file["axes"][
+                    name
+                ].attrs["unit"]
             xarray.attrs["units"] = h5_file["binned"]["BinnedData"].attrs[
                 "units"
             ]
@@ -188,8 +197,7 @@ def to_tiff(
     data: Union[xr.DataArray, np.ndarray],
     faddr: Union[Path, str],
     axis_dict: dict = None,
-    ret_axes_order: bool = False,
-) -> None:
+) -> list:
     """Save an array as a  .tiff stack compatible with ImageJ
 
     Args:
@@ -210,6 +218,9 @@ def to_tiff(
         AttributeError: if more than one axis corresponds to a single dimension
         NotImplementedError: if data is not 2,3 or 4 dimensional
         TypeError: if data is not a np.ndarray or an xarray.DataArray
+
+    Returns:
+        dims_order: The axis order of the saved array
     """
     _imagej_axes_order = ["T", "Z", "C", "Y", "X", "S"]
 
@@ -217,11 +228,11 @@ def to_tiff(
         dim_expansions = {2: [0, 1, 2, 5], 3: [0, 2, 5], 4: [2, 5]}
         dims_order = data.dims
         try:
-            out = np.expand_dims(data, dim_expansions[data.ndim])
-        except KeyError:
+            out = np.expand_dims(data, dim_expansions[data.dims])
+        except KeyError as exc:
             raise NotImplementedError(
                 f"Only 2-3-4D arrays supported when data is a {type(data)}",
-            )
+            ) from exc
 
     elif isinstance(data, xr.DataArray):
         dims_to_add = {"C": 1, "S": 1}
@@ -262,7 +273,7 @@ def to_tiff(
             ]
             if len(axis_name_list) > 1:
                 raise AttributeError(f"Too many dimensions for {key} axis.")
-            elif len(axis_name_list) == 1:
+            if len(axis_name_list) == 1:
                 dims_order.append(*axis_name_list)
             else:
                 dims_to_add[key] = 1
@@ -277,16 +288,15 @@ def to_tiff(
 
     tifffile.imwrite(faddr, out.astype(np.float32), imagej=True)
     # clean up the temporary axes names
-    for ax in _imagej_axes_order:
-        if ax not in data.dims:
+    for axis in _imagej_axes_order:
+        if axis not in data.dims:
             try:
-                dims_order.remove(ax)
+                dims_order.remove(axis)
             except ValueError:
                 pass
 
     print(f"Successfully saved {faddr}\n Axes order: {dims_order}")
-    if ret_axes_order:
-        return dims_order
+    return dims_order
 
 
 def load_tiff(
@@ -316,17 +326,17 @@ def load_tiff(
     data = tifffile.imread(faddr).squeeze()
     if coords is None:
         return data
-    else:
-        if dims is None:
-            dims = list(coords.keys())
-        assert data.ndim == len(coords) == len(dims), (
-            f"Data dimension {data.ndim} must coincide number of coordinates"
-            f"{len(coords)} and dimensions {len(dims)} provided,"
-        )
-        return xr.DataArray(data=data, coords=coords, dims=dims, attrs=attrs)
+
+    if dims is None:
+        dims = list(coords.keys())
+    assert data.ndim == len(coords) == len(dims), (
+        f"Data dimension {data.ndim} must coincide number of coordinates"
+        f"{len(coords)} and dimensions {len(dims)} provided,"
+    )
+    return xr.DataArray(data=data, coords=coords, dims=dims, attrs=attrs)
 
 
-def get_pair_from_list(list_line: list) -> list:
+def get_pair_from_list(list_line: List[Any]) -> List[Any]:
     """Returns key value pair for the read function
     where a line in the file contains '=' character.
 
@@ -356,7 +366,7 @@ def get_pair_from_list(list_line: list) -> list:
     return [(k, v)]
 
 
-def read_calib2d(filepath: str) -> list:
+def read_calib2d(filepath: str) -> List[Any]:
     """Reads the calib2d file into a convenient list for the parser
     function containing useful and cleaned data.
 
@@ -366,10 +376,10 @@ def read_calib2d(filepath: str) -> list:
     Returns:
         list: List containing dictionary, string and float objects.
     """
-    with open(filepath) as f:
-        lines = f.readlines()
+    with open(filepath, encoding="utf-8") as file:
+        lines = file.readlines()
 
-    listf = []
+    listf: List[Any] = []
     for line in lines:
 
         if line[0] == "\n" or line[0] == "#":
@@ -389,7 +399,7 @@ def read_calib2d(filepath: str) -> list:
     return listf
 
 
-def parse_calib2d_to_dict(filepath: str) -> dict:
+def parse_calib2d_to_dict(filepath: str) -> Dict[Any, Any]:
     """Parses the given calib2d file into a nested dictionary structure
     to provide parameters for image conversion.
 
@@ -402,20 +412,20 @@ def parse_calib2d_to_dict(filepath: str) -> dict:
     """
     listf = read_calib2d(filepath)
 
-    calib_dict = {}
+    calib_dict: Dict[Any, Any] = {}
     mode = None
-    rr = None
+    retardation_ratio = None
     for elem in listf:
         if isinstance(elem, str):  # Initialize mode dict
             mode = elem
             calib_dict[mode] = {"rr": {}, "default": {}}
-            rr = None
+            retardation_ratio = None
         elif isinstance(elem, (int, float)):  # Initialize rr nested dict
-            rr = elem
-            calib_dict[mode]["rr"][rr] = {}
+            retardation_ratio = elem
+            calib_dict[mode]["rr"][retardation_ratio] = {}
         else:  # populate the dict
-            if rr:
-                calib_dict[mode]["rr"][rr].update(elem)
+            if retardation_ratio:
+                calib_dict[mode]["rr"][retardation_ratio].update(elem)
             elif mode:
                 calib_dict[mode]["default"].update(elem)
             else:

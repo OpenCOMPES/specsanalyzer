@@ -6,7 +6,7 @@ def get_damatrix_fromcalib2d(
     lens_mode,
     kinetic_energy,
     pass_energy,
-    config_dict
+    config_dict,
 ):
     """_summary_
 
@@ -17,20 +17,12 @@ def get_damatrix_fromcalib2d(
     Returns:
         _type_: _description_
     """
-    # try:
-    # infofile = open(infofilename)
-    # calibfile = open(calib2dfilename)
 
-    # now read the infofile and return a dictionary
-    # infodict = dict(get_pair(line) for line in infofile)
-    # now from the retardatio ratio and lens mode go through the calib file
-    # and get the good stuff
     ek = kinetic_energy
     ep = pass_energy
-    rr = ek/ep
+    rr = ek / ep
 
     # given the lens mode get all the retardatio ratios available
-    # calibfilelines = calibfile.readlines()
     rr_vec, damatrix_full = get_rr_da(lens_mode, config_dict)
     closest_rr_index = bisection(rr_vec, rr)
 
@@ -40,8 +32,7 @@ def get_damatrix_fromcalib2d(
 
     # now compare the distance with the neighboring indexes,
     # we need the second nearest rr
-    second_closest_rr_index = second_closest_rr(rr, rr_vec,
-                                                closest_rr_index)
+    second_closest_rr_index = second_closest_rr(rr, rr_vec, closest_rr_index)
 
     # compute the rr_factor, in igor done by a BinarySearchInterp
     # find closest retardation ratio in table
@@ -49,25 +40,22 @@ def get_damatrix_fromcalib2d(
     # fraction from this to next retardation ratio in table
     # rr_factor=BinarySearchInterp(w_rr, rr)-rr_inf
     rr_index = np.arange(0, rr_vec.shape[0], 1)
-    rr_factor = np.interp(rr, rr_vec, rr_index)-closest_rr_index
-
-    # print(rr_factor)
+    rr_factor = np.interp(rr, rr_vec, rr_index) - closest_rr_index
 
     damatrix_close = damatrix_full[closest_rr_index][:][:]
     damatrix_second = damatrix_full[second_closest_rr_index][:][:]
-    # print(damatrix_close.shape)
-    # print(damatrix_second.shape)
 
     one_mat = np.ones(damatrix_close.shape)
-    rr_factor_mat = np.ones(damatrix_close.shape)*rr_factor
+    rr_factor_mat = np.ones(damatrix_close.shape) * rr_factor
     damatrix = (
-        damatrix_close*(one_mat-rr_factor_mat) +
-        damatrix_second*rr_factor_mat
+        damatrix_close * (one_mat - rr_factor_mat)
+        + damatrix_second * rr_factor_mat
     )
     aInner = damatrix[0][0]
     damatrix = damatrix[1:][:]
 
     return aInner, damatrix
+
 
 # Auxiliary function to load the info file
 
@@ -77,29 +65,29 @@ def get_damatrix_fromcalib2d(
 
 
 def bisection(array, value):
-    '''Given an ``array`` , and given a ``value`` , returns an index
+    """Given an ``array`` , and given a ``value`` , returns an index
     j such that ``value`` is between array[j]
     and array[j+1]. ``array`` must be monotonic
     increasing. j=-1 or j=len(array) is returned
-    to indicate that ``value`` is out of range below and above respectively.'''
+    to indicate that ``value`` is out of range below and above respectively."""
     n = len(array)
-    if (value < array[0]):
+    if value < array[0]:
         return -1
-    elif (value > array[n-1]):
+    elif value > array[n - 1]:
         return n
     jl = 0  # Initialize lower
-    ju = n-1  # and upper limits.
-    while (ju-jl > 1):  # If we are not yet done,
-        jm = (ju+jl) >> 1  # compute a midpoint with a bitshift
-        if (value >= array[jm]):
+    ju = n - 1  # and upper limits.
+    while ju - jl > 1:  # If we are not yet done,
+        jm = (ju + jl) >> 1  # compute a midpoint with a bitshift
+        if value >= array[jm]:
             jl = jm  # and replace either the lower limit
         else:
             ju = jm  # or the upper limit, as appropriate.
         # Repeat until the test condition is satisfied.
-    if (value == array[0]):  # edge cases at bottom
+    if value == array[0]:  # edge cases at bottom
         return 0
-    elif (value == array[n-1]):  # and top
-        return n-1
+    elif value == array[n - 1]:  # and top
+        return n - 1
     else:
         return jl
 
@@ -118,17 +106,18 @@ def second_closest_rr(rr, rrvec, closest_rr_index):
     if closest_rr_index == 0:
         second_closest_rr_index = 1
     else:
-        if closest_rr_index == (rrvec.size-1):
-            second_closest_rr_index = closest_rr_index-1
+        if closest_rr_index == (rrvec.size - 1):
+            second_closest_rr_index = closest_rr_index - 1
         else:
             # we are not at the edges, compare the neighbors and get the
             # closest
-            if (rr < rrvec[closest_rr_index]):
-                second_closest_rr_index = closest_rr_index-1
+            if rr < rrvec[closest_rr_index]:
+                second_closest_rr_index = closest_rr_index - 1
             else:
-                second_closest_rr_index = closest_rr_index+1
+                second_closest_rr_index = closest_rr_index + 1
 
     return second_closest_rr_index
+
 
 # this function should get both the rr array, and the corresponding Da matrices
 # for a certain Angle mode
@@ -136,35 +125,26 @@ def second_closest_rr(rr, rrvec, closest_rr_index):
 
 def get_rr_da(lens_mode, config_dict):
 
-    rr_array = np.array(
-     list(config_dict["calib2d_dict"][lens_mode]["rr"])
-    )
+    rr_array = np.array(list(config_dict["calib2d_dict"][lens_mode]["rr"]))
 
     dim1 = rr_array.shape[0]
-    base_dict = config_dict["calib2d_dict"][
-        lens_mode
-        ]["rr"]
+    base_dict = config_dict["calib2d_dict"][lens_mode]["rr"]
     dim2 = len(base_dict[rr_array[0]])
 
     try:
         dim3 = len(base_dict[rr_array[0]]["Da1"])
     except KeyError:
-        raise("Da values do not exist for the given mode.")
+        raise ("Da values do not exist for the given mode.")
 
     da_matrix = np.zeros([dim1, dim2, dim3])
     for i in range(len(rr_array)):
         aInner = base_dict[rr_array[i]]["aInner"]
         da_block = np.concatenate(
             tuple(
-                [[v] for k, v in base_dict[rr_array[i]].items() if k != "aInner"]
-            )
+                [v] for k, v in base_dict[rr_array[i]].items() if k != "aInner"
+            ),
         )
-        da_matrix[i] = np.concatenate(
-            (
-                np.array([[aInner] * dim3]),
-                da_block
-            )
-        )
+        da_matrix[i] = np.concatenate((np.array([[aInner] * dim3]), da_block))
     return rr_array, da_matrix
 
 
@@ -172,9 +152,9 @@ def calculate_polynomial_coef_da(
     da_matrix,
     kinetic_energy,
     pass_energy,
-    eshift
+    eshift,
 ):
-    """Given the da coeffiecients contained in the 
+    """Given the da coeffiecients contained in the
     scanpareters, the program calculate the energy range based
     on the eshift parameter and fits a second order polinomial
     to the tabulated values. The polinomial coefficients
@@ -185,22 +165,17 @@ def calculate_polynomial_coef_da(
         scanparameters (_dict_): scan parameter dictionary
 
     Returns:
-        _np.array_: dapolymatrix, a matrix with polinomial 
+        _np.array_: dapolymatrix, a matrix with polinomial
     """
 
-    # get the Das from the damatrix
-    # da1=currentdamatrix[0][:]
-    # da3=currentdamatrix[1][:]
-    # da5=currentdamatrix[2][:]
-    # da7=currentdamatrix[3][:]
     ek = kinetic_energy
     ep = pass_energy
 
     # calcualte the energy values for each da, given the eshift
-    da_energy = eshift*ep+ek*np.ones(eshift.shape)
+    da_energy = eshift * ep + ek * np.ones(eshift.shape)
 
     # create the polinomial coeffiecient matrix,
-    # each is a third order polinomial
+    # each is a second order polinomial
 
     dapolymatrix = np.zeros(da_matrix.shape)
 
@@ -208,11 +183,14 @@ def calculate_polynomial_coef_da(
         # igor uses the fit poly 3, which should be a parabola
         dapolymatrix[i][:] = np.polyfit(
             da_energy,
-            da_matrix[i][:], 2,
+            da_matrix[i][:],
+            2,
         ).transpose()
 
     # scanparameters['dapolymatrix'] = dapolymatrix
     return dapolymatrix
+
+
 # the function now returns a matrix of the fit coeffiecients,
 # given the physical energy scale
 # each line of the matrix is a set of coefficients for each of the
@@ -235,14 +213,16 @@ def zinner(ek, angle, dapolymatrix):
     out = 0
 
     for i in np.arange(0, dapolymatrix.shape[0], 1):
-        out = out + ((10.0**(-2*i)) *
-                     (angle**(1+2*i)) *
-                     np.polyval(dapolymatrix[i][:], ek))
+        out = out + (
+            (10.0 ** (-2 * i))
+            * (angle ** (1 + 2 * i))
+            * np.polyval(dapolymatrix[i][:], ek)
+        )
     return out
 
 
 def zinner_diff(ek, angle, dapolymatrix):
-    """_summary_ poly(D1, Ek ) + 3*10^-2*poly(D3, Ek )*(Ang)^2 
+    """_summary_ poly(D1, Ek ) + 3*10^-2*poly(D3, Ek )*(Ang)^2
     + 5*10^-4*poly(D5, Ek )*(Ang)^4 + 7*10^-6*poly(D7, Ek )*(Ang)^6
     Args:
         ek (_type_): _description_
@@ -257,10 +237,12 @@ def zinner_diff(ek, angle, dapolymatrix):
 
     for i in np.arange(0, dapolymatrix.shape[0], 1):
 
-        out = out + ((10.0**(-2*i)) *
-                     (1+2*i) *
-                     (angle**(2*i)) *
-                     np.polyval(dapolymatrix[i][:], ek))
+        out = out + (
+            (10.0 ** (-2 * i))
+            * (1 + 2 * i)
+            * (angle ** (2 * i))
+            * np.polyval(dapolymatrix[i][:], ek)
+        )
 
     return out
 
@@ -277,21 +259,18 @@ def mcp_position_mm(ek, angle, aInner, dapolymatrix):
         _type_: _description_
     """
 
-    # ainner = scanparameters['aInner']
-    # dapolymatrix = scanparameters['dapolymatrix']
-
     mask = np.less_equal(np.abs(angle), aInner)
 
-    # result=np.zeros(angle.shape)#ideally has to be evaluated on a mesh
+    ainner_vec = np.ones(angle.shape) * aInner
 
-    ainner_vec = np.ones(angle.shape)*aInner
-    # result = np.where(mask,-10,10)
     result = np.where(
-        mask, zinner(ek, angle, dapolymatrix),
-        np.sign(angle)*(
-            zinner(ek, ainner_vec, dapolymatrix) +
-            (np.abs(angle)-ainner_vec) *
-            zinner_diff(ek, ainner_vec, dapolymatrix)
+        mask,
+        zinner(ek, angle, dapolymatrix),
+        np.sign(angle)
+        * (
+            zinner(ek, ainner_vec, dapolymatrix)
+            + (np.abs(angle) - ainner_vec)
+            * zinner_diff(ek, ainner_vec, dapolymatrix)
         ),
     )
     return result
@@ -302,7 +281,7 @@ def calculate_matrix_correction(
     pass_energy,
     kinetic_energy,
     binning,
-    config_dict
+    config_dict,
 ):
     """_summary_
 
@@ -312,52 +291,36 @@ def calculate_matrix_correction(
     Returns:
         _type_: _description_
     """
-    # scanparameters = get_scanparameters(
-    #     lens_mode,
-    #     kinetic_energy,
-    #     pass_energy,
-    #     config_dict
-    # )
-    eshift = np.array(config_dict[
-        "calib2d_dict"
-    ]["eShift"])
+
+    eshift = np.array(config_dict["calib2d_dict"]["eShift"])
 
     aInner, damatrix = get_damatrix_fromcalib2d(
         lens_mode,
         kinetic_energy,
         pass_energy,
-        config_dict
+        config_dict,
     )
 
     dapolymatrix = calculate_polynomial_coef_da(
         damatrix,
         kinetic_energy,
         pass_energy,
-        eshift)
-    # ek = kinetic_energy
-    # ep = pass_energy
-    # dapolymatrix = scanparameters["dapolymatrix"]
-    # scanparameters["eShift"] = config_dict["calib2d_dict"]["eShift"]
-    # scanparameters["eGrid"] = list(config_dict["calib2d_dict"]["eGrid"])
-    # scanparameters["aGrid"] = list(config_dict["calib2d_dict"]["aGrid"])
+        eshift,
+    )
 
     de1 = [config_dict["calib2d_dict"]["De1"]]
     erange = config_dict["calib2d_dict"]["eRange"]
-    # ainner = scanparameters["aInner"]
-    arange = config_dict["calib2d_dict"][lens_mode][
-            "default"
-            ]["aRange"]
-    # DEFINE THE DETECTOR PARAMETERS; currently hard-coded and not IO
+    arange = config_dict["calib2d_dict"][lens_mode]["default"]["aRange"]
     nx_pixel = config_dict["nx_pixel"]
     ny_pixel = config_dict["ny_pixel"]
     pixelsize = config_dict["pixel_size"]
     # binning = float(scanparameters["Binning"])*2
     magnification = config_dict["magnification"]
 
-    nx_bins = int(nx_pixel/binning)
-    ny_bins = int(ny_pixel/binning)
-    ek_low = kinetic_energy + erange[0]*pass_energy
-    ek_high = kinetic_energy + erange[1]*pass_energy
+    nx_bins = int(nx_pixel / binning)
+    ny_bins = int(ny_pixel / binning)
+    ek_low = kinetic_energy + erange[0] * pass_energy
+    ek_high = kinetic_energy + erange[1] * pass_energy
 
     # assume an even number of pixels on the detector, seems reasonable
     ek_axis = np.linspace(ek_low, ek_high, nx_bins)
@@ -366,8 +329,8 @@ def calculate_matrix_correction(
     # arange was defined in the igor procedure Calculate_Da_values
     # it seems to be a constant, written in the calib2d file header
     # I decided to rename from "AzimuthLow"
-    angle_low = arange[0]*1.2
-    angle_high = arange[1]*1.2
+    angle_low = arange[0] * 1.2
+    angle_high = arange[1] * 1.2
 
     # check the effect of the additional range x1.2;
     # this is present in the igor code
@@ -389,29 +352,31 @@ def calculate_matrix_correction(
     E_Offset_px = config_dict["E_Offset_px"]
 
     angular_correction_matrix = (
-        mcp_position_mm_matrix/magnification
-        / (pixelsize*binning)
-        + ny_bins/2
+        mcp_position_mm_matrix / magnification / (pixelsize * binning)
+        + ny_bins / 2
         + Ang_Offset_px
     )
     e_correction = (
-        (
-            ek_axis -
-            kinetic_energy*np.ones(ek_axis.shape)
-        )
-        / pass_energy/de1/magnification/(pixelsize*binning)
-        + nx_bins/2
+        (ek_axis - kinetic_energy * np.ones(ek_axis.shape))
+        / pass_energy
+        / de1
+        / magnification
+        / (pixelsize * binning)
+        + nx_bins / 2
         + E_Offset_px
     )
     w_dyde = np.gradient(angular_correction_matrix, ek_axis, axis=1)
     w_dyda = np.gradient(angular_correction_matrix, angle_axis, axis=0)
     w_dxda = 0
     w_dxde = np.gradient(e_correction, ek_axis, axis=0)
-    jacobian_determinant = np.abs(w_dxde*w_dyda - w_dyde*w_dxda)
+    jacobian_determinant = np.abs(w_dxde * w_dyda - w_dyde * w_dxda)
 
     return (
-        ek_axis, angle_axis, angular_correction_matrix,
-        e_correction, jacobian_determinant,
+        ek_axis,
+        angle_axis,
+        angular_correction_matrix,
+        e_correction,
+        jacobian_determinant,
     )
 
 
@@ -435,14 +400,18 @@ def physical_unit_data(
 
     # create 2d matrix with the
     # ek coordinates
-    e_correction_expand = np.ones(angular_correction_matrix.shape)*e_correction
+    e_correction_expand = (
+        np.ones(angular_correction_matrix.shape) * e_correction
+    )
 
     # Create a list of e and angle coordinates where to
     # evaluate the interpolating
     # function
 
-    coords = (angular_correction_matrix.flatten(),
-              e_correction_expand.flatten())
+    coords = (
+        angular_correction_matrix.flatten(),
+        e_correction_expand.flatten(),
+    )
     # these coords seems to be pixels..
 
     x_bins = np.arange(0, image.shape[0], 1)
@@ -452,7 +421,7 @@ def physical_unit_data(
     my_interpolating_function = RegularGridInterpolator(
         (x_bins, y_bins),
         image,
-        method='nearest',
+        method="nearest",
         bounds_error=False,
         fill_value=33,
     )
@@ -460,8 +429,8 @@ def physical_unit_data(
         np.reshape(
             my_interpolating_function(coords),
             angular_correction_matrix.shape,
-        ) *
-        jacobian_determinant
+        )
+        * jacobian_determinant
     )
 
     return corrected_data
