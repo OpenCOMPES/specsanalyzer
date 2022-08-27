@@ -1,3 +1,5 @@
+"""This is a code that performs several tests for the image tool module
+"""
 import os
 
 import numpy as np
@@ -26,6 +28,9 @@ da = xr.DataArray(
 
 
 def test_fourier_filter_2d():
+    """Test if the Fourier filter function returns the same array if no peaks
+    are filtered out.
+    """
     np.testing.assert_allclose(
         array2d,
         fourier_filter_2d(array2d, []),
@@ -34,12 +39,18 @@ def test_fourier_filter_2d():
 
     config = parse_config(f"{test_dir}/data/config/config.yaml")
     peaks = config["fft_filter_peaks"]
-    with open(f"{test_dir}/data/dataFHI/Scan1232.tsv") as file:
+    with open(
+        f"{test_dir}/data/dataFHI/Scan1232.tsv",
+        encoding="utf-8",
+    ) as file:
         tsv_data = np.loadtxt(file, delimiter="\t")
 
     filtered = fourier_filter_2d(tsv_data, peaks)
 
-    with open(f"{test_dir}/data/dataFHI/Scan1232_filtered.tsv") as file:
+    with open(
+        f"{test_dir}/data/dataFHI/Scan1232_filtered.tsv",
+        encoding="utf-8",
+    ) as file:
         ref = np.loadtxt(file, delimiter="\t")
     ref = ref.T
 
@@ -47,9 +58,11 @@ def test_fourier_filter_2d():
 
 
 def test_fourier_filter_2d_raises():
+    """Test if the Fourier filter function raises an error if a key is not defined."""
     with np.testing.assert_raises(KeyError):
         fourier_filter_2d(array2d, [{"amplitude": 1}])
 
 
 def test_crop_xarray():
+    """Test if the cropping function leaves the xarray intact if we don't crop it."""
     np.testing.assert_allclose(da, crop_xarray(da, 0, 1, 0, 1))

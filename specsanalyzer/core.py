@@ -1,19 +1,24 @@
+"""This is the specsanalyzer core class
+
+"""
 import os
+from typing import Any
+from typing import Dict
 from typing import Union
 
 import numpy as np
 import xarray as xr
 
+import specsanalyzer.convert
 from specsanalyzer import io
 from specsanalyzer.convert import calculate_matrix_correction
+from specsanalyzer.convert import physical_unit_data_1
 from specsanalyzer.convert import physical_unit_data_2
-from specsanalyzer.convert import physical_unit_data
+from specsanalyzer.img_tools import crop_xarray
 from specsanalyzer.img_tools import fourier_filter_2d
 from specsanalyzer.metadata import MetaHandler
 from specsanalyzer.settings import parse_config
 
-
-import specsanalyzer.convert
 # from typing import Any
 # from typing import List
 # from typing import Tuple
@@ -23,13 +28,13 @@ import specsanalyzer.convert
 package_dir = os.path.dirname(__file__)
 
 
-class SpecsAnalyzer:
+class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
     """[summary]"""
 
     def __init__(
         self,
-        metadata: dict = {},
-        config: Union[dict, str] = {},
+        metadata: Dict[Any, Any] = {},
+        config: Union[Dict[Any, Any], str] = {},
     ):
 
         self._config = parse_config(config)
@@ -45,15 +50,26 @@ class SpecsAnalyzer:
 
         self._attributes = MetaHandler(meta=metadata)
 
-        self._correction_matrix_dict = {}
+        self._correction_matrix_dict: Dict[Any, Any] = {}
 
     def __repr__(self):
         if self._config is None:
-            s = "No configuration available"
+            pretty_str = "No configuration available"
         else:
-            s = print(self._config)
-            # TODO Proper report with scan number, dimensions, configuration etc.
-        return s if s is not None else ""
+            for key in self._config:
+                pretty_str += print(f"{self._config[key]}\n")
+        # TODO Proper report with scan number, dimensions, configuration etc.
+        return pretty_str if pretty_str is not None else ""
+
+    @property
+    def config(self):
+        """Get config"""
+        return self._config
+
+    @config.setter
+    def config(self, config: Union[dict, str]):
+        """Set config"""
+        self._config = parse_config(config)
 
     def convert_image(
         self,
@@ -148,8 +164,6 @@ class SpecsAnalyzer:
             # calculate_polynomial_coef_da inside.
             # TODO: store result in dictionary.
 
-
-        
         # conv_img = specsanalyzer.convert.physical_unit_data(
         #     img,
         #     angular_correction_matrix,
@@ -158,12 +172,12 @@ class SpecsAnalyzer:
         # )
 
         conv_img = specsanalyzer.convert.physical_unit_data_6(
-           img,
-           angular_correction_matrix,
-           e_correction,
-           jacobian_determinant,
-           ek_axis,
-           angle_axis
+            img,
+            angular_correction_matrix,
+            e_correction,
+            jacobian_determinant,
+            ek_axis,
+            angle_axis,
         )
 
         # TODO: make function compatible, check interpolation functions.
@@ -179,22 +193,12 @@ class SpecsAnalyzer:
         # parameters in the config, or should we store one set per pass energy/
         # lens mode/ kinetic energy in the dict?
 
-        # crop = kwds.pop("crop", self._config["crop"])
-        # if crop:
-        #     ek_min = kwds.pop("ek_min", self._config["ek_min"])
-        #     ek_max = kwds.pop("ek_max", self._config["ek_max"])
-        #     ang_min = kwds.pop("ang_min", self._config["ang_min"])
-        #     ang_max = kwds.pop("ang_max", self._config["ang_max"])
-        #     da = crop_xarray(da, ang_min, ang_max, ek_min, ek_max)
+        crop = kwds.pop("crop", self._config["crop"])
+        if crop:
+            ek_min = kwds.pop("ek_min", self._config["ek_min"])
+            ek_max = kwds.pop("ek_max", self._config["ek_max"])
+            ang_min = kwds.pop("ang_min", self._config["ang_min"])
+            ang_max = kwds.pop("ang_max", self._config["ang_max"])
+            da = crop_xarray(da, ang_min, ang_max, ek_min, ek_max)
 
         return da
-
-    def return_config(
-        self
-    ) -> dict:
-        # returns the config file for debuggin
-        if self._config is None:
-            s = "No configuration available"
-        else:
-            s = self._config
-        return s if s is not None else ""
