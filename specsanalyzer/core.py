@@ -6,8 +6,8 @@ import xarray as xr
 
 from specsanalyzer import io
 from specsanalyzer.convert import calculate_matrix_correction
-from specsanalyzer.convert import physical_unit_data_7
-from specsanalyzer.img_tools import crop_xarray
+from specsanalyzer.convert import physical_unit_data_2
+from specsanalyzer.convert import physical_unit_data
 from specsanalyzer.img_tools import fourier_filter_2d
 from specsanalyzer.metadata import MetaHandler
 from specsanalyzer.settings import parse_config

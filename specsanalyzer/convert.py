@@ -476,7 +476,7 @@ def calculate_jacobian(
 
 
 # original function using regular grid interpolator
-def physical_unit_data(
+def physical_unit_data_1(
     image,
     angular_correction_matrix,
     e_correction,
@@ -536,6 +536,7 @@ def physical_unit_data(
 
 # fails due to memory allocation
 # interpolate.interp2d
+# Loop version
 def physical_unit_data_2(
     image,
     angular_correction_matrix,
@@ -562,29 +563,13 @@ def physical_unit_data_2(
     # evaluate the interpolating
     # function
 
-    coords = (angular_correction_matrix.flatten(),
-              e_correction_expand.flatten())
+    coords = (angular_correction_matrix,
+              e_correction_expand)
     # these coords seems to be pixels..
-
-    # x_bins = np.arange(0, image.shape[0], 1)
-    # y_bins = np.arange(0, image.shape[1], 1)
-
     x_bins = np.arange(0, image.shape[1], 1)
     y_bins = np.arange(0, image.shape[0], 1)
 
-    print("x_bins-shape",  x_bins.shape)
-    print("y_bins-shape",  y_bins.shape)
-    print("image-shape",  image.shape)
     # create interpolation function
-    # angular_interpolation_function = RegularGridInterpolator(
-    #     (x_bins, y_bins),
-    #     image,
-    # method='nearest',
-    #     method= 'linear',
-    #     bounds_error=False,
-    #     fill_value=0,
-    # )
-
     angular_interpolation_function = interpolate.interp2d(
         x_bins,
         y_bins,
@@ -594,21 +579,18 @@ def physical_unit_data_2(
         # fill_value=0
     )
 
-    # corrected_data = (
-    #     np.reshape(
-    #         angular_interpolation_function(coords),
-    #         angular_correction_matrix.shape,
-    #     ) *
-    #     jacobian_determinant
-    # )
-
-    # this seems wrong.. but it does not accept non-regularly spaced outputs
-    corrected_data = angular_interpolation_function(
-        e_correction,
-        angular_correction_matrix[:, 0]
-    )*jacobian_determinant
+    # Loop, might be slow
+    corrected_data = np.zeros(angular_correction_matrix.shape)
+    for i in range(0,angular_correction_matrix.shape[0]):
+        for j in range(0,angular_correction_matrix.shape[1]):
+            corrected_data[i][j] = angular_interpolation_function(
+                #e_correction,
+                #angular_correction_matrix[:, 0]
+                e_correction[j], angular_correction_matrix[i][j]
+            )*jacobian_determinant[i][j]
 
     return corrected_data
+
 
 # Using xarray internal interpolation functions
 def physical_unit_data_3(
@@ -674,7 +656,7 @@ def physical_unit_data_3(
 # numba accelerated bilinear interpolation..
 # https://stackoverflow.com/questions/8661537/
 # how-to-perform-bilinear-interpolation-in-python
-@jit(nopython=True, fastmath=True, nogil=True, cache=True, parallel=True)
+#@jit(nopython=True, fastmath=True, nogil=True, cache=True, parallel=True)
 def bilinear_interpolation(x_in, y_in, f_in, x_out, y_out):
     f_out = np.zeros((y_out.size, x_out.size))
 
@@ -927,11 +909,12 @@ def physical_unit_data_7(
 
 # LAURENZ SUGGESTIONS
 # scipy.interpolate.RectBivariateSpline
+# Loop version
 def physical_unit_data_8(
     image,
     angular_correction_matrix,
     e_correction,
-    jacobian_determinant,
+    jacobian_determinant
 ):
     """_summary_
 
@@ -953,44 +936,38 @@ def physical_unit_data_8(
     # evaluate the interpolating
     # function
 
-    # coords = (angular_correction_matrix.flatten(),
-    #          e_correction_expand.flatten())
+    coords = (angular_correction_matrix,
+              e_correction_expand)
     # these coords seems to be pixels..
 
-    # x_bins = np.arange(0, image.shape[0], 1)
-    # y_bins = np.arange(0, image.shape[1], 1)
+    x_bins = np.arange(0, image.shape[1], 1)
+    y_bins = np.arange(0, image.shape[0], 1)
 
-    x_bins = np.arange(0, image.shape[0], 1)
-    y_bins = np.arange(0, image.shape[1], 1)
-
-    print("x_bins-shape",  x_bins.shape)
-    print("y_bins-shape",  y_bins.shape)
-    print("image-shape",  image.shape)
     # create interpolation function
-    angular_interpolation_function = RectBivariateSpline(x_bins, y_bins, image)
-    # define new coordinates
-   
-    x_bins_new= np.sort(angular_correction_matrix,axis=None)
-    y_bins_new= np.sort(e_correction_expand,axis=None)
 
-    # print(x_bins_new.shape) 
-    # print(y_bins_new.shape) 
-    
-    corrected_data = angular_interpolation_function(x_bins_new,y_bins_new)
-    
-    
-    """ (
-        np.reshape(
-            angular_interpolation_function(x_bins_new,y_bins_new),
-            angular_correction_matrix.shape,
-        ) *
-        jacobian_determinant
+    angular_interpolation_function = interpolate.RectBivariateSpline(
+        x_bins,
+        y_bins,
+        image.T,
+        #kind='linear'
+        kx=1, ky=1
+        # bounds_error=False,
+        # fill_value=0
     )
- """
+
+
+    # Loop version, might be slow
+    corrected_data = np.zeros(angular_correction_matrix.shape)
+    for i in range(0,angular_correction_matrix.shape[0]):
+        for j in range(0,angular_correction_matrix.shape[1]):
+            corrected_data[i][j] = angular_interpolation_function(
+                #e_correction,
+                #angular_correction_matrix[:, 0]
+                e_correction[j], angular_correction_matrix[i][j]
+            )*jacobian_determinant[i][j]
+
     return corrected_data
-#I get an error like
-# MemoryError                               Traceback (most recent call last)
-# MemoryError: Unable to allocate 57.8 GiB for an array with shape (88064, 88064) and data type float64
+
 
 
 # LAURENZ SUGGESTIONS
