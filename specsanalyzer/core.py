@@ -154,8 +154,9 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
                 jacobian_determinant,
             ) = calculate_matrix_correction(
                 lens_mode,
-                pass_energy,
                 kinetic_energy,
+                pass_energy,
+                work_function,
                 binning,
                 self._config,
             )
@@ -164,24 +165,14 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
             # calculate_polynomial_coef_da inside.
             # TODO: store result in dictionary.
 
-        # conv_img = specsanalyzer.convert.physical_unit_data(
-        #     img,
-        #     angular_correction_matrix,
-        #     e_correction,
-        #     jacobian_determinant,
-        # )
-
-        conv_img = specsanalyzer.convert.physical_unit_data_6(
+        conv_img = specsanalyzer.convert.physical_unit_data(
             img,
             angular_correction_matrix,
             e_correction,
             jacobian_determinant,
-            ek_axis,
-            angle_axis,
         )
 
-        # TODO: make function compatible, check interpolation functions.
-        # TODO generate xarray
+      
         # TODO: annotate with metadata
         da = xr.DataArray(
             data=conv_img,
