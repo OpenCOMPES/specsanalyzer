@@ -1,7 +1,5 @@
 from pyexpat.errors import XML_ERROR_UNKNOWN_ENCODING
-
 from scipy.ndimage import map_coordinates
-
 
 def get_damatrix_fromcalib2d(
     lens_mode,

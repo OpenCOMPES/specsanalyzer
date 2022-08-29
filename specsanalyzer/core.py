@@ -9,11 +9,10 @@ from typing import Union
 import numpy as np
 import xarray as xr
 
-import specsanalyzer.convert
 from specsanalyzer import io
 from specsanalyzer.convert import calculate_matrix_correction
-from specsanalyzer.convert import physical_unit_data_1
-from specsanalyzer.convert import physical_unit_data_2
+from specsanalyzer.convert import physical_unit_data
+
 from specsanalyzer.img_tools import crop_xarray
 from specsanalyzer.img_tools import fourier_filter_2d
 from specsanalyzer.metadata import MetaHandler
@@ -165,7 +164,7 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
             # calculate_polynomial_coef_da inside.
             # TODO: store result in dictionary.
 
-        conv_img = specsanalyzer.convert.physical_unit_data(
+        conv_img = physical_unit_data(
             img,
             angular_correction_matrix,
             e_correction,
