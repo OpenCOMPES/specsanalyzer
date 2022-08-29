@@ -73,9 +73,10 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
     def convert_image(
         self,
         raw_img: np.ndarray,
-        pass_energy: float,
-        kinetic_energy: float,
         lens_mode: str,
+        kinetic_energy: float,        
+        pass_energy: float,
+        work_function:float,
         **kwds,
     ) -> xr.DataArray:
         """Converts raw image into physical unit coordinates.
