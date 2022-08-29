@@ -1,87 +1,93 @@
-from pyexpat.errors import XML_ERROR_UNKNOWN_ENCODING
 from scipy.ndimage import map_coordinates
+import numpy as np
 
 def get_damatrix_fromcalib2d(
-    lens_mode,
-    kinetic_energy,
-    pass_energy,
-    work_function,
-    config_dict,
-):
-    """_summary_
+    lens_mode:str,
+    kinetic_energy:float,
+    pass_energy:float,
+    work_function:float,
+    config_dict:dict,
+)->tuple[float,np.ndarray]:
+    """ This function estimates the best angular
+    conversion coefficients for the current analyser mode, starting from
+    a dictionary containing the specs .calib2d database.
+    A linear interpolation is performed from the tabulated coefficients based
+    on the retardatio ratio value.
 
     Args:
-        lens_mode (_type_): _description_
-        kinetic_energy (_type_): _description_
-        pass_energy (_type_): _description_
-        work_function (_type_): _description_
-        config_dict (_type_): _description_
+        lens_mode (string): the lens mode string description
+        kinetic_energy (float): _description_
+        pass_energy (float): _description_
+        work_function (float): _description_
+        config_dict (dict): _description_
 
     Returns:
-        _type_: _description_
+        Tuple[float,np.ndarray]: _description_
     """
+
+
     # retardation ratio
-    #work_function = config_dict["work_function"]
+    retardation_ratio = (kinetic_energy - work_function) / pass_energy
 
-    rr = (kinetic_energy - work_function) / pass_energy
 
-    # now we have a dilemma: in igor the rr was calculated including the work function,
-    # depending on the settings, one might have or not have the work function included in the
-    # labview data acquisition..
-
-    # given the lens mode get all the retardatio ratios available
+    # given the lens mode get all the retardation ratios available
     rr_vec, damatrix_full = get_rr_da(lens_mode, config_dict)
-    closest_rr_index = bisection(rr_vec, rr)
+    # find closest retardation ratio in table
+    closest_rr_index = bisection(rr_vec, retardation_ratio)
 
-    # return as the closest rr index the smallest in case of -1 output
+    # return as the closest rr index the smallest index in
+    # case of -1 output from bisection
+
     if closest_rr_index == -1:
         closest_rr_index = 0
-    # print("closest_rr_index= ", closest_rr_index)
     # now compare the distance with the neighboring indexes,
     # we need the second nearest rr
-    second_closest_rr_index = second_closest_rr(rr, rr_vec, closest_rr_index)
+    second_closest_rr_index = second_closest_rr(rr_vec, closest_rr_index)
 
-    # compute the rr_factor, in igor done by a BinarySearchInterp
-    # find closest retardation ratio in table
-    # rr_inf=BinarySearch(w_rr, rr)
-    # fraction from this to next retardation ratio in table
-    # rr_factor=BinarySearchInterp(w_rr, rr)-rr_inf
+    # compute the rr_factor, which in igor done by a BinarySearchInterp
+    # this is a fraction from the current rr to next rr in the table
+    # array of array indexes
     rr_index = np.arange(0, rr_vec.shape[0], 1)
-    rr_factor = np.interp(rr, rr_vec, rr_index) - closest_rr_index
-
-    # print("rr_factor= ", rr_factor)
+    # the factor is obtained by linear interpolation
+    rr_factor = (np.interp(retardation_ratio, rr_vec, rr_index)-
+    closest_rr_index)
 
     damatrix_close = damatrix_full[closest_rr_index][:][:]
     damatrix_second = damatrix_full[second_closest_rr_index][:][:]
-    # print(damatrix_close.shape)
-    # print(damatrix_second.shape)
-
     one_mat = np.ones(damatrix_close.shape)
     rr_factor_mat = np.ones(damatrix_close.shape) * rr_factor
+    # weighted average between two neighboring da matrices
     damatrix = (
         damatrix_close * (one_mat - rr_factor_mat)
         + damatrix_second * rr_factor_mat
     )
-    aInner = damatrix[0][0]
+    # separate the first line (aInner) from the da coefficients
+    a_inner = damatrix[0][0]
     damatrix = damatrix[1:][:]
 
-    return aInner, damatrix
+    return a_inner, damatrix
 
-
-# Auxiliary function to load the info file
 
 # Auxiliary function to find the closest rr index
 # from https://stackoverflow.com/questions/2566412/
 # find-nearest-value-in-numpy-array
 
-
-def bisection(array, value):
-    """Given an ``array`` , and given a ``value`` , returns an index
+def bisection(array:np.ndarray, value:float)->int:
+    """"" Given an ``array`` , and given a ``value`` , returns an index
     j such that ``value`` is between array[j]
     and array[j+1]. ``array`` must be monotonic
     increasing. j=-1 or j=len(array) is returned
     to indicate that ``value`` is out of range below and above respectively.
-    This should mimick the function BinarySearch in igor pro 6"""
+    This should mimick the function BinarySearch in igor pro 6
+
+    Args:
+        array (np.ndarray): ordered array
+        value (float): comparison value
+
+    Returns:
+        int: index (non-integer) expressing the position of value between
+        array[j] and array[j+1]
+    """
 
     n = len(array)
     if value < array[0]:
@@ -105,16 +111,16 @@ def bisection(array, value):
         return jl
 
 
-def second_closest_rr(rr, rrvec, closest_rr_index):
-    """_summary_
+def second_closest_rr(rrvec:np.ndarray, closest_rr_index:int)->int:
+    """Return closest_rr_index+1 unless you are at the edge
+    of the rrvec.
 
     Args:
-        rr (_type_): _description_
-        rrvec (_type_): _description_
-        closest_rr_index (_type_): _description_
+        rrvec (np.ndarray): the retardation ratio vector
+        closest_rr_index (int): the nearest rr index corresponding to the scan
 
     Returns:
-        _type_: _description_
+        int: nearest rr index to calculate the best da coefficients
     """
     if closest_rr_index == (rrvec.size - 1):
         # we are the edge: the behaviour is to not change the index
@@ -124,9 +130,26 @@ def second_closest_rr(rr, rrvec, closest_rr_index):
 
     return second_closest_rr_index
 
+def get_rr_da(
+    lens_mode:str,
+    config_dict:dict
+) -> tuple[np.ndarray,np.ndarray]:
+    """Get the retardatio ratios and the da for a certain lens mode from the
+    confugaration dictionary
 
-def get_rr_da(lens_mode, config_dict):
+    Args:
+        lens_mode (string): string containing the lens mode
+        config_dict (dict): config dictionary
 
+    Raises:
+        Da1Error: to be tested
+
+    Returns:
+        Tuple[np.ndarray,np.ndarray]: retardation ratio vector, matrix of
+        da coeffients, per row row0 : da1, row1: da3, .. up to da7
+        non angle resolved lens modes do not posses das.
+
+    """
     rr_array = np.array(list(config_dict["calib2d_dict"][lens_mode]["rr"]))
 
     dim1 = rr_array.shape[0]
@@ -135,27 +158,27 @@ def get_rr_da(lens_mode, config_dict):
 
     try:
         dim3 = len(base_dict[rr_array[0]]["Da1"])
-    except KeyError:
-        raise ("Da values do not exist for the given mode.")
+    except KeyError as exc:
+        raise Da1Error() from exc
 
     da_matrix = np.zeros([dim1, dim2, dim3])
     for i in range(len(rr_array)):
-        aInner = base_dict[rr_array[i]]["aInner"]
+        a_inner = base_dict[rr_array[i]]["aInner"]
         da_block = np.concatenate(
             tuple(
                 [v] for k, v in base_dict[rr_array[i]].items() if k != "aInner"
             ),
         )
-        da_matrix[i] = np.concatenate((np.array([[aInner] * dim3]), da_block))
+        da_matrix[i] = np.concatenate((np.array([[a_inner] * dim3]), da_block))
     return rr_array, da_matrix
-¨
 
 def calculate_polynomial_coef_da(
-    da_matrix,
-    kinetic_energy,
-    pass_energy,
-    eshift,
-):
+    da_matrix:np.ndarray,
+    kinetic_energy:float,
+    pass_energy:float,
+    eshift:float,
+) -> np.ndarray:
+
     """Given the da coeffiecients contained in the
     scanpareters, the program calculate the energy range based
     on the eshift parameter and fits a second order polinomial
@@ -164,12 +187,14 @@ def calculate_polynomial_coef_da(
     The dapolymatrix is also saved in the scanparameters dictionary
 
     Args:
-        scanparameters (_dict_): scan parameter dictionary
+        da_matrix (np.ndarray): _description_
+        kinetic_energy (float): _description_
+        pass_energy (float): _description_
+        eshift (float): _description_
 
     Returns:
-        _np.array_: dapolymatrix, a matrix with polinomial
+        np.ndarray: _description_
     """
-
     # get the Das from the damatrix
     # da1=currentdamatrix[0][:]
     # da3=currentdamatrix[1][:]
@@ -202,19 +227,24 @@ def calculate_polynomial_coef_da(
 # dai corrections
 
 
-def zinner(ek, angle, dapolymatrix):
-    """_summary_
+def zinner(
+    ek:float,
+    angle:float,
+    dapolymatrix:np.ndarray
+    )->float:
+    """Auxiliary function for mcp_position_mm, uses kinetic energy and angle
+    starting from the dapolymatrix, to get
+    the zinner coefficient to calculate the electron arrival position on the
+    mcp withing the a_inner boundaries
 
     Args:
-        ek (_type_): _description_
-        angle (_type_): _description_
-        dapolymatrix (_type_): _description_
+        ek (float): kinetic energy
+        angle (float): angle
+        dapolymatrix (np.ndarray): matrix with polynomial coefficients
 
     Returns:
-        _type_: _description_
+        float: zinner,
     """
-    # poly(D1, Ek )*(Ang) + 10^-2*poly(D3, Ek )*(Ang)^3 +
-    # 10^-4*poly(D5, Ek )*(Ang)^5 + 10^-6*poly(D7, Ek )*(Ang)^7
     out = 0
 
     for i in np.arange(0, dapolymatrix.shape[0], 1):
@@ -226,16 +256,23 @@ def zinner(ek, angle, dapolymatrix):
     return out
 
 
-def zinner_diff(ek, angle, dapolymatrix):
-    """_summary_ poly(D1, Ek ) + 3*10^-2*poly(D3, Ek )*(Ang)^2
-    + 5*10^-4*poly(D5, Ek )*(Ang)^4 + 7*10^-6*poly(D7, Ek )*(Ang)^6
+def zinner_diff(
+    ek:float,
+    angle:float,
+    dapolymatrix:np.ndarray
+)->float:
+    """Auxiliary function for mcp_position_mm, uses kinetic energy and angle
+    starting from the dapolymatrix, to get
+    the zinner_diff coefficient to coorect the electron arrival position on the
+    mcp outside the a_inner boundaries
+
     Args:
-        ek (_type_): _description_
-        angle (_type_): _description_
-        dapolymatrix (_type_): _description_
+        ek (float): kinetic energy
+        angle (float): angle
+        dapolymatrix (np.ndarray): polinomial matrix
 
     Returns:
-        _type_: _description_
+        float: zinner_diff
     """
 
     out = 0
@@ -252,18 +289,25 @@ def zinner_diff(ek, angle, dapolymatrix):
     return out
 
 
-def mcp_position_mm(ek, angle, a_inner, dapolymatrix):
+def mcp_position_mm(
+    ek:float,
+    angle:float,
+    a_inner:float,
+    dapolymatrix:np.ndarray
+)->np.ndarray:
     """_summary_
 
     Args:
-        ek (_type_): _description_
-        angle (_type_): _description_
-        scanparameters (_type_): _description_
+        ek (float): _description_
+        angle (float): _description_
+        a_inner (float): _description_
+        dapolymatrix (np.ndarray): _description_
 
     Returns:
-        _type_: _description_
+        np.ndarray: _description_
     """
 
+    # define two angular regions: within and outsied the a_inner boundaries
     mask = np.less_equal(np.abs(angle), a_inner)
 
     a_inner_vec = np.ones(angle.shape) * a_inner
@@ -282,14 +326,38 @@ def mcp_position_mm(ek, angle, a_inner, dapolymatrix):
 
 
 def calculate_matrix_correction(
-    lens_mode,
-    kinetic_energy,
-    pass_energy,
-    work_function,
-    binning,
-    config_dict,
-):
+    lens_mode:str,
+    kinetic_energy:float,
+    pass_energy:float,
+    work_function:float,
+    binning:int,
+    config_dict:dict,
+)->tuple[np.ndarray,
+        np.ndarray,
+        np.ndarray,
+        np.ndarray,
+        np.ndarray]:
+    """Calculate the matrix correction function for the interpoolation
 
+    Args:
+        lens_mode (str): _description_
+        kinetic_energy (float): _description_
+        pass_energy (float): _description_
+        work_function (float): _description_
+        binning (int): _description_
+        config_dict (dict): _description_
+
+    Returns:
+        tuple[np.ndarray,
+        np.ndarray,
+        np.ndarray,
+        np.ndarray,
+        np.ndarray]: returns ek_axis,
+        angle_axis,
+        angular_correction_matrix,
+        e_correction,
+        jacobian_determinant,
+    """
     eshift = np.array(config_dict["calib2d_dict"]["eShift"])
 
     aInner, damatrix = get_damatrix_fromcalib2d(
@@ -307,14 +375,12 @@ def calculate_matrix_correction(
         eshift,
     )
 
-    
     de1 = [config_dict["calib2d_dict"]["De1"]]
     erange = config_dict["calib2d_dict"]["eRange"]
     arange = config_dict["calib2d_dict"][lens_mode]["default"]["aRange"]
     nx_pixel = config_dict["nx_pixel"]
     ny_pixel = config_dict["ny_pixel"]
     pixelsize = config_dict["pixel_size"]
-    # binning = float(scanparameters["Binning"])*2
     magnification = config_dict["magnification"]
 
     nx_bins = int(nx_pixel / binning)
@@ -323,7 +389,6 @@ def calculate_matrix_correction(
     ek_high = kinetic_energy + erange[1] * pass_energy
 
     ek_axis = np.linspace(ek_low, ek_high, nx_bins, endpoint=False)
-    
     angle_low = arange[0] * 1.2
     angle_high = arange[1] * 1.2
     
@@ -379,13 +444,23 @@ def calculate_matrix_correction(
         jacobian_determinant,
     )
 
-
 def calculate_jacobian(
-    angular_correction_matrix,
-    e_correction,
-    ek_axis,
-    angle_axis,
-):
+    angular_correction_matrix:np.ndarray,
+    e_correction:np.ndarray,
+    ek_axis:np.ndarray,
+    angle_axis:np.ndarray,
+)->np.ndarray:
+    """calculate the jacobian matrix associated with the transformation
+
+    Args:
+        angular_correction_matrix (np.ndarray): angular correction matrix
+        e_correction (np.ndarray): energy correction
+        ek_axis (np.ndarray): kinetic energy axis
+        angle_axis (np.ndarray): angle axis
+
+    Returns:
+        np.ndarray: _description_
+    """
     w_dyde = np.gradient(angular_correction_matrix, ek_axis, axis=1)
     w_dyda = np.gradient(angular_correction_matrix, angle_axis, axis=0)
     w_dxda = 0
@@ -394,16 +469,26 @@ def calculate_jacobian(
     return jacobian_determinant
 
 
-# interpolate on physical units, 
-# using the map_coordinates function
-# from scipy.ndimage 
 
 def physical_unit_data(
-    image,
-    angular_correction_matrix,
-    e_correction,
-    jacobian_determinant,
-):
+    image:np.ndarray,
+    angular_correction_matrix:np.ndarray,
+    e_correction:float,
+    jacobian_determinant:np.ndarray,
+)->np.ndarray:
+    """interpolate the image on physical units, using the map_coordinates
+    function from scipy.ndimage 
+
+    Args:
+        image (np.ndarray): raw image
+        angular_correction_matrix (np.ndarray): angular correction matrix
+        e_correction (float): energy correction
+        jacobian_determinant (np.ndarray): jacobian determinant for preserving
+        the area normalization
+
+    Returns:
+        np.ndarray: interpolated image as a function of angle and energy
+    """
 
     # Create a list of e and angle pixel 
     # coordinates where to
@@ -432,3 +517,8 @@ def physical_unit_data(
     )
 
     return corrected_data
+
+# error class for the Da s
+class Da1Error(KeyError):
+    def __init__(self):
+        super().__init__("Da values do not exist for the given mode.")
