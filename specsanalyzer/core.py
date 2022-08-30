@@ -126,13 +126,18 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
         else:
             img = raw_img
 
+        # TODO add image rotation
+
         # TODO check valid lens modes
+        # create a tuple containing the current scan parameters
         current_scan=[lens_mode,
                 kinetic_energy,
                 pass_energy,
                 work_function,
                 binning]
+        
         try:
+            # check if the config file contains the last scan parameters
             last_scan=self._config['calib2d_dict']['last_scan_params']
             if current_scan==last_scan:
                 # Save the results into the config
@@ -160,7 +165,7 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
             #     pass_energy
             # ][kinetic_energy]["jacobian_determinant"]
         except KeyError:
-            print("New correction matrix")
+            old_matrix_check=False
             (
                 ek_axis,
                 angle_axis,
@@ -197,8 +202,16 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
             # calculate_polynomial_coef_da inside.
             # TODO: store result in dictionary.
         else:
-            print("Old correction matrix")
-            print(last_scan)
+            old_matrix_check=True
+            # print("Old correction matrix")
+            # print(last_scan)
+        
+        # save a flag called old_matrix_check to determine if the current 
+        # image was corrected using (True) or not using (False) the
+        # parameter in the class
+
+        calibd=self._config['calib2d_dict']["old_matrix_check"]=old_matrix_check
+
         conv_img = physical_unit_data(
             img,
             angular_correction_matrix,
