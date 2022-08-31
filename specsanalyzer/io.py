@@ -245,6 +245,7 @@ def to_tiff(
         TypeError: if data is not a np.ndarray or an xarray.DataArray
     """
 
+    out: Union[np.ndarray, xr.DataArray] = None
     if isinstance(data, np.ndarray):
         # TODO: add sorting by dictionary keys
         dim_expansions = {2: [0, 1, 2, 5], 3: [0, 2, 5], 4: [2, 5]}
