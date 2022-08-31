@@ -136,9 +136,9 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
             # this contains 3 element tuples of the form
             # [kinetic_energy, pass_energy, work_function]
 
-            old_db = self._config["calib2d_dict"][lens_mode]["old_scans_params"][
-                (kinetic_energy, pass_energy, work_function)
-            ]
+            old_db = self._config["calib2d_dict"][lens_mode][
+                "old_scans_params"
+            ][(kinetic_energy, pass_energy, work_function)]
 
             ek_axis = old_db["ek_axis"]
             angle_axis = old_db["angle_axis"]
