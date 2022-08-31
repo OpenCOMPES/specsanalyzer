@@ -1,13 +1,14 @@
 from scipy.ndimage import map_coordinates
 import numpy as np
 
+
 def get_damatrix_fromcalib2d(
-    lens_mode:str,
-    kinetic_energy:float,
-    pass_energy:float,
-    work_function:float,
-    config_dict:dict,
-)->tuple[float,np.ndarray]:
+    lens_mode: str,
+    kinetic_energy: float,
+    pass_energy: float,
+    work_function: float,
+    config_dict: dict,
+) -> tuple[float, np.ndarray]:
     """ This function estimates the best angular
     conversion coefficients for the current analyser mode, starting from
     a dictionary containing the specs .calib2d database.
@@ -25,10 +26,8 @@ def get_damatrix_fromcalib2d(
         Tuple[float,np.ndarray]: _description_
     """
 
-
     # retardation ratio
     retardation_ratio = (kinetic_energy - work_function) / pass_energy
-
 
     # given the lens mode get all the retardation ratios available
     rr_vec, damatrix_full = get_rr_da(lens_mode, config_dict)
@@ -49,8 +48,8 @@ def get_damatrix_fromcalib2d(
     # array of array indexes
     rr_index = np.arange(0, rr_vec.shape[0], 1)
     # the factor is obtained by linear interpolation
-    rr_factor = (np.interp(retardation_ratio, rr_vec, rr_index)-
-    closest_rr_index)
+    rr_factor = (np.interp(retardation_ratio, rr_vec, rr_index) -
+                 closest_rr_index)
 
     damatrix_close = damatrix_full[closest_rr_index][:][:]
     damatrix_second = damatrix_full[second_closest_rr_index][:][:]
@@ -72,7 +71,7 @@ def get_damatrix_fromcalib2d(
 # from https://stackoverflow.com/questions/2566412/
 # find-nearest-value-in-numpy-array
 
-def bisection(array:np.ndarray, value:float)->int:
+def bisection(array: np.ndarray, value: float) -> int:
     """"" Given an ``array`` , and given a ``value`` , returns an index
     j such that ``value`` is between array[j]
     and array[j+1]. ``array`` must be monotonic
@@ -111,7 +110,7 @@ def bisection(array:np.ndarray, value:float)->int:
         return jl
 
 
-def second_closest_rr(rrvec:np.ndarray, closest_rr_index:int)->int:
+def second_closest_rr(rrvec: np.ndarray, closest_rr_index: int) -> int:
     """Return closest_rr_index+1 unless you are at the edge
     of the rrvec.
 
@@ -130,10 +129,11 @@ def second_closest_rr(rrvec:np.ndarray, closest_rr_index:int)->int:
 
     return second_closest_rr_index
 
+
 def get_rr_da(
-    lens_mode:str,
-    config_dict:dict
-) -> tuple[np.ndarray,np.ndarray]:
+    lens_mode: str,
+    config_dict: dict
+) -> tuple[np.ndarray, np.ndarray]:
     """Get the retardatio ratios and the da for a certain lens mode from the
     confugaration dictionary
 
@@ -172,13 +172,13 @@ def get_rr_da(
         da_matrix[i] = np.concatenate((np.array([[a_inner] * dim3]), da_block))
     return rr_array, da_matrix
 
-def calculate_polynomial_coef_da(
-    da_matrix:np.ndarray,
-    kinetic_energy:float,
-    pass_energy:float,
-    eshift:float,
-) -> np.ndarray:
 
+def calculate_polynomial_coef_da(
+    da_matrix: np.ndarray,
+    kinetic_energy: float,
+    pass_energy: float,
+    eshift: float,
+) -> np.ndarray:
     """Given the da coeffiecients contained in the
     scanpareters, the program calculate the energy range based
     on the eshift parameter and fits a second order polinomial
@@ -228,10 +228,10 @@ def calculate_polynomial_coef_da(
 
 
 def zinner(
-    ek:float,
-    angle:float,
-    dapolymatrix:np.ndarray
-    )->float:
+    ek: float,
+    angle: float,
+    dapolymatrix: np.ndarray
+) -> float:
     """Auxiliary function for mcp_position_mm, uses kinetic energy and angle
     starting from the dapolymatrix, to get
     the zinner coefficient to calculate the electron arrival position on the
@@ -257,10 +257,10 @@ def zinner(
 
 
 def zinner_diff(
-    ek:float,
-    angle:float,
-    dapolymatrix:np.ndarray
-)->float:
+    ek: float,
+    angle: float,
+    dapolymatrix: np.ndarray
+) -> float:
     """Auxiliary function for mcp_position_mm, uses kinetic energy and angle
     starting from the dapolymatrix, to get
     the zinner_diff coefficient to coorect the electron arrival position on the
@@ -290,11 +290,11 @@ def zinner_diff(
 
 
 def mcp_position_mm(
-    ek:float,
-    angle:float,
-    a_inner:float,
-    dapolymatrix:np.ndarray
-)->np.ndarray:
+    ek: float,
+    angle: float,
+    a_inner: float,
+    dapolymatrix: np.ndarray
+) -> np.ndarray:
     """_summary_
 
     Args:
@@ -326,17 +326,17 @@ def mcp_position_mm(
 
 
 def calculate_matrix_correction(
-    lens_mode:str,
-    kinetic_energy:float,
-    pass_energy:float,
-    work_function:float,
-    binning:int,
-    config_dict:dict,
-)->tuple[np.ndarray,
-        np.ndarray,
-        np.ndarray,
-        np.ndarray,
-        np.ndarray]:
+    lens_mode: str,
+    kinetic_energy: float,
+    pass_energy: float,
+    work_function: float,
+    binning: int,
+    config_dict: dict,
+) -> tuple[np.ndarray,
+           np.ndarray,
+           np.ndarray,
+           np.ndarray,
+           np.ndarray]:
     """Calculate the matrix correction function for the interpoolation
 
     Args:
@@ -385,22 +385,36 @@ def calculate_matrix_correction(
 
     nx_bins = int(nx_pixel / binning)
     ny_bins = int(ny_pixel / binning)
+
+    # the bins of the new image, defaul = the original image
+    # get form the configuraton file an upsampling factor
+    try:
+        ke_upsampling_factor = config_dict["ke_upsampling_factor"]
+        angle_upsampling_factor = config_dict["angle_upsampling_factor"]
+    except KeyError:
+        ke_upsampling_factor = 1
+        angle_upsampling_factor = 1
+
+    n_ke_bins = ke_upsampling_factor*nx_bins
+    n_angle_bins = angle_upsampling_factor*ny_bins
+
     ek_low = kinetic_energy + erange[0] * pass_energy
     ek_high = kinetic_energy + erange[1] * pass_energy
 
-    ek_axis = np.linspace(ek_low, ek_high, nx_bins, endpoint=False)
+    ek_axis = np.linspace(ek_low, ek_high, n_ke_bins, endpoint=False)
     angle_low = arange[0] * 1.2
     angle_high = arange[1] * 1.2
-    
-    angle_axis = np.linspace(angle_low, angle_high, ny_bins, endpoint=False)
-    
-    mcp_position_mm_matrix = np.zeros([nx_bins, ny_bins])
-    angular_correction_matrix = np.zeros([nx_bins, ny_bins])
+
+    angle_axis = np.linspace(angle_low, angle_high, n_angle_bins,
+                             endpoint=False)
+
+    mcp_position_mm_matrix = np.zeros([n_ke_bins, n_angle_bins])
+    angular_correction_matrix = np.zeros([n_ke_bins, n_angle_bins])
     e_correction = np.zeros(ek_axis.shape)
-    
+
     # let's create a meshgrid for vectorized evaluation
     ek_mesh, angle_mesh = np.meshgrid(ek_axis, angle_axis)
-    
+
     mcp_position_mm_matrix = mcp_position_mm(
         ek_mesh,
         angle_mesh,
@@ -428,7 +442,7 @@ def calculate_matrix_correction(
         + E_Offset_px
     )
 
-    #calculate the Jacobian determinant of the transformation
+    # calculate the Jacobian determinant of the transformation
     jacobian_determinant = calculate_jacobian(
         angular_correction_matrix,
         e_correction,
@@ -444,12 +458,13 @@ def calculate_matrix_correction(
         jacobian_determinant,
     )
 
+
 def calculate_jacobian(
-    angular_correction_matrix:np.ndarray,
-    e_correction:np.ndarray,
-    ek_axis:np.ndarray,
-    angle_axis:np.ndarray,
-)->np.ndarray:
+    angular_correction_matrix: np.ndarray,
+    e_correction: np.ndarray,
+    ek_axis: np.ndarray,
+    angle_axis: np.ndarray,
+) -> np.ndarray:
     """calculate the jacobian matrix associated with the transformation
 
     Args:
@@ -469,15 +484,14 @@ def calculate_jacobian(
     return jacobian_determinant
 
 
-
 def physical_unit_data(
-    image:np.ndarray,
-    angular_correction_matrix:np.ndarray,
-    e_correction:float,
-    jacobian_determinant:np.ndarray,
-)->np.ndarray:
+    image: np.ndarray,
+    angular_correction_matrix: np.ndarray,
+    e_correction: float,
+    jacobian_determinant: np.ndarray,
+) -> np.ndarray:
     """interpolate the image on physical units, using the map_coordinates
-    function from scipy.ndimage 
+    function from scipy.ndimage
 
     Args:
         image (np.ndarray): raw image
@@ -490,7 +504,7 @@ def physical_unit_data(
         np.ndarray: interpolated image as a function of angle and energy
     """
 
-    # Create a list of e and angle pixel 
+    # Create a list of e and angle pixel
     # coordinates where to
     # evaluate the interpolating
     # function
@@ -506,9 +520,9 @@ def physical_unit_data(
     coords = np.array(
         (angular_correction_matrix.flatten(), e_correction_matrix.flatten()),
     )
-    
+
     # the image is expressed as intensity vs pixels,
-    # angular correction and e_correction 
+    # angular correction and e_correction
     corrected_data = (
         map_coordinates(image, coords, order=1).reshape(
             angular_correction_matrix.shape,
@@ -519,6 +533,8 @@ def physical_unit_data(
     return corrected_data
 
 # error class for the Da s
+
+
 class Da1Error(KeyError):
     def __init__(self):
         super().__init__("Da values do not exist for the given mode.")
