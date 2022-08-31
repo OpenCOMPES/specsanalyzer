@@ -28,8 +28,7 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/mpes-kit/specsanalyzer",
-    download_url="https://github.com/mpes-kit/specsanalyzer/tarball/"
-    + __version__,
+    download_url="https://github.com/mpes-kit/specsanalyzer/tarball/" + __version__,
     license="MIT",
     classifiers=[
         "Development Status :: 3 - Alpha",

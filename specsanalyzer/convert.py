@@ -9,7 +9,7 @@ def get_damatrix_fromcalib2d(
     work_function: float,
     config_dict: dict,
 ) -> tuple[float, np.ndarray]:
-    """ This function estimates the best angular
+    """This function estimates the best angular
     conversion coefficients for the current analyser mode, starting from
     a dictionary containing the specs .calib2d database.
     A linear interpolation is performed from the tabulated coefficients based
@@ -48,10 +48,7 @@ def get_damatrix_fromcalib2d(
     # array of array indexes
     rr_index = np.arange(0, rr_vec.shape[0], 1)
     # the factor is obtained by linear interpolation
-    rr_factor = (
-        np.interp(retardation_ratio, rr_vec, rr_index) -
-        closest_rr_index
-    )
+    rr_factor = np.interp(retardation_ratio, rr_vec, rr_index) - closest_rr_index
 
     damatrix_close = damatrix_full[closest_rr_index][:][:]
     damatrix_second = damatrix_full[second_closest_rr_index][:][:]
@@ -59,8 +56,7 @@ def get_damatrix_fromcalib2d(
     rr_factor_mat = np.ones(damatrix_close.shape) * rr_factor
     # weighted average between two neighboring da matrices
     damatrix = (
-        damatrix_close * (one_mat - rr_factor_mat)
-        + damatrix_second * rr_factor_mat
+        damatrix_close * (one_mat - rr_factor_mat) + damatrix_second * rr_factor_mat
     )
     # separate the first line (aInner) from the da coefficients
     a_inner = damatrix[0][0]
@@ -73,8 +69,9 @@ def get_damatrix_fromcalib2d(
 # from https://stackoverflow.com/questions/2566412/
 # find-nearest-value-in-numpy-array
 
+
 def bisection(array: np.ndarray, value: float) -> int:
-    """"" Given an ``array`` , and given a ``value`` , returns an index
+    """ "" Given an ``array`` , and given a ``value`` , returns an index
     j such that ``value`` is between array[j]
     and array[j+1]. ``array`` must be monotonic
     increasing. j=-1 or j=len(array) is returned
@@ -167,9 +164,7 @@ def get_rr_da(
     for count, item in enumerate(rr_array):
         a_inner = base_dict[item]["aInner"]
         da_block = np.concatenate(
-            tuple(
-                [v] for k, v in base_dict[item].items() if k != "aInner"
-            ),
+            tuple([v] for k, v in base_dict[item].items() if k != "aInner"),
         )
         da_matrix[count] = np.concatenate((np.array([[a_inner] * dim3]), da_block))
     return rr_array, da_matrix
@@ -320,8 +315,7 @@ def mcp_position_mm(
         np.sign(angle)
         * (
             zinner(ek, a_inner_vec, dapolymatrix)
-            + (np.abs(angle) - a_inner_vec)
-            * zinner_diff(ek, a_inner_vec, dapolymatrix)
+            + (np.abs(angle) - a_inner_vec) * zinner_diff(ek, a_inner_vec, dapolymatrix)
         ),
     )
     return result
@@ -334,13 +328,7 @@ def calculate_matrix_correction(
     work_function: float,
     binning: int,
     config_dict: dict,
-) -> tuple[
-    np.ndarray,
-    np.ndarray,
-    np.ndarray,
-    np.ndarray,
-    np.ndarray,
-]:
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Calculate the matrix correction function for the interpoolation
 
     Args:
@@ -399,8 +387,8 @@ def calculate_matrix_correction(
         ke_upsampling_factor = 1
         angle_upsampling_factor = 1
 
-    n_ke_bins = ke_upsampling_factor*nx_bins
-    n_angle_bins = angle_upsampling_factor*ny_bins
+    n_ke_bins = ke_upsampling_factor * nx_bins
+    n_angle_bins = angle_upsampling_factor * ny_bins
 
     ek_low = kinetic_energy + erange[0] * pass_energy
     ek_high = kinetic_energy + erange[1] * pass_energy
@@ -410,7 +398,9 @@ def calculate_matrix_correction(
     angle_high = arange[1] * 1.2
 
     angle_axis = np.linspace(
-        angle_low, angle_high, n_angle_bins,
+        angle_low,
+        angle_high,
+        n_angle_bins,
         endpoint=False,
     )
 
@@ -517,9 +507,7 @@ def physical_unit_data(
 
     # create a 2d matrix with the
     # y pixel coordinates for a certain kinetic energy
-    e_correction_matrix = (
-        np.ones(angular_correction_matrix.shape) * e_correction
-    )
+    e_correction_matrix = np.ones(angular_correction_matrix.shape) * e_correction
 
     # flatten the x and y to a 2 x N coordinates array
     # N = Nxpix x Nypixels
@@ -537,6 +525,7 @@ def physical_unit_data(
     )
 
     return corrected_data
+
 
 # error class for the Da s
 
