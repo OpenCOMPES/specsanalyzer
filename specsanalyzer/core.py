@@ -69,6 +69,11 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
         """Set config"""
         self._config = parse_config(config)
 
+    @property
+    def correction_matrix_dict(self):
+        """Get config"""
+        return self._correction_matrix_dict
+
     def convert_image(
         self,
         raw_img: np.ndarray,
@@ -128,15 +133,13 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
         # TODO add image rotation
 
         # TODO check valid lens modes
-        # create a tuple containing the current scan parameters
+
+        # check if the correction matrix dic
+        # contains already the angular correction for the
+        # current kinetic_energy, pass_energy, work_function
 
         try:
-            # check if the config file contains the last scan parameters
-            # old_params in the current lens_mode
-            # this contains 3 element tuples of the form
-            # [kinetic_energy, pass_energy, work_function]
-
-            old_db = self._config["calib2d_dict"][lens_mode][kinetic_energy][
+            old_db = self._correction_matrix_dict[lens_mode][kinetic_energy][
                 pass_energy
             ][work_function]
 
@@ -164,14 +167,16 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
             )
 
             # save the config parameters for later use
-            self._config["calib2d_dict"][lens_mode][kinetic_energy] = {
-                pass_energy: {
-                    work_function: {
-                        "ek_axis": ek_axis,
-                        "angle_axis": angle_axis,
-                        "angular_correction_matrix": angular_correction_matrix,
-                        "e_correction": e_correction,
-                        "jacobian_determinant": jacobian_determinant,
+            self._correction_matrix_dict[lens_mode] = {
+                kinetic_energy: {
+                    pass_energy: {
+                        work_function: {
+                            "ek_axis": ek_axis,
+                            "angle_axis": angle_axis,
+                            "angular_correction_matrix": angular_correction_matrix,
+                            "e_correction": e_correction,
+                            "jacobian_determinant": jacobian_determinant,
+                        },
                     },
                 },
             }
@@ -188,7 +193,7 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
         # image was corrected using (True) or not using (False) the
         # parameter in the class
 
-        self._config["calib2d_dict"]["old_matrix_check"] = old_matrix_check
+        self._correction_matrix_dict["old_matrix_check"] = old_matrix_check
 
         conv_img = physical_unit_data(
             img,
