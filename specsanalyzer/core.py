@@ -132,13 +132,13 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
 
         try:
             # check if the config file contains the last scan parameters
-            # old_scans_params in the current lens_mode
+            # old_params in the current lens_mode
             # this contains 3 element tuples of the form
             # [kinetic_energy, pass_energy, work_function]
 
-            old_db = self._config["calib2d_dict"][lens_mode][
-                "old_scans_params"
-            ][(kinetic_energy, pass_energy, work_function)]
+            old_db = self._config["calib2d_dict"][lens_mode][kinetic_energy][
+                pass_energy
+            ][work_function]
 
             ek_axis = old_db["ek_axis"]
             angle_axis = old_db["angle_axis"]
@@ -163,17 +163,16 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
                 self._config,
             )
 
-            # Save the results into the config db, under the voice
-            # "old_scans_params", identified by the tuple (kinetic_energy,
-            # pass_energy, work_function )
-
-            self._config["calib2d_dict"][lens_mode]["old_scans_params"] = {
-                (kinetic_energy, pass_energy, work_function): {
-                    "ek_axis": ek_axis,
-                    "angle_axis": angle_axis,
-                    "angular_correction_matrix": angular_correction_matrix,
-                    "e_correction": e_correction,
-                    "jacobian_determinant": jacobian_determinant,
+            # save the config parameters for later use
+            self._config["calib2d_dict"][lens_mode][kinetic_energy] = {
+                pass_energy: {
+                    work_function: {
+                        "ek_axis": ek_axis,
+                        "angle_axis": angle_axis,
+                        "angular_correction_matrix": angular_correction_matrix,
+                        "e_correction": e_correction,
+                        "jacobian_determinant": jacobian_determinant,
+                    },
                 },
             }
 
