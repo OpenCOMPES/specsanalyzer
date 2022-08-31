@@ -17,12 +17,6 @@ from specsanalyzer.img_tools import fourier_filter_2d
 from specsanalyzer.metadata import MetaHandler
 from specsanalyzer.settings import parse_config
 
-# from typing import Any
-# from typing import List
-# from typing import Tuple
-# import numpy as np
-# from .convert import convert_image
-
 package_dir = os.path.dirname(__file__)
 
 
@@ -69,7 +63,7 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
         """Set config"""
         self._config = parse_config(config)
 
-    def convert_image(
+    def convert_image(  # pylint: disable=too-many-locals
         self,
         raw_img: np.ndarray,
         pass_energy: float,
@@ -143,7 +137,7 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
                 pass_energy
             ][kinetic_energy]["jacobian_determinant"]
         except KeyError:
-            (
+            (  # pylint: disable=R0801
                 ek_axis,
                 angle_axis,
                 angular_correction_matrix,
@@ -156,8 +150,6 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
                 binning,
                 self._config,
             )
-            # TODO: make this function compatible, call the function
-            # calculate_polynomial_coef_da inside.
             # TODO: store result in dictionary.
 
         conv_img = physical_unit_data(
@@ -166,10 +158,8 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
             e_correction,
             jacobian_determinant,
         )
-        # TODO: make function compatible, check interpolation functions.
-        # TODO generate xarray
         # TODO: annotate with metadata
-        da = xr.DataArray(
+        data_array = xr.DataArray(
             data=conv_img,
             coords={"Angle": angle_axis, "Ekin": ek_axis},
             dims=["Angle", "Ekin"],
@@ -185,6 +175,12 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
             ek_max = kwds.pop("ek_max", self._config["ek_max"])
             ang_min = kwds.pop("ang_min", self._config["ang_min"])
             ang_max = kwds.pop("ang_max", self._config["ang_max"])
-            da = crop_xarray(da, ang_min, ang_max, ek_min, ek_max)
+            data_array = crop_xarray(
+                data_array,
+                ang_min,
+                ang_max,
+                ek_min,
+                ek_max,
+            )
 
-        return da
+        return data_array
