@@ -175,12 +175,10 @@ def load_h5(faddr: str, mode: str = "r") -> xr.DataArray:
 
         try:
             for name in bin_names:
-                xarray[bin_names[name]].attrs["unit"] = h5_file["axes"][
-                    name
-                ].attrs["unit"]
-            xarray.attrs["units"] = h5_file["binned"]["BinnedData"].attrs[
-                "units"
-            ]
+                xarray[bin_names[name]].attrs["unit"] = h5_file["axes"][name].attrs[
+                    "unit"
+                ]
+            xarray.attrs["units"] = h5_file["binned"]["BinnedData"].attrs["units"]
             xarray.attrs["long_name"] = h5_file["binned"]["BinnedData"].attrs[
                 "long_name"
             ]
@@ -268,9 +266,7 @@ def to_tiff(
         # Sort the dimensions in the correct order, and fill with one-point dimensions
         # the missing axes.
         for key in _imagej_axes_order:
-            axis_name_list = [
-                name for name in axis_dict[key] if name in data.dims
-            ]
+            axis_name_list = [name for name in axis_dict[key] if name in data.dims]
             if len(axis_name_list) > 1:
                 raise AttributeError(f"Too many dimensions for {key} axis.")
             if len(axis_name_list) == 1:
