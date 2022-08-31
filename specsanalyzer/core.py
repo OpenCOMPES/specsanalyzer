@@ -76,7 +76,7 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
         lens_mode: str,
         kinetic_energy: float,
         pass_energy: float,
-        work_function:float,
+        work_function: float,
         **kwds,
     ) -> xr.DataArray:
         """Converts raw image into physical unit coordinates.
@@ -130,42 +130,24 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
 
         # TODO check valid lens modes
         # create a tuple containing the current scan parameters
-        current_scan=[lens_mode,
-                kinetic_energy,
-                pass_energy,
-                work_function,
-                binning]
-        
+
         try:
             # check if the config file contains the last scan parameters
-            last_scan=self._config['calib2d_dict']['last_scan_params']
-            if current_scan==last_scan:
-                # Save the results into the config
-                calibd=self._config['calib2d_dict']
+            # old_scans_params in the current lens_mode
+            # this contains 3 element tuples of the form
+            # [kinetic_energy, pass_energy, work_function]
 
-                ek_axis=calibd['ek_axis']
-                angle_axis=calibd['angle_axis']
-                angular_correction_matrix=calibd['angular_correction_matrix']
-                e_correction=calibd['e_correction']
-                jacobian_determinant=calibd['jacobian_determinant']
+            old_db = self._config['calib2d_dict'][lens_mode][
+                'old_scans_params'][(kinetic_energy, pass_energy, work_function)]
 
-            # ek_axis = self._correction_matrix_dict[lens_mode][pass_energy][
-            #     kinetic_energy
-            # ]["ek_axis"]
-            # angle_axis = self._correction_matrix_dict[lens_mode][pass_energy][
-            #     kinetic_energy
-            # ]["angle_axis"]
-            # angular_correction_matrix = self._correction_matrix_dict[
-            #     lens_mode
-            # ][pass_energy][kinetic_energy]["angular_correction_matrix"]
-            # e_correction = self._correction_matrix_dict[lens_mode][
-            #     pass_energy
-            # ][kinetic_energy]["e_correction"]
-            # jacobian_determinant = self._correction_matrix_dict[lens_mode][
-            #     pass_energy
-            # ][kinetic_energy]["jacobian_determinant"]
+            ek_axis = old_db['ek_axis']
+            angle_axis = old_db['angle_axis']
+            angular_correction_matrix = old_db['angular_correction_matrix']
+            e_correction = old_db['e_correction']
+            jacobian_determinant = old_db['jacobian_determinant']
+
         except KeyError:
-            old_matrix_check=False
+            old_matrix_check = False
             (
                 ek_axis,
                 angle_axis,
@@ -181,36 +163,32 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
                 self._config,
             )
 
-            # Save the results into the config
-            self._config['calib2d_dict']['last_scan_params']=[lens_mode,
-                kinetic_energy,
-                pass_energy,
-                work_function,
-                binning]
-            
-            # Save the results into the config
-            calibd=self._config['calib2d_dict']
+            # Save the results into the config db, under the voice
+            # "old_scans_params", identified by the tuple (kinetic_energy,
+            # pass_energy, work_function )
 
-            calibd['ek_axis']=ek_axis
-            calibd['angle_axis']=angle_axis
-            calibd['angular_correction_matrix']=angular_correction_matrix
-            calibd['e_correction']=e_correction
-            calibd['jacobian_determinant']=jacobian_determinant
-
+            self._config['calib2d_dict'][lens_mode]['old_scans_params'] = {
+                (kinetic_energy, pass_energy, work_function
+                 ): {
+                    "ek_axis": ek_axis,
+                    'angle_axis': angle_axis,
+                    'angular_correction_matrix': angular_correction_matrix,
+                    'e_correction': e_correction,
+                    'jacobian_determinant': jacobian_determinant}}
 
             # TODO: make this function compatible, call the function
             # calculate_polynomial_coef_da inside.
-            # TODO: store result in dictionary.
+
         else:
-            old_matrix_check=True
+            old_matrix_check = True
             # print("Old correction matrix")
             # print(last_scan)
-        
-        # save a flag called old_matrix_check to determine if the current 
+
+        # save a flag called old_matrix_check to determine if the current
         # image was corrected using (True) or not using (False) the
         # parameter in the class
 
-        calibd=self._config['calib2d_dict']["old_matrix_check"]=old_matrix_check
+        self._config['calib2d_dict']["old_matrix_check"] = old_matrix_check
 
         conv_img = physical_unit_data(
             img,
@@ -219,7 +197,6 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
             jacobian_determinant,
         )
 
-      
         # TODO: annotate with metadata
         da = xr.DataArray(
             data=conv_img,
