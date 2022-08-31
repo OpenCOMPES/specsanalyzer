@@ -2,6 +2,7 @@
 
 """
 import os
+
 import pytest
 
 import specsanalyzer.settings

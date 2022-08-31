@@ -1,5 +1,5 @@
-from scipy.ndimage import map_coordinates
 import numpy as np
+from scipy.ndimage import map_coordinates
 
 
 def get_damatrix_fromcalib2d(
@@ -48,8 +48,10 @@ def get_damatrix_fromcalib2d(
     # array of array indexes
     rr_index = np.arange(0, rr_vec.shape[0], 1)
     # the factor is obtained by linear interpolation
-    rr_factor = (np.interp(retardation_ratio, rr_vec, rr_index) -
-                 closest_rr_index)
+    rr_factor = (
+        np.interp(retardation_ratio, rr_vec, rr_index) -
+        closest_rr_index
+    )
 
     damatrix_close = damatrix_full[closest_rr_index][:][:]
     damatrix_second = damatrix_full[second_closest_rr_index][:][:]
@@ -132,7 +134,7 @@ def second_closest_rr(rrvec: np.ndarray, closest_rr_index: int) -> int:
 
 def get_rr_da(
     lens_mode: str,
-    config_dict: dict
+    config_dict: dict,
 ) -> tuple[np.ndarray, np.ndarray]:
     """Get the retardatio ratios and the da for a certain lens mode from the
     confugaration dictionary
@@ -162,14 +164,14 @@ def get_rr_da(
         raise Da1Error() from exc
 
     da_matrix = np.zeros([dim1, dim2, dim3])
-    for i in range(len(rr_array)):
-        a_inner = base_dict[rr_array[i]]["aInner"]
+    for count, item in enumerate(rr_array):
+        a_inner = base_dict[item]["aInner"]
         da_block = np.concatenate(
             tuple(
-                [v] for k, v in base_dict[rr_array[i]].items() if k != "aInner"
+                [v] for k, v in base_dict[item].items() if k != "aInner"
             ),
         )
-        da_matrix[i] = np.concatenate((np.array([[a_inner] * dim3]), da_block))
+        da_matrix[count] = np.concatenate((np.array([[a_inner] * dim3]), da_block))
     return rr_array, da_matrix
 
 
@@ -230,7 +232,7 @@ def calculate_polynomial_coef_da(
 def zinner(
     ek: float,
     angle: float,
-    dapolymatrix: np.ndarray
+    dapolymatrix: np.ndarray,
 ) -> float:
     """Auxiliary function for mcp_position_mm, uses kinetic energy and angle
     starting from the dapolymatrix, to get
@@ -259,7 +261,7 @@ def zinner(
 def zinner_diff(
     ek: float,
     angle: float,
-    dapolymatrix: np.ndarray
+    dapolymatrix: np.ndarray,
 ) -> float:
     """Auxiliary function for mcp_position_mm, uses kinetic energy and angle
     starting from the dapolymatrix, to get
@@ -293,7 +295,7 @@ def mcp_position_mm(
     ek: float,
     angle: float,
     a_inner: float,
-    dapolymatrix: np.ndarray
+    dapolymatrix: np.ndarray,
 ) -> np.ndarray:
     """_summary_
 
@@ -332,11 +334,13 @@ def calculate_matrix_correction(
     work_function: float,
     binning: int,
     config_dict: dict,
-) -> tuple[np.ndarray,
-           np.ndarray,
-           np.ndarray,
-           np.ndarray,
-           np.ndarray]:
+) -> tuple[
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+]:
     """Calculate the matrix correction function for the interpoolation
 
     Args:
@@ -405,8 +409,10 @@ def calculate_matrix_correction(
     angle_low = arange[0] * 1.2
     angle_high = arange[1] * 1.2
 
-    angle_axis = np.linspace(angle_low, angle_high, n_angle_bins,
-                             endpoint=False)
+    angle_axis = np.linspace(
+        angle_low, angle_high, n_angle_bins,
+        endpoint=False,
+    )
 
     mcp_position_mm_matrix = np.zeros([n_ke_bins, n_angle_bins])
     angular_correction_matrix = np.zeros([n_ke_bins, n_angle_bins])
