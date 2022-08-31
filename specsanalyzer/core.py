@@ -12,7 +12,6 @@ import xarray as xr
 from specsanalyzer import io
 from specsanalyzer.convert import calculate_matrix_correction
 from specsanalyzer.convert import physical_unit_data
-
 from specsanalyzer.img_tools import crop_xarray
 from specsanalyzer.img_tools import fourier_filter_2d
 from specsanalyzer.metadata import MetaHandler
@@ -138,7 +137,8 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
             # [kinetic_energy, pass_energy, work_function]
 
             old_db = self._config['calib2d_dict'][lens_mode][
-                'old_scans_params'][(kinetic_energy, pass_energy, work_function)]
+                'old_scans_params'
+            ][(kinetic_energy, pass_energy, work_function)]
 
             ek_axis = old_db['ek_axis']
             angle_axis = old_db['angle_axis']
@@ -168,13 +168,16 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
             # pass_energy, work_function )
 
             self._config['calib2d_dict'][lens_mode]['old_scans_params'] = {
-                (kinetic_energy, pass_energy, work_function
-                 ): {
+                (
+                    kinetic_energy, pass_energy, work_function,
+                ): {
                     "ek_axis": ek_axis,
                     'angle_axis': angle_axis,
                     'angular_correction_matrix': angular_correction_matrix,
                     'e_correction': e_correction,
-                    'jacobian_determinant': jacobian_determinant}}
+                    'jacobian_determinant': jacobian_determinant,
+                },
+            }
 
             # TODO: make this function compatible, call the function
             # calculate_polynomial_coef_da inside.
