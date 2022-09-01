@@ -167,19 +167,28 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
             )
 
             # save the config parameters for later use
-            self._correction_matrix_dict[lens_mode] = {
-                kinetic_energy: {
-                    pass_energy: {
-                        work_function: {
-                            "ek_axis": ek_axis,
-                            "angle_axis": angle_axis,
-                            "angular_correction_matrix": angular_correction_matrix,
-                            "e_correction": e_correction,
-                            "jacobian_determinant": jacobian_determinant,
+            # collect the info in a new nested dictionary
+            current_correction = {
+                lens_mode: {
+                    kinetic_energy: {
+                        pass_energy: {
+                            work_function: {
+                                "ek_axis": ek_axis,
+                                "angle_axis": angle_axis,
+                                "angular_correction_matrix": angular_correction_matrix,
+                                "e_correction": e_correction,
+                                "jacobian_determinant": jacobian_determinant,
+                            },
                         },
                     },
                 },
             }
+
+            # check if some correction energy matrix already exists in the
+            # dictionary
+            self._correction_matrix_dict = dict(
+                mergedicts(self._correction_matrix_dict, current_correction),
+            )
 
             # TODO: make this function compatible, call the function
             # calculate_polynomial_coef_da inside.
@@ -222,3 +231,21 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
             da = crop_xarray(da, ang_min, ang_max, ek_min, ek_max)
 
         return da
+
+
+def mergedicts(dict1, dict2):
+    for k in set(dict1.keys()).union(dict2.keys()):
+        if k in dict1 and k in dict2:
+            if isinstance(dict1[k], dict) and isinstance(dict2[k], dict):
+                yield (k, dict(mergedicts(dict1[k], dict2[k])))
+            else:
+                # If one of the values is not a dict,
+                #  you can't continue merging it.
+                # Value from second dict overrides one in first and we move on.
+                yield (k, dict2[k])
+                # Alternatively, replace this with exception
+                # raiser to alert you of value conflicts
+        elif k in dict1:
+            yield (k, dict1[k])
+        else:
+            yield (k, dict2[k])

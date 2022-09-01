@@ -28,7 +28,16 @@ def recursive_write_metadata(h5group: h5py.Group, node: dict):
     for key, item in node.items():
         if isinstance(
             item,
-            (np.ndarray, np.int64, np.float64, str, bytes, int, float, list),
+            (
+                np.ndarray,
+                np.int64,
+                np.float64,
+                str,
+                bytes,
+                int,
+                float,
+                list,
+            ),
         ):
             try:
                 h5group.create_dataset(key, data=item)
