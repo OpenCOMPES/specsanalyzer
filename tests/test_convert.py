@@ -1,25 +1,29 @@
 """This is a code that performs several tests for the convert functions
 """
-import matplotlib.pyplot as plt
-import xarray as xr
-import numpy as np
-# let's get all the functions to be tested
-from specsanalyzer.convert import get_damatrix_fromcalib2d
-from specsanalyzer.convert import get_rr_da
-from specsanalyzer.convert import calculate_polynomial_coef_da
-from specsanalyzer.convert import mcp_position_mm
-from specsanalyzer.convert import calculate_matrix_correction
-from specsanalyzer import SpecsAnalyzer
 import os
+
+import numpy as np
+
+from specsanalyzer import SpecsAnalyzer
+from specsanalyzer.convert import calculate_matrix_correction
+from specsanalyzer.convert import calculate_polynomial_coef_da
+from specsanalyzer.convert import get_damatrix_fromcalib2d
+
+# from specsanalyzer.convert import get_rr_da
+# from specsanalyzer.convert import mcp_position_mm
+# let's get all the functions to be tested
+
 
 def test_da_matrix():
 
     # get the raw data
-    raw_image_name=os.fspath('./tests/data/dataEPFL/R9132/Data9132_RAWDATA.tsv')
+    raw_image_name = os.fspath(
+        "./tests/data/dataEPFL/R9132/Data9132_RAWDATA.tsv",
+    )
     with open(raw_image_name) as file:
         tsv_data = np.loadtxt(file, delimiter="\t")
     ########################################
-
+    print(tsv_data)
     # Load the IGOR txt Di_coeff values for comparison
     igordatapath = os.fspath("./tests/data/dataEPFL/R9132")
     igordatapath_content = os.listdir(igordatapath)
@@ -41,7 +45,7 @@ def test_da_matrix():
         with open(tmp_name) as file:
             igor_D_coef_list.append(np.loadtxt(file, delimiter="\t"))
     igor_D_coef_matrix = np.flip(np.vstack(igor_D_coef_list), axis=1)
-  
+
     # Jacobian_correction_reference
     jname = [i for i in igordatapath_content if "Jacobian" in i][0]
     with open(os.path.join(igordatapath, jname)) as file:
@@ -51,7 +55,7 @@ def test_da_matrix():
     jname = [i for i in igordatapath_content if "Angular_Correction" in i][0]
     jname
     with open(os.path.join(igordatapath, jname)) as file:
-       angle_correction_reference = np.loadtxt(file, delimiter="\t").T
+        angular_correction_reference = np.loadtxt(file, delimiter="\t").T
     # e_correction
     jname = [i for i in igordatapath_content if "E_Correction" in i][0]
     jname
@@ -77,9 +81,12 @@ def test_da_matrix():
     )
     # get the polynomial coefficent matrix
     dapolymatrix = calculate_polynomial_coef_da(
-        damatrix, kinetic_energy, pass_energy, eshift
+        damatrix,
+        kinetic_energy,
+        pass_energy,
+        eshift,
     )
-    
+
     # get the matrix_correction
     (
         ek_axis,
@@ -95,13 +102,18 @@ def test_da_matrix():
         binning,
         config_dict,
     )
-    
-   
-    
-    
-    np.testing.assert_allclose(damatrix, igor_D_value_matrix, rtol=1e-05)       
+    np.testing.assert_allclose(
+        angular_correction_matrix, angular_correction_reference, rtol=1e-03,
+    )
+    np.testing.assert_allclose(damatrix, igor_D_value_matrix, rtol=1e-05)
     np.testing.assert_allclose(dapolymatrix, igor_D_coef_matrix, rtol=1e-05)
-    np.testing.assert_allclose(jacobian_determinant, jacobian_reference, rtol=1e-04)
-    np.testing.assert_allclose(e_correction, e_correction_reference, rtol=1e-04)
-    
-    
+    np.testing.assert_allclose(
+        jacobian_determinant,
+        jacobian_reference,
+        rtol=1e-04,
+    )
+    np.testing.assert_allclose(
+        e_correction,
+        e_correction_reference,
+        rtol=1e-04,
+    )
