@@ -2,6 +2,7 @@
 
 """
 from typing import Sequence
+from typing import Union
 
 import numpy as np
 import xarray as xr
@@ -9,13 +10,13 @@ import xarray as xr
 
 def gauss2d(
     # pylint: disable=invalid-name, too-many-arguments
-    x: float,
-    y: float,
+    x: Union[float, np.ndarray],
+    y: Union[float, np.ndarray],
     mx: float,
     my: float,
     sx: float,
     sy: float,
-) -> float:
+) -> Union[float, np.ndarray]:
     """Function to calculate a 2-dimensional Gaussian peak function without
        correlation, and amplitude 1.
 
