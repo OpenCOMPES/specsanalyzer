@@ -15,19 +15,19 @@ import os
 def test_da_matrix():
 
     # get the raw data
-    raw_image_name="tests\data\dataEPFL\R9132\Data9132_RAWDATA.tsv"
+    raw_image_name=os.fspath('./tests/data/dataEPFL/R9132/Data9132_RAWDATA.tsv')
     with open(raw_image_name) as file:
         tsv_data = np.loadtxt(file, delimiter="\t")
     ########################################
 
     # Load the IGOR txt Di_coeff values for comparison
-    igordatapath = "tests\data\dataEPFL\R9132"
+    igordatapath = os.fspath("./tests/data/dataEPFL/R9132")
     igordatapath_content = os.listdir(igordatapath)
 
     # get the Da coefficients
     Di_value_list = [i for i in igordatapath_content if "_value.tsv" in i]
     igor_D_value_list = []
-    for i, name in enumerate(Di_value_list):
+    for i, name in enumerate(sorted(Di_value_list)):
         tmp_name = os.path.join(igordatapath, name)
         with open(tmp_name) as file:
             igor_D_value_list.append(np.loadtxt(file, delimiter="\t"))
@@ -36,26 +36,30 @@ def test_da_matrix():
     # get the fitted polynomial coefficients
     Di_coef_list = [i for i in igordatapath_content if "_coef" in i]
     igor_D_coef_list = []
-    for i, name in enumerate(Di_coef_list):
+    for i, name in enumerate(sorted(Di_coef_list)):
         tmp_name = os.path.join(igordatapath, name)
         with open(tmp_name) as file:
             igor_D_coef_list.append(np.loadtxt(file, delimiter="\t"))
     igor_D_coef_matrix = np.flip(np.vstack(igor_D_coef_list), axis=1)
   
-    # Jacobian
+    # Jacobian_correction_reference
     jname = [i for i in igordatapath_content if "Jacobian" in i][0]
     with open(os.path.join(igordatapath, jname)) as file:
         jacobian_reference = np.loadtxt(file, delimiter="\t").T
 
-    # e_correction
+    # angle_correction_reference
     jname = [i for i in igordatapath_content if "Angular_Correction" in i][0]
     jname
     with open(os.path.join(igordatapath, jname)) as file:
        angle_correction_reference = np.loadtxt(file, delimiter="\t").T
+    # e_correction
+    jname = [i for i in igordatapath_content if "E_Correction" in i][0]
+    jname
+    with open(os.path.join(igordatapath, jname)) as file:
+        e_correction_reference = np.loadtxt(file, delimiter="\t")
 
-
-
-    spa = SpecsAnalyzer(config="tests\data\dataEPFL\config\config.yaml")
+    configpath = os.fspath("./tests/data/dataEPFL/config/config.yaml")
+    spa = SpecsAnalyzer(config=configpath)
     config_dict = spa.config
     lens_mode = "WideAngleMode"
     kinetic_energy = 35.000000
@@ -71,11 +75,12 @@ def test_da_matrix():
         work_function,
         config_dict,
     )
-
+    # get the polynomial coefficent matrix
     dapolymatrix = calculate_polynomial_coef_da(
         damatrix, kinetic_energy, pass_energy, eshift
     )
-
+    
+    # get the matrix_correction
     (
         ek_axis,
         angle_axis,
@@ -90,6 +95,13 @@ def test_da_matrix():
         binning,
         config_dict,
     )
-           
+    
+   
+    
+    
+    np.testing.assert_allclose(damatrix, igor_D_value_matrix, rtol=1e-05)       
     np.testing.assert_allclose(dapolymatrix, igor_D_coef_matrix, rtol=1e-05)
     np.testing.assert_allclose(jacobian_determinant, jacobian_reference, rtol=1e-04)
+    np.testing.assert_allclose(e_correction, e_correction_reference, rtol=1e-04)
+    
+    
