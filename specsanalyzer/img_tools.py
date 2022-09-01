@@ -68,7 +68,7 @@ def fourier_filter_2d(
     mask_i = np.arange(0, image_fft.shape[0], 1)
     mask_j = np.arange(0, image_fft.shape[1], 1)
 
-    mask_i_mesh, mask_j_mesh = np.meshgrid(mask_j, mask_i)
+    mask_i_mesh, mask_j_mesh = np.meshgrid(mask_i, mask_j, indexing="ij")
 
     for peak in peaks:
         try:
@@ -90,7 +90,7 @@ def fourier_filter_2d(
     # apply mask to the FFT, and transform back
     filtered = np.fft.irfft2(image_fft * mask)
 
-    filtered[filtered < 0] = 0
+    # filtered[filtered < 0] = 0
 
     # strip negative values
     # for i in range(0, filtered.shape[0]):
