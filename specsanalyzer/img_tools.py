@@ -65,33 +65,33 @@ def fourier_filter_2d(
     image_fft = np.fft.rfft2(image)
     mask = np.ones(image_fft.shape)
 
-    mask_i=np.arange(0,image_fft.shape[0],1)
-    mask_j=np.arange(0,image_fft.shape[1],1)
+    mask_i = np.arange(0, image_fft.shape[0], 1)
+    mask_j = np.arange(0, image_fft.shape[1], 1)
 
-    mask_i_mesh, mask_j_mesh = np.meshgrid(mask_j,mask_i)
-    
+    mask_i_mesh, mask_j_mesh = np.meshgrid(mask_j, mask_i)
+
     for peak in peaks:
         try:
             mask -= peak["amplitude"] * gauss2d(
-            mask_i_mesh,
-            mask_j_mesh,
-            peak["pos_x"],
-            peak["pos_y"],
-            peak["sigma_x"],
-            peak["sigma_y"],
+                mask_i_mesh,
+                mask_j_mesh,
+                peak["pos_x"],
+                peak["pos_y"],
+                peak["sigma_x"],
+                peak["sigma_y"],
             )
         except KeyError as exc:
             raise KeyError(
-            f"The peaks input is supposed to be a list of dicts with the\
-            following structure: pos_x, pos_y, sigma_x, sigma_y, amplitude. The error was {exc}.",
+                f"The peaks input is supposed to be a list of dicts with the\
+            following structure: pos_x, pos_y, sigma_x, sigma_y, amplitude.\
+                The error was {exc}.",
             ) from exc
 
     # apply mask to the FFT, and transform back
     filtered = np.fft.irfft2(image_fft * mask)
 
-    
-    filtered[filtered < 0]=0
-    
+    filtered[filtered < 0] = 0
+
     # strip negative values
     # for i in range(0, filtered.shape[0]):
     #     for j in range(0, filtered.shape[1]):
