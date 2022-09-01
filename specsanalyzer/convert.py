@@ -1,3 +1,5 @@
+from typing import Tuple
+
 import numpy as np
 from scipy.ndimage import map_coordinates
 
@@ -8,7 +10,7 @@ def get_damatrix_fromcalib2d(
     pass_energy: float,
     work_function: float,
     config_dict: dict,
-) -> tuple[float, np.ndarray]:
+) -> Tuple[float, np.ndarray]:
     """This function estimates the best angular
     conversion coefficients for the current analyser mode, starting from
     a dictionary containing the specs .calib2d database.
@@ -135,7 +137,7 @@ def second_closest_rr(rrvec: np.ndarray, closest_rr_index: int) -> int:
 def get_rr_da(
     lens_mode: str,
     config_dict: dict,
-) -> tuple[np.ndarray, np.ndarray]:
+) -> Tuple[np.ndarray, np.ndarray]:
     """Get the retardatio ratios and the da for a certain lens mode from the
     confugaration dictionary
 
@@ -334,7 +336,7 @@ def calculate_matrix_correction(
     work_function: float,
     binning: int,
     config_dict: dict,
-) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Calculate the matrix correction function for the interpoolation
 
     Args:
