@@ -64,33 +64,32 @@ def fourier_filter_2d(
     # Do Fourier Transform of the (real-valued) image
     image_fft = np.fft.rfft2(image)
     mask = np.ones(image_fft.shape)
-
-    for i in range(image_fft.shape[0]):
-        for j in range(image_fft.shape[1]):
-            for peak in peaks:
-                try:
-                    mask[i][j] -= peak["amplitude"] * gauss2d(
-                        i,
-                        j,
-                        peak["pos_x"],
-                        peak["pos_y"],
-                        peak["sigma_x"],
-                        peak["sigma_y"],
-                    )
-                except KeyError as exc:
-                    raise KeyError(
-                        f"The peaks input is supposed to be a list of dicts with the\
+    ygrid, xgrid = np.meshgrid(
+        range(image_fft.shape[1]),
+        range(image_fft.shape[0]),
+        sparse=True,
+    )
+    for peak in peaks:
+        try:
+            mask -= peak["amplitude"] * gauss2d(
+                xgrid,
+                ygrid,
+                peak["pos_x"],
+                peak["pos_y"],
+                peak["sigma_x"],
+                peak["sigma_y"],
+            )
+        except KeyError as exc:
+            raise KeyError(
+                f"The peaks input is supposed to be a list of dicts with the\
 following structure: pos_x, pos_y, sigma_x, sigma_y, amplitude. The error was {exc}.",
-                    ) from exc
+            ) from exc
 
     # apply mask to the FFT, and transform back
     filtered = np.fft.irfft2(image_fft * mask)
 
     # strip negative values
-    for i in range(0, filtered.shape[0]):
-        for j in range(0, filtered.shape[1]):
-            filtered[i, j] = filtered[i][j] if filtered[i][j] > 0 else 0
-
+    filtered = filtered.clip(min=0)
     if ret == "filtered":
         return filtered
     if ret == "fft":
