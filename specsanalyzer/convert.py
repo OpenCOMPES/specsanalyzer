@@ -520,7 +520,10 @@ def physical_unit_data(
     # flatten the x and y to a 2 x N coordinates array
     # N = Nxpix x Nypixels
     coords = np.array(
-        (angular_correction_matrix.flatten(), e_correction_matrix.flatten()),
+        (
+            angular_correction_matrix.flatten(),
+            e_correction_matrix.flatten(),
+        ),
     )
 
     # the image is expressed as intensity vs pixels,
