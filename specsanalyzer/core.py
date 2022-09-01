@@ -17,12 +17,6 @@ from specsanalyzer.img_tools import fourier_filter_2d
 from specsanalyzer.metadata import MetaHandler
 from specsanalyzer.settings import parse_config
 
-# from typing import Any
-# from typing import List
-# from typing import Tuple
-# import numpy as np
-# from .convert import convert_image
-
 package_dir = os.path.dirname(__file__)
 
 
@@ -74,7 +68,7 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
         """Get config"""
         return self._correction_matrix_dict
 
-    def convert_image(
+    def convert_image(  # pylint: disable=too-many-locals
         self,
         raw_img: np.ndarray,
         lens_mode: str,
@@ -151,7 +145,7 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
 
         except KeyError:
             old_matrix_check = False
-            (
+            (  # pylint: disable=R0801
                 ek_axis,
                 angle_axis,
                 angular_correction_matrix,
@@ -212,7 +206,7 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
         )
 
         # TODO: annotate with metadata
-        da = xr.DataArray(
+        data_array = xr.DataArray(
             data=conv_img,
             coords={"Angle": angle_axis, "Ekin": ek_axis},
             dims=["Angle", "Ekin"],
@@ -228,9 +222,15 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
             ek_max = kwds.pop("ek_max", self._config["ek_max"])
             ang_min = kwds.pop("ang_min", self._config["ang_min"])
             ang_max = kwds.pop("ang_max", self._config["ang_max"])
-            da = crop_xarray(da, ang_min, ang_max, ek_min, ek_max)
+            data_array = crop_xarray(
+                data_array,
+                ang_min,
+                ang_max,
+                ek_min,
+                ek_max,
+            )
 
-        return da
+        return data_array
 
 
 def mergedicts(dict1, dict2):
