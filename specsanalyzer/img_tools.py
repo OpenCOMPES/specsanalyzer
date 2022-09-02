@@ -89,14 +89,8 @@ def fourier_filter_2d(
 
     # apply mask to the FFT, and transform back
     filtered = np.fft.irfft2(image_fft * mask)
-
-    # filtered[filtered < 0] = 0
-
     # strip negative values
-    # for i in range(0, filtered.shape[0]):
-    #     for j in range(0, filtered.shape[1]):
-    #         filtered[i, j] = filtered[i][j] if filtered[i][j] > 0 else 0
-
+    filtered[filtered < 0] = 0
     if ret == "filtered":
         return filtered
     if ret == "fft":

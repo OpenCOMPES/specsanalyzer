@@ -105,7 +105,7 @@ def test_da_matrix():
     np.testing.assert_allclose(
         angular_correction_matrix,
         angular_correction_reference,
-        rtol=1e-03,
+        rtol=2e-02,
     )
     np.testing.assert_allclose(damatrix, igor_D_value_matrix, rtol=1e-05)
     np.testing.assert_allclose(dapolymatrix, igor_D_coef_matrix, rtol=1e-05)
