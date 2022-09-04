@@ -5,9 +5,9 @@ import os
 import numpy as np
 import xarray as xr
 
+from specsanalyzer.img_tools import crop_xarray
 from specsanalyzer.img_tools import fourier_filter_2d
 from specsanalyzer.settings import parse_config
-# from specsanalyzer.img_tools import crop_xarray
 
 test_dir = os.path.dirname(__file__)
 
@@ -37,24 +37,32 @@ def test_fourier_filter_2d():
         atol=1e-10,
     )
 
-    config_path = os.fspath('./tests/data/config/config.yaml')
-    data_path = os.fspath('./tests/data/dataFHI/Scan1232.tsv')
-    filtered_path = os.fspath('./tests/data/dataFHI/Scan1232_filtered.tsv')
-    config = parse_config(config_path)
+    config = parse_config(f"{test_dir}/data/config/config.yaml")
     peaks = config["fft_filter_peaks"]
     with open(
-        data_path,
-            encoding="utf-8",
+        f"{test_dir}/data/dataFHI/Scan1232.tsv",
+        encoding="utf-8",
     ) as file:
         tsv_data = np.loadtxt(file, delimiter="\t")
 
     filtered = fourier_filter_2d(tsv_data, peaks)
 
     with open(
-        filtered_path,
-            encoding="utf-8",
+        f"{test_dir}/data/dataFHI/Scan1232_filtered.tsv",
+        encoding="utf-8",
     ) as file:
         ref = np.loadtxt(file, delimiter="\t")
     ref = ref.T
 
     np.testing.assert_allclose(ref, filtered, atol=3.5)
+
+
+def test_fourier_filter_2d_raises():
+    """Test if the Fourier filter function raises an error if a key is not defined."""
+    with np.testing.assert_raises(KeyError):
+        fourier_filter_2d(array2d, [{"amplitude": 1}])
+
+
+def test_crop_xarray():
+    """Test if the cropping function leaves the xarray intact if we don't crop it."""
+    np.testing.assert_allclose(da, crop_xarray(da, 0, 1, 0, 1))
