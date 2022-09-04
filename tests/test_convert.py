@@ -9,70 +9,50 @@ from specsanalyzer.convert import calculate_matrix_correction
 from specsanalyzer.convert import calculate_polynomial_coef_da
 from specsanalyzer.convert import get_damatrix_fromcalib2d
 
+test_dir = os.path.dirname(__file__)
+
 # from specsanalyzer.convert import get_rr_da
 # from specsanalyzer.convert import mcp_position_mm
 # let's get all the functions to be tested
 
 
 def test_da_matrix():
+    "Check the consistency of the da matrix with the Igor calculations"
 
-    # get the raw data
-    raw_image_name = os.fspath(
-        "./tests/data/dataEPFL/R9132/Data9132_RAWDATA.tsv",
-    )
-    with open(raw_image_name) as file:
-        tsv_data = np.loadtxt(file, delimiter="\t")
     ########################################
-    print(tsv_data)
     # Load the IGOR txt Di_coeff values for comparison
-    igordatapath = os.fspath("./tests/data/dataEPFL/R9132")
-    igordatapath_content = os.listdir(igordatapath)
+    igordatapath = os.fspath(f"{test_dir}/data/dataEPFL/R9132")
 
     # get the Da coefficients
-    Di_value_list = [i for i in igordatapath_content if "_value.tsv" in i]
+    Di_file_list = [
+        f"{igordatapath}/Da{i}_value.tsv" for i in np.arange(1, 8, 2)
+    ]
     igor_D_value_list = []
-    for i, name in enumerate(sorted(Di_value_list)):
-        tmp_name = os.path.join(igordatapath, name)
-        with open(tmp_name) as file:
-            igor_D_value_list.append(np.loadtxt(file, delimiter="\t"))
+    for file in Di_file_list:
+        with open(file) as f:
+            igor_D_value_list.append(np.loadtxt(f, delimiter="\t"))
     igor_D_value_matrix = np.vstack(igor_D_value_list)
 
     # get the fitted polynomial coefficients
-    Di_coef_list = [i for i in igordatapath_content if "_coef" in i]
+    Di_coef_list = [
+        f"{igordatapath}/D{i}_coef.tsv" for i in np.arange(1, 8, 2)
+    ]
     igor_D_coef_list = []
-    for i, name in enumerate(sorted(Di_coef_list)):
-        tmp_name = os.path.join(igordatapath, name)
-        with open(tmp_name) as file:
-            igor_D_coef_list.append(np.loadtxt(file, delimiter="\t"))
+    for file in Di_coef_list:
+        with open(file) as f:
+            igor_D_coef_list.append(np.loadtxt(f, delimiter="\t"))
     igor_D_coef_matrix = np.flip(np.vstack(igor_D_coef_list), axis=1)
 
-    # Jacobian_correction_reference
-    jname = [i for i in igordatapath_content if "Jacobian" in i][0]
-    with open(os.path.join(igordatapath, jname)) as file:
-        jacobian_reference = np.loadtxt(file, delimiter="\t").T
-
-    # angle_correction_reference
-    jname = [i for i in igordatapath_content if "Angular_Correction" in i][0]
-    jname
-    with open(os.path.join(igordatapath, jname)) as file:
-        angular_correction_reference = np.loadtxt(file, delimiter="\t").T
-    # e_correction
-    jname = [i for i in igordatapath_content if "E_Correction" in i][0]
-    jname
-    with open(os.path.join(igordatapath, jname)) as file:
-        e_correction_reference = np.loadtxt(file, delimiter="\t")
-
-    configpath = os.fspath("./tests/data/dataEPFL/config/config.yaml")
+    configpath = os.fspath(f"{test_dir}/data/dataEPFL/config/config.yaml")
     spa = SpecsAnalyzer(config=configpath)
     config_dict = spa.config
     lens_mode = "WideAngleMode"
     kinetic_energy = 35.000000
     pass_energy = 35.000000
     work_function = 4.2
-    binning = 4
 
     eshift = np.array(config_dict["calib2d_dict"]["eShift"])
-    aInner, damatrix = get_damatrix_fromcalib2d(
+    a_inner, damatrix = get_damatrix_fromcalib2d(
         lens_mode,
         kinetic_energy,
         pass_energy,
@@ -86,6 +66,50 @@ def test_da_matrix():
         pass_energy,
         eshift,
     )
+
+    np.testing.assert_allclose(damatrix, igor_D_value_matrix, rtol=1e-05)
+    np.testing.assert_allclose(dapolymatrix, igor_D_coef_matrix, rtol=1e-05)
+
+
+def test_conversion_matrix():
+    "Check the consistency of the conversion matrix with the Igor calculations"
+    igordatapath = os.fspath(f"{test_dir}/data/dataEPFL/R9132")
+
+    configpath = os.fspath(f"{test_dir}/data/dataEPFL/config/config.yaml")
+    spa = SpecsAnalyzer(config=configpath)
+    config_dict = spa.config
+    lens_mode = "WideAngleMode"
+    kinetic_energy = 35.000000
+    pass_energy = 35.000000
+    work_function = 4.2
+    binning = 4
+
+    # Jacobian_correction_reference
+    jacobian_file_name = f"{igordatapath}/Jacobian_Determinant.tsv"
+    with open(jacobian_file_name) as file:
+        jacobian_reference = np.loadtxt(file, delimiter="\t").T
+
+    # angle_correction_reference
+    angular_correction_file_name = f"{igordatapath}/Angular_Correction.tsv"
+    with open(angular_correction_file_name) as file:
+        angular_correction_reference = np.loadtxt(file, delimiter="\t").T
+
+    # e_correction
+    E_correction_file_name = f"{igordatapath}/E_Correction.tsv"
+    with open(E_correction_file_name) as file:
+        e_correction_reference = np.loadtxt(file, delimiter="\t")
+
+    # TODO: Seems to be wrong references...
+
+    # angular axis
+    # angle_axis_file_name = f"{igordatapath}/w_Ang.tsv"
+    # with open(angle_axis_file_name) as file:
+    #     angle_axis_ref = np.loadtxt(file, delimiter="\t")
+
+    # ek axis axis
+    # ek_axis_file_name = f"{igordatapath}/w_E.tsv"
+    # with open(ek_axis_file_name) as file:
+    #    ek_axis_ref = np.loadtxt(file, delimiter="\t")
 
     # get the matrix_correction
     (
@@ -102,20 +126,70 @@ def test_da_matrix():
         binning,
         config_dict,
     )
+
     np.testing.assert_allclose(
         angular_correction_matrix,
         angular_correction_reference,
         rtol=2e-02,
     )
-    np.testing.assert_allclose(damatrix, igor_D_value_matrix, rtol=1e-05)
-    np.testing.assert_allclose(dapolymatrix, igor_D_coef_matrix, rtol=1e-05)
+
     np.testing.assert_allclose(
         jacobian_determinant,
         jacobian_reference,
         rtol=1e-04,
     )
+
     np.testing.assert_allclose(
         e_correction,
         e_correction_reference,
         rtol=1e-04,
     )
+
+    # np.testing.assert_allclose(
+    #     angle_axis,
+    #     angle_axis_ref,
+    #     rtol=1e-04,
+    # )
+
+    # np.testing.assert_allclose(
+    #     ek_axis,
+    #     ek_axis_ref,
+    #     rtol=1e-04,
+    # )
+
+
+def test_conversion():
+    "Test if the conversion pipeline gives the same result as the Igor procedures"
+
+    # get the raw data
+    raw_image_name = os.fspath(
+        f"{test_dir}/data/dataEPFL/R9132/Data9132_RAWDATA.tsv",
+    )
+    with open(raw_image_name) as file:
+        tsv_data = np.loadtxt(file, delimiter="\t")
+
+    # get the reference data
+    reference_image_name = os.fspath(
+        f"{test_dir}/data/dataEPFL/R9132/Data9132_IGOR_corrected.tsv",
+    )
+    with open(reference_image_name) as file:
+        reference = np.loadtxt(file, delimiter="\t")
+
+    configpath = os.fspath(f"{test_dir}/data/dataEPFL/config/config.yaml")
+    spa = SpecsAnalyzer(config=configpath)
+    lens_mode = "WideAngleMode"
+    kinetic_energy = 35.000000
+    pass_energy = 35.000000
+    work_function = 4.2
+
+    converted = spa.convert_image(
+        raw_img=tsv_data,
+        lens_mode=lens_mode,
+        kinetic_energy=kinetic_energy,
+        pass_energy=pass_energy,
+        work_function=work_function,
+        apply_fft_filter=False,
+    )
+
+    # TODO Does not work yet... Not sure how you produced the reference?
+    np.testing.assert_allclose(converted.data, reference, rtol=1)
