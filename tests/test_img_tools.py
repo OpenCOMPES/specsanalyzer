@@ -37,10 +37,13 @@ def test_fourier_filter_2d():
         atol=1e-10,
     )
 
-    config = parse_config(f"{test_dir}/data/config/config.yaml")
+    config_path = os.fspath(f"{test_dir}/data/config/config.yaml")
+    data_path = os.fspath(f"{test_dir}/data/dataFHI/Scan1232.tsv")
+    filtered_path = os.fspath(f"{test_dir}/data/dataFHI/Scan1232_filtered.tsv")
+    config = parse_config(config_path)
     peaks = config["fft_filter_peaks"]
     with open(
-        f"{test_dir}/data/dataFHI/Scan1232.tsv",
+        data_path,
         encoding="utf-8",
     ) as file:
         tsv_data = np.loadtxt(file, delimiter="\t")
@@ -48,7 +51,7 @@ def test_fourier_filter_2d():
     filtered = fourier_filter_2d(tsv_data, peaks)
 
     with open(
-        f"{test_dir}/data/dataFHI/Scan1232_filtered.tsv",
+        filtered_path,
         encoding="utf-8",
     ) as file:
         ref = np.loadtxt(file, delimiter="\t")
