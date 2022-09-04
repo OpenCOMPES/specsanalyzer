@@ -2,6 +2,7 @@
 
 """
 from typing import Sequence
+from typing import Union
 
 import numpy as np
 import xarray as xr
@@ -9,13 +10,13 @@ import xarray as xr
 
 def gauss2d(
     # pylint: disable=invalid-name, too-many-arguments
-    x: float,
-    y: float,
+    x: Union[float, np.ndarray],
+    y: Union[float, np.ndarray],
     mx: float,
     my: float,
     sx: float,
     sy: float,
-) -> float:
+) -> Union[float, np.ndarray]:
     """Function to calculate a 2-dimensional Gaussian peak function without
        correlation, and amplitude 1.
 
@@ -64,17 +65,17 @@ def fourier_filter_2d(
     # Do Fourier Transform of the (real-valued) image
     image_fft = np.fft.rfft2(image)
     mask = np.ones(image_fft.shape)
-
-    mask_i = np.arange(0, image_fft.shape[0], 1)
-    mask_j = np.arange(0, image_fft.shape[1], 1)
-
-    mask_i_mesh, mask_j_mesh = np.meshgrid(mask_i, mask_j, indexing="ij")
-
+    xgrid, ygrid = np.meshgrid(
+        range(image_fft.shape[0]),
+        range(image_fft.shape[1]),
+        indexing="ij",
+        sparse=True,
+    )
     for peak in peaks:
         try:
             mask -= peak["amplitude"] * gauss2d(
-                mask_i_mesh,
-                mask_j_mesh,
+                xgrid,
+                ygrid,
                 peak["pos_x"],
                 peak["pos_y"],
                 peak["sigma_x"],
@@ -83,14 +84,13 @@ def fourier_filter_2d(
         except KeyError as exc:
             raise KeyError(
                 f"The peaks input is supposed to be a list of dicts with the\
-            following structure: pos_x, pos_y, sigma_x, sigma_y, amplitude.\
-                The error was {exc}.",
+following structure: pos_x, pos_y, sigma_x, sigma_y, amplitude. The error was {exc}.",
             ) from exc
 
     # apply mask to the FFT, and transform back
     filtered = np.fft.irfft2(image_fft * mask)
     # strip negative values
-    filtered[filtered < 0] = 0
+    filtered = filtered.clip(min=0)
     if ret == "filtered":
         return filtered
     if ret == "fft":
