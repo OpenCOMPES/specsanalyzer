@@ -1,3 +1,3 @@
-data_path: "/mnt/topfloor/trARPES/"
+data_path: "//nap32/topfloor/trARPES/PESData/"
 spa_params:
   apply_fft_filter: false
