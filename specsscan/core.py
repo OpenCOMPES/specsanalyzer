@@ -92,7 +92,7 @@ class SpecsScan:
             # search for the given scan using the default path
             path = Path(self._config['data_path'])
             # takes upto 55 seconds to look for the folder using glob
-            # path_scan = sorted(path.glob(f"20[1,2][9,0-9]/*/*/Raw Data/{scan}"))[0]
+            # path_scan = sorted(path.glob(f"20[1,2][9,0-9]/*/*/Raw Data/{scan}"))
             # takes upto 23 seconds using user defined function for the same scan
             path_scan = find_scan(path, scan)
             if path_scan:
