@@ -219,7 +219,7 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
         return data_array
 
 
-def mergedicts(dict1: dict, dict2: dict) -> Generator[dict]:
+def mergedicts(dict1: dict, dict2: dict) -> Generator[dict, None, None]:
     """Merge two dictionaries, overwriting only existing values and retaining
     previously present values
 
