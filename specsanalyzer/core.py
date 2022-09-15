@@ -1,9 +1,12 @@
 """This is the specsanalyzer core class
 
 """
+# from csv import DictReader
 import os
 from typing import Any
 from typing import Dict
+from typing import Generator
+from typing import Tuple
 from typing import Union
 
 import numpy as np
@@ -48,8 +51,9 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
         if self._config is None:
             pretty_str = "No configuration available"
         else:
-            for key in self._config:
-                pretty_str += print(f"{self._config[key]}\n")
+            pretty_str = ""
+            for k in self._config:
+                pretty_str += f"{k} = {self._config[k]}\n"
         # TODO Proper report with scan number, dimensions, configuration etc.
         return pretty_str if pretty_str is not None else ""
 
@@ -63,41 +67,36 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
         """Set config"""
         self._config = parse_config(config)
 
+    @property
+    def correction_matrix_dict(self):
+        """Get correction_matrix_dict"""
+        return self._correction_matrix_dict
+
     def convert_image(  # pylint: disable=too-many-locals
         self,
         raw_img: np.ndarray,
-        pass_energy: float,
-        kinetic_energy: float,
         lens_mode: str,
+        kinetic_energy: float,
+        pass_energy: float,
+        work_function: float,
         **kwds,
     ) -> xr.DataArray:
-        """Converts raw image into physical unit coordinates.
-        Args:
-            raw_img: raw image data as numpy 2D ndarray
-            pass_energy: the pass energy in eV
-            kinetic_energy: the kinetic energy in eV
-            lens_mode: the lens mode as string. Depending on the calibration file,
-                    the following lens modes are supported:
-                    -LowAngularDispersion
-                    -MediumAngularDispersion
-                    -HighAngularDispersion
-                    -WideAngleMode
-                    -LargeArea
-                    -MediumArea
-                    -SmallArea
-                    -SmallArea2
-                    -HighMagnification2
-                    -HighMagnification
-                    -LowMagnification
-                    -SuperWideAngleMode
-            **kwds: additional config keywords
+        """Converts an imagin in physical unit data, angle vs energy
 
-        Raises:
-            ...
+
+        Args:
+            raw_img (np.ndarray): Raw image data, numpy 2d matrix
+            lens_mode (str):
+                analzser lens mode, check calib2d for a list
+                of modes Camelback naming convention e.g. "WideAngleMode"
+
+            kinetic_energy (float): set analyser kinetic energy
+            pass_energy (float): set analyser pass energy
+            work_function (float): set analyser work function
 
         Returns:
-            da: xarray DataArray object with kinetic energy and angle/position as
-                coordinates
+            xr.DataArray: xarray containg the corrected data and kinetic
+            and angle axis
         """
 
         apply_fft_filter = kwds.pop(
@@ -118,25 +117,27 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
         else:
             img = raw_img
 
+        # TODO add image rotation
+
         # TODO check valid lens modes
 
+        # check if the correction matrix dic
+        # contains already the angular correction for the
+        # current kinetic_energy, pass_energy, work_function
+
         try:
-            ek_axis = self._correction_matrix_dict[lens_mode][pass_energy][
-                kinetic_energy
-            ]["ek_axis"]
-            angle_axis = self._correction_matrix_dict[lens_mode][pass_energy][
-                kinetic_energy
-            ]["angle_axis"]
-            angular_correction_matrix = self._correction_matrix_dict[
-                lens_mode
-            ][pass_energy][kinetic_energy]["angular_correction_matrix"]
-            e_correction = self._correction_matrix_dict[lens_mode][
+            old_db = self._correction_matrix_dict[lens_mode][kinetic_energy][
                 pass_energy
-            ][kinetic_energy]["e_correction"]
-            jacobian_determinant = self._correction_matrix_dict[lens_mode][
-                pass_energy
-            ][kinetic_energy]["jacobian_determinant"]
+            ][work_function]
+
+            ek_axis = old_db["ek_axis"]
+            angle_axis = old_db["angle_axis"]
+            angular_correction_matrix = old_db["angular_correction_matrix"]
+            e_correction = old_db["e_correction"]
+            jacobian_determinant = old_db["jacobian_determinant"]
+
         except KeyError:
+            old_matrix_check = False
             (  # pylint: disable=R0801
                 ek_axis,
                 angle_axis,
@@ -145,12 +146,44 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
                 jacobian_determinant,
             ) = calculate_matrix_correction(
                 lens_mode,
-                pass_energy,
                 kinetic_energy,
+                pass_energy,
+                work_function,
                 binning,
                 self._config,
             )
-            # TODO: store result in dictionary.
+
+            # save the config parameters for later use
+            # collect the info in a new nested dictionary
+            current_correction = {
+                lens_mode: {
+                    kinetic_energy: {
+                        pass_energy: {
+                            work_function: {
+                                "ek_axis": ek_axis,
+                                "angle_axis": angle_axis,
+                                "angular_correction_matrix": angular_correction_matrix,
+                                "e_correction": e_correction,
+                                "jacobian_determinant": jacobian_determinant,
+                            },
+                        },
+                    },
+                },
+            }
+
+            # check if some correction energy matrix already exists in the
+            # dictionary
+            self._correction_matrix_dict = dict(
+                mergedicts(self._correction_matrix_dict, current_correction),
+            )
+        else:
+            old_matrix_check = True
+
+        # save a flag called old_matrix_check to determine if the current
+        # image was corrected using (True) or not using (False) the
+        # parameter in the class
+
+        self._correction_matrix_dict["old_matrix_check"] = old_matrix_check
 
         conv_img = physical_unit_data(
             img,
@@ -158,6 +191,7 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
             e_correction,
             jacobian_determinant,
         )
+
         # TODO: annotate with metadata
         data_array = xr.DataArray(
             data=conv_img,
@@ -184,3 +218,34 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
             )
 
         return data_array
+
+
+def mergedicts(
+    dict1: dict,
+    dict2: dict,
+) -> Generator[Tuple[Any, Any], None, None]:
+    """Merge two dictionaries, overwriting only existing values and retaining
+    previously present values
+
+    Args:
+        dict1 (dict): dictionary 1
+        dict2 (dict): dictiontary 2
+
+    Yields:
+        dict: merged dictionary generator
+    """
+    for k in set(dict1.keys()).union(dict2.keys()):
+        if k in dict1 and k in dict2:
+            if isinstance(dict1[k], dict) and isinstance(dict2[k], dict):
+                yield (k, dict(mergedicts(dict1[k], dict2[k])))
+            else:
+                # If one of the values is not a dict,
+                #  you can't continue merging it.
+                # Value from second dict overrides one in first and we move on.
+                yield (k, dict2[k])
+                # Alternatively, replace this with exception
+                # raiser to alert you of value conflicts
+        elif k in dict1:
+            yield (k, dict1[k])
+        else:
+            yield (k, dict2[k])

@@ -65,9 +65,10 @@ def fourier_filter_2d(
     # Do Fourier Transform of the (real-valued) image
     image_fft = np.fft.rfft2(image)
     mask = np.ones(image_fft.shape)
-    ygrid, xgrid = np.meshgrid(
-        range(image_fft.shape[1]),
+    xgrid, ygrid = np.meshgrid(
         range(image_fft.shape[0]),
+        range(image_fft.shape[1]),
+        indexing="ij",
         sparse=True,
     )
     for peak in peaks:
@@ -88,7 +89,6 @@ following structure: pos_x, pos_y, sigma_x, sigma_y, amplitude. The error was {e
 
     # apply mask to the FFT, and transform back
     filtered = np.fft.irfft2(image_fft * mask)
-
     # strip negative values
     filtered = filtered.clip(min=0)
     if ret == "filtered":

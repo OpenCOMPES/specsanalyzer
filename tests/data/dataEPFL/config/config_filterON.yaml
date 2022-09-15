@@ -1,14 +1,12 @@
-calib2d_file: "../tests/data/dataFHI/phoibos150.calib2d"
+calib2d_file: "../specsanalyzer/config/phoibos150.calib2d"
 nx_pixel: 1376
 ny_pixel: 1024
-binning: 4
 pixel_size: 0.00645
 magnification: 4.54
-work_function: 4.58
-Ang_Offset_px: 0
+Ang_Offset_px: -2
 E_Offset_px: 0
-crop: False
 apply_fft_filter: True
+crop: False
 fft_filter_peaks:
   - amplitude: .95
     pos_x: 77.9131
