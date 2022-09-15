@@ -26,9 +26,11 @@ jobs:
       run: |
         python -m pycodestyle --ignore=E501,W503 specsanalyzer tests
     - name: pylint
+      if: ${{ always() }}
       run: |
-        python -m pylint --good-names=i,j,k,ex,x,y,k,v specsanalyzer tests
+        python -m pylint --good-names=i,j,k,ex,x,y,k,v --disable=fixme specsanalyzer tests
     - name: mypy
+      if: ${{ always() }}
       run: |
         python -m mypy --ignore-missing-imports --follow-imports=silent --no-strict-optional specsanalyzer tests
     - name: Test with pytest
