@@ -11,11 +11,11 @@ repos:
     -   id: check-ast
     -   id: check-docstring-first
 
-#-   repo: https://github.com/psf/black
-#    rev: 22.1.0
-#    hooks:
-#    -   id: black
-#        args: [--line-length=79]
+-   repo: https://github.com/psf/black
+    rev: 22.1.0
+    hooks:
+    -   id: black
+        args: [--line-length=79]
 -   repo: https://github.com/PyCQA/flake8
     rev: 4.0.1
     hooks:
@@ -35,8 +35,8 @@ repos:
     hooks:
     -   id: add-trailing-comma
         args: [--py36-plus]
-#-   repo: https://gitlab.com/iamlikeme/nbhooks
-#    rev: 1.0.0
-#    hooks:
-#    -   id: nb-ensure-clean
-#        args: [--meta, ExecuteTime]
+-   repo: https://gitlab.com/iamlikeme/nbhooks
+    rev: 1.0.0
+    hooks:
+    -   id: nb-ensure-clean
+        args: [--meta, ExecuteTime]
