@@ -1,10 +1,12 @@
+"""Specsanalyzer image conversion module
+"""
 from typing import Tuple
 
 import numpy as np
 from scipy.ndimage import map_coordinates
 
 
-def get_damatrix_fromcalib2d(
+def get_damatrix_fromcalib2d(  # pylint: disable=too-many-locals
     lens_mode: str,
     kinetic_energy: float,
     pass_energy: float,
@@ -94,26 +96,27 @@ def bisection(array: np.ndarray, value: float) -> int:
         array[j] and array[j+1]
     """
 
-    n = len(array)
+    num_elems = len(array)
     if value < array[0]:
         return -1
-    elif value > array[n - 1]:
-        return n
-    jl = 0  # Initialize lower
-    ju = n - 1  # and upper limits.
-    while ju - jl > 1:  # If we are not yet done,
-        jm = (ju + jl) >> 1  # compute a midpoint with a bitshift
-        if value >= array[jm]:
-            jl = jm  # and replace either the lower limit
+    if value > array[num_elems - 1]:
+        return num_elems
+    lower_index = 0  # Initialize lower
+    upper_index = num_elems - 1  # and upper limits.
+    while upper_index - lower_index > 1:  # If we are not yet done,
+        # compute a midpoint with a bitshift
+        middle_index = (upper_index + lower_index) >> 1
+        if value >= array[middle_index]:
+            lower_index = middle_index  # and replace either the lower limit
         else:
-            ju = jm  # or the upper limit, as appropriate.
+            upper_index = middle_index  # or the upper limit, as appropriate.
         # Repeat until the test condition is satisfied.
     if value == array[0]:  # edge cases at bottom
         return 0
-    elif value == array[n - 1]:  # and top
-        return n - 1
-    else:
-        return jl
+    if value == array[num_elems - 1]:  # and top
+        return num_elems - 1
+
+    return lower_index
 
 
 def second_closest_rr(rrvec: np.ndarray, closest_rr_index: int) -> int:
@@ -164,8 +167,8 @@ def get_rr_da(
 
     try:
         dim3 = len(base_dict[rr_array[0]]["Da1"])
-    except KeyError:
-        raise ValueError("Da values do not exist for the given mode.")
+    except KeyError as exc:
+        raise ValueError("Da values do not exist for the given mode.") from exc
     da_matrix = np.zeros([dim1, dim2, dim3])
     for count, item in enumerate(rr_array):
         a_inner = base_dict[item]["aInner"]
@@ -235,9 +238,9 @@ def calculate_polynomial_coef_da(
 
 
 def zinner(
-    ek: float,
+    kinetic_energy: float,
     angle: float,
-    dapolymatrix: np.ndarray,
+    da_poly_matrix: np.ndarray,
 ) -> float:
     """Auxiliary function for mcp_position_mm, uses kinetic energy and angle
     starting from the dapolymatrix, to get
@@ -245,9 +248,9 @@ def zinner(
     mcp withing the a_inner boundaries
 
     Args:
-        ek (float): kinetic energy
+        kinetic_energy (float): kinetic energy
         angle (float): angle
-        dapolymatrix (np.ndarray): matrix with polynomial coefficients
+        da_poly_matrix (np.ndarray): matrix with polynomial coefficients
 
     Returns:
         float: returns the calcualted position on the mcp,
@@ -255,19 +258,19 @@ def zinner(
     """
     out = 0
 
-    for i in np.arange(0, dapolymatrix.shape[0], 1):
+    for i in np.arange(0, da_poly_matrix.shape[0], 1):
         out = out + (
             (10.0 ** (-2 * i))
             * (angle ** (1 + 2 * i))
-            * np.polyval(dapolymatrix[i][:], ek)
+            * np.polyval(da_poly_matrix[i][:], kinetic_energy)
         )
     return out
 
 
 def zinner_diff(
-    ek: float,
+    kinetic_energy: float,
     angle: float,
-    dapolymatrix: np.ndarray,
+    da_poly_matrix: np.ndarray,
 ) -> float:
     """Auxiliary function for mcp_position_mm, uses kinetic energy and angle
     starting from the dapolymatrix, to get
@@ -275,9 +278,9 @@ def zinner_diff(
     mcp outside the a_inner boundaries
 
     Args:
-        ek (float): kinetic energy
+        kinetic_energy (float): kinetic energy
         angle (float): angle
-        dapolymatrix (np.ndarray): polynomial matrix
+        da_poly_matrix (np.ndarray): polynomial matrix
 
     Returns:
         float: zinner_diff the correction for the
@@ -287,37 +290,37 @@ def zinner_diff(
 
     out = 0
 
-    for i in np.arange(0, dapolymatrix.shape[0], 1):
+    for i in np.arange(0, da_poly_matrix.shape[0], 1):
 
         out = out + (
             (10.0 ** (-2 * i))
             * (1 + 2 * i)
             * (angle ** (2 * i))
-            * np.polyval(dapolymatrix[i][:], ek)
+            * np.polyval(da_poly_matrix[i][:], kinetic_energy)
         )
 
     return out
 
 
 def mcp_position_mm(
-    ek: float,
+    kinetic_energy: float,
     angle: float,
     a_inner: float,
-    dapolymatrix: np.ndarray,
+    da_poly_matrix: np.ndarray,
 ) -> np.ndarray:
     """calculated the position of the photoelectron on the mcp, for
     a certain kinetic energy and emission angle. This is determined for
     the given lens mode (as defined by the a_inner and dapolymatrix)
 
     Args:
-        ek (float): kinetic energy
+        kinetic_energy (float): kinetic energy
         angle (float): photoemission angle
         a_inner (float): inner angle parameter of the lens mode
-        dapolymatrix (np.ndarray): matrix with the polynomial correction
+        da_poly_matrix (np.ndarray): matrix with the polynomial correction
         coefficients for calculating the arrival position on the MCP
     Returns:
-        np.ndarray: lateral position of photoelectron on the mcp (angular dis
-        persing axis)
+        np.ndarray:
+            lateral position of photoelectron on the mcp (angular dispersing axis)
     """
 
     # define two angular regions: within and outsied the a_inner boundaries
@@ -327,18 +330,18 @@ def mcp_position_mm(
 
     result = np.where(
         mask,
-        zinner(ek, angle, dapolymatrix),
+        zinner(kinetic_energy, angle, da_poly_matrix),
         np.sign(angle)
         * (
-            zinner(ek, a_inner_vec, dapolymatrix)
+            zinner(kinetic_energy, a_inner_vec, da_poly_matrix)
             + (np.abs(angle) - a_inner_vec)
-            * zinner_diff(ek, a_inner_vec, dapolymatrix)
+            * zinner_diff(kinetic_energy, a_inner_vec, da_poly_matrix)
         ),
     )
     return result
 
 
-def calculate_matrix_correction(
+def calculate_matrix_correction(  # pylint: disable=too-many-arguments, too-many-locals
     lens_mode: str,
     kinetic_energy: float,
     pass_energy: float,
@@ -370,9 +373,12 @@ def calculate_matrix_correction(
         jacobian_determinant, the transformation jacobian for area preserving
         transformation
     """
-    eshift = np.array(config_dict["calib2d_dict"]["eShift"])
+    e_shift = np.array(config_dict["calib2d_dict"]["eShift"])
 
-    aInner, damatrix = get_damatrix_fromcalib2d(
+    (
+        a_inner,
+        da_matrix,
+    ) = get_damatrix_fromcalib2d(  # pylint: disable=duplicate-code
         lens_mode,
         kinetic_energy,
         pass_energy,
@@ -380,19 +386,19 @@ def calculate_matrix_correction(
         config_dict,
     )
 
-    dapolymatrix = calculate_polynomial_coef_da(
-        damatrix,
+    da_poly_matrix = calculate_polynomial_coef_da(
+        da_matrix,
         kinetic_energy,
         pass_energy,
-        eshift,
+        e_shift,
     )
 
     de1 = [config_dict["calib2d_dict"]["De1"]]
-    erange = config_dict["calib2d_dict"]["eRange"]
-    arange = config_dict["calib2d_dict"][lens_mode]["default"]["aRange"]
+    e_range = config_dict["calib2d_dict"]["eRange"]
+    a_range = config_dict["calib2d_dict"][lens_mode]["default"]["aRange"]
     nx_pixel = config_dict["nx_pixel"]
     ny_pixel = config_dict["ny_pixel"]
-    pixelsize = config_dict["pixel_size"]
+    pixel_size = config_dict["pixel_size"]
     magnification = config_dict["magnification"]
 
     nx_bins = int(nx_pixel / binning)
@@ -410,12 +416,12 @@ def calculate_matrix_correction(
     n_ke_bins = ke_upsampling_factor * nx_bins
     n_angle_bins = angle_upsampling_factor * ny_bins
 
-    ek_low = kinetic_energy + erange[0] * pass_energy
-    ek_high = kinetic_energy + erange[1] * pass_energy
+    ek_low = kinetic_energy + e_range[0] * pass_energy
+    ek_high = kinetic_energy + e_range[1] * pass_energy
 
     ek_axis = np.linspace(ek_low, ek_high, n_ke_bins, endpoint=False)
-    angle_low = arange[0] * 1.2
-    angle_high = arange[1] * 1.2
+    angle_low = a_range[0] * 1.2
+    angle_high = a_range[1] * 1.2
 
     angle_axis = np.linspace(
         angle_low,
@@ -434,18 +440,18 @@ def calculate_matrix_correction(
     mcp_position_mm_matrix = mcp_position_mm(
         ek_mesh,
         angle_mesh,
-        aInner,
-        dapolymatrix,
+        a_inner,
+        da_poly_matrix,
     )
 
     # read angular and energy offsets from configuration file
-    Ang_Offset_px = config_dict["Ang_Offset_px"]
-    E_Offset_px = config_dict["E_Offset_px"]
+    angle_offset_px = config_dict["Ang_Offset_px"]
+    energy_offset_px = config_dict["E_Offset_px"]
 
     angular_correction_matrix = (
-        mcp_position_mm_matrix / magnification / (pixelsize * binning)
+        mcp_position_mm_matrix / magnification / (pixel_size * binning)
         + ny_bins / 2
-        + Ang_Offset_px
+        + angle_offset_px
     )
 
     e_correction = (
@@ -453,9 +459,9 @@ def calculate_matrix_correction(
         / pass_energy
         / de1
         / magnification
-        / (pixelsize * binning)
+        / (pixel_size * binning)
         + nx_bins / 2
-        + E_Offset_px
+        + energy_offset_px
     )
 
     # calculate the Jacobian determinant of the transformation
