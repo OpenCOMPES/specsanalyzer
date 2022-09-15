@@ -375,10 +375,7 @@ def calculate_matrix_correction(  # pylint: disable=too-many-arguments, too-many
     """
     e_shift = np.array(config_dict["calib2d_dict"]["eShift"])
 
-    (
-        a_inner,
-        da_matrix,
-    ) = get_damatrix_fromcalib2d(  # pylint: disable=duplicate-code
+    (a_inner, da_matrix) = get_damatrix_fromcalib2d(
         lens_mode,
         kinetic_energy,
         pass_energy,
