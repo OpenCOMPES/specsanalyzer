@@ -144,8 +144,8 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
             jacobian_determinant = old_db["jacobian_determinant"]
 
         except KeyError:
-            # old_matrix_check = False
-            print("New correction Matrix")
+            old_matrix_check = False
+            # print("New correction Matrix")
             (  # pylint: disable=R0801
                 ek_axis,
                 angle_axis,
@@ -189,15 +189,15 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
             # calculate_polynomial_coef_da inside.
 
         else:
-            # old_matrix_check = True
-            print("Old correction matrix")
+            old_matrix_check = True
+            # print("Old correction matrix")
             # print(last_scan)
 
         # save a flag called old_matrix_check to determine if the current
         # image was corrected using (True) or not using (False) the
         # parameter in the class
 
-        # self._correction_matrix_dict["old_matrix_check"] = old_matrix_check
+        self._correction_matrix_dict["old_matrix_check"] = old_matrix_check
 
         conv_img = physical_unit_data(
             img,

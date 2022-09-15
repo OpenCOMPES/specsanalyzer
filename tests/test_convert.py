@@ -17,7 +17,8 @@ test_dir = os.path.dirname(__file__)
 
 
 def test_da_matrix():
-    "Check the consistency of the da matrix with the Igor calculations"
+    """Check the consistency of the da matrix and the
+    da poly matrix with the Igor calculations"""
 
     ########################################
     # Load the IGOR txt Di_coeff values for comparison
@@ -72,9 +73,10 @@ def test_da_matrix():
 
 
 def test_conversion_matrix():
-    "Check the consistency of the conversion matrix with the Igor calculations"
+    """Check the consistency of the conversion matrix with the
+    Igor calculations.
+    """
     igordatapath = os.fspath(f"{test_dir}/data/dataEPFL/R9132")
-
     configpath = os.fspath(f"{test_dir}/data/dataEPFL/config/config.yaml")
     spa = SpecsAnalyzer(config=configpath)
     config_dict = spa.config
@@ -102,14 +104,14 @@ def test_conversion_matrix():
     # TODO: Seems to be wrong references...
 
     # angular axis
-    # angle_axis_file_name = f"{igordatapath}/w_Ang.tsv"
-    # with open(angle_axis_file_name) as file:
-    #     angle_axis_ref = np.loadtxt(file, delimiter="\t")
+    angle_axis_file_name = f"{igordatapath}/Data9132_angle.tsv"
+    with open(angle_axis_file_name) as file:
+        angle_axis_ref = np.loadtxt(file, delimiter="\t")
 
     # ek axis axis
-    # ek_axis_file_name = f"{igordatapath}/w_E.tsv"
-    # with open(ek_axis_file_name) as file:
-    #    ek_axis_ref = np.loadtxt(file, delimiter="\t")
+    ek_axis_file_name = f"{igordatapath}/Data9132_energy.tsv"
+    with open(ek_axis_file_name) as file:
+        ek_axis_ref = np.loadtxt(file, delimiter="\t")
 
     # get the matrix_correction
     (
@@ -145,17 +147,17 @@ def test_conversion_matrix():
         rtol=1e-04,
     )
 
-    # np.testing.assert_allclose(
-    #     angle_axis,
-    #     angle_axis_ref,
-    #     rtol=1e-04,
-    # )
+    np.testing.assert_allclose(
+        angle_axis,
+        angle_axis_ref,
+        rtol=1e-04,
+    )
 
-    # np.testing.assert_allclose(
-    #     ek_axis,
-    #     ek_axis_ref,
-    #     rtol=1e-04,
-    # )
+    np.testing.assert_allclose(
+        ek_axis,
+        ek_axis_ref,
+        rtol=1e-04,
+    )
 
 
 def test_conversion():
@@ -190,6 +192,54 @@ def test_conversion():
         work_function=work_function,
         apply_fft_filter=False,
     )
+    # Calculate the average intensity of the image, neglect the noisy parts
+    # normalize to unit amplitude
+    python_data = converted.data
+    igor_data = reference
+    python_data /= igor_data.max()
+    igor_data /= igor_data.max()
 
     # TODO Does not work yet... Not sure how you produced the reference?
-    np.testing.assert_allclose(converted.data, reference, rtol=1)
+    np.testing.assert_allclose(python_data, igor_data, atol=5e-5)
+
+
+def test_recycling():
+    """Test function for chceking that the class correctly re-uses the
+    precalculated parameters
+    """
+    # get the raw data
+    raw_image_name = os.fspath(
+        f"{test_dir}/data/dataEPFL/R9132/Data9132_RAWDATA.tsv",
+    )
+    with open(raw_image_name) as file:
+        tsv_data = np.loadtxt(file, delimiter="\t")
+
+    configpath = os.fspath(f"{test_dir}/data/dataEPFL/config/config.yaml")
+    spa = SpecsAnalyzer(config=configpath)
+    lens_mode = "WideAngleMode"
+    kinetic_energy = 35.000000
+    pass_energy = 35.000000
+    work_function = 4.2
+
+    converted = spa.convert_image(
+        raw_img=tsv_data,
+        lens_mode=lens_mode,
+        kinetic_energy=kinetic_energy,
+        pass_energy=pass_energy,
+        work_function=work_function,
+        apply_fft_filter=False,
+    )
+
+    converted = spa.convert_image(
+        raw_img=tsv_data,
+        lens_mode=lens_mode,
+        kinetic_energy=kinetic_energy,
+        pass_energy=pass_energy,
+        work_function=work_function,
+        apply_fft_filter=False,
+    )
+    converted
+    currentdict = spa.correction_matrix_dict
+
+    testresult = currentdict["old_matrix_check"]
+    assert testresult
