@@ -78,33 +78,22 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
         work_function: float,
         **kwds,
     ) -> xr.DataArray:
-        """Converts raw image into physical unit coordinates.
-        Args:
-            raw_img: raw image data as numpy 2D ndarray
-            pass_energy: the pass energy in eV
-            kinetic_energy: the kinetic energy in eV
-            lens_mode: the lens mode as string. Depending on the calibration file,
-                    the following lens modes are supported:
-                    -LowAngularDispersion
-                    -MediumAngularDispersion
-                    -HighAngularDispersion
-                    -WideAngleMode
-                    -LargeArea
-                    -MediumArea
-                    -SmallArea
-                    -SmallArea2
-                    -HighMagnification2
-                    -HighMagnification
-                    -LowMagnification
-                    -SuperWideAngleMode
-            **kwds: additional config keywords
+        """Converts an imagin in physical unit data, angle vs energy
 
-        Raises:
-            ...
+
+        Args:
+            raw_img (np.ndarray): Raw image data, numpy 2d matrix
+            lens_mode (str):
+                analzser lens mode, check calib2d for a list
+                of modes Camelback naming convention e.g. "WideAngleMode"
+
+            kinetic_energy (float): set analyser kinetic energy
+            pass_energy (float): set analyser pass energy
+            work_function (float): set analyser work function
 
         Returns:
-            da: xarray DataArray object with kinetic energy and angle/position as
-                coordinates
+            xr.DataArray: xarray containg the corrected data and kinetic
+            and angle axis
         """
 
         apply_fft_filter = kwds.pop(
@@ -146,7 +135,6 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
 
         except KeyError:
             old_matrix_check = False
-            # print("New correction Matrix")
             (  # pylint: disable=R0801
                 ek_axis,
                 angle_axis,
@@ -185,14 +173,8 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
             self._correction_matrix_dict = dict(
                 mergedicts(self._correction_matrix_dict, current_correction),
             )
-
-            # TODO: make this function compatible, call the function
-            # calculate_polynomial_coef_da inside.
-
         else:
             old_matrix_check = True
-            # print("Old correction matrix")
-            # print(last_scan)
 
         # save a flag called old_matrix_check to determine if the current
         # image was corrected using (True) or not using (False) the
