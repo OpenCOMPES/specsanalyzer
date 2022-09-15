@@ -148,7 +148,7 @@ def get_rr_da(
         config_dict (dict): config dictionary
 
     Raises:
-        Da1Error: to be tested
+        ValueError
 
     Returns:
         Tuple[np.ndarray,np.ndarray]: retardation ratio vector, matrix of
@@ -165,7 +165,7 @@ def get_rr_da(
     try:
         dim3 = len(base_dict[rr_array[0]]["Da1"])
     except KeyError:
-        raise KeyError
+        raise ValueError("Da values do not exist for the given mode.")
     da_matrix = np.zeros([dim1, dim2, dim3])
     for count, item in enumerate(rr_array):
         a_inner = base_dict[item]["aInner"]
@@ -277,7 +277,7 @@ def zinner_diff(
     Args:
         ek (float): kinetic energy
         angle (float): angle
-        dapolymatrix (np.ndarray): polinomial matrix
+        dapolymatrix (np.ndarray): polynomial matrix
 
     Returns:
         float: zinner_diff the correction for the
@@ -550,11 +550,3 @@ def physical_unit_data(
     )
 
     return corrected_data
-
-
-# error class for the Da s
-
-
-# class Da1Error(KeyError):
-#    def __init__(self):
-#        super().__init__("Da values do not exist for the given mode.")
