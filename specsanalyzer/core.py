@@ -6,6 +6,7 @@ import os
 from typing import Any
 from typing import Dict
 from typing import Generator
+from typing import Tuple
 from typing import Union
 
 import numpy as np
@@ -219,7 +220,10 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
         return data_array
 
 
-def mergedicts(dict1: dict, dict2: dict) -> Generator[dict, None, None]:
+def mergedicts(
+    dict1: dict,
+    dict2: dict,
+) -> Generator[Tuple[Any, Any], None, None]:
     """Merge two dictionaries, overwriting only existing values and retaining
     previously present values
 
