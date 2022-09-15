@@ -1,8 +1,14 @@
+"""This is the SpecsScan core class
+
+"""
 from pathlib import Path
+from typing import Any
 from typing import Dict
+from typing import List
 from typing import Sequence
 from typing import Union
 
+import numpy as np
 import xarray as xr
 from specsanalyzer import SpecsAnalyzer
 
@@ -19,7 +25,7 @@ from specsscan.settings import parse_config
 class SpecsScan:
     """[summary]"""
 
-    def __init__(
+    def __init__(  # pylint: disable=dangerous-default-value
         self,
         metadata: dict = {},
         config: Union[dict, str] = {},
@@ -29,6 +35,8 @@ class SpecsScan:
 
         self._attributes = MetaHandler(meta=metadata)
 
+        self._scan_info: Dict[Any, Any] = {}
+
         try:
             self.spa = SpecsAnalyzer(config=self._config["spa_params"])
         except KeyError:
@@ -36,18 +44,22 @@ class SpecsScan:
 
     def __repr__(self):
         if self._config is None:
-            s = "No configuration available"
+            pretty_str = "No configuration available"
         else:
-            s = print(self._config)
+            pretty_str = ""
+            for k in self._config:
+                pretty_str += f"{k} = {self._config[k]}\n"
         # TODO Proper report with scan number, dimensions, configuration etc.
-        return s if s is not None else ""
+        return pretty_str if pretty_str is not None else ""
 
     @property
     def config(self):
+        """Get config"""
         return self._config
 
     @config.setter
     def config(self, config: Union[dict, str]):
+        """Set config"""
         self._config = parse_config(config)
         try:
             self.spa = SpecsAnalyzer(config=self._config["spa_params"])
@@ -84,36 +96,32 @@ class SpecsScan:
                 )
         else:
             # search for the given scan using the default path
-            path = Path(self._config['data_path'])
+            path = Path(self._config["data_path"])
             # path_scan = sorted(path.glob(f"20[1,2][9,0-9]/*/*/Raw Data/{scan}"))
             path_scan_list = find_scan(path, scan)
             if not path_scan_list:
                 raise FileNotFoundError(
                     f"Scan number {scan} not found",
                 )
-            else:
-                path = path_scan_list[0]
+            path = path_scan_list[0]
 
         try:
-            self.scan_info = parse_info_to_dict(path)
+            self._scan_info = parse_info_to_dict(path)
 
         except FileNotFoundError:
             print("info.txt file not found.")
             # raise FileNotFoundError("info.txt file not found.")
             raise
-        (
-            scan_type,
-            lens_mode,
-            kin_energy,
-            pass_energy,
-        ) = (
-            self.scan_info["ScanType"],
-            self.scan_info["LensMode"],
-            self.scan_info["KineticEnergy"],
-            self.scan_info["PassEnergy"],
+        (scan_type, lens_mode, kin_energy, pass_energy) = (
+            self._scan_info["ScanType"],
+            self._scan_info["LensMode"],
+            self._scan_info["KineticEnergy"],
+            self._scan_info["PassEnergy"],
         )
 
         # Treat the data based on the scan type.
+
+        return xr.DataArray(np.zeros((10, 10), float))
 
 
 def parse_info_to_dict(path: Path) -> Dict:
@@ -124,7 +132,7 @@ def parse_info_to_dict(path: Path) -> Dict:
     Returns:
         info_dict: Parsed dictionary
     """
-    info_dict = {}
+    info_dict: Dict[Any, Any] = {}
     with open(path.joinpath("info.txt"), encoding="utf-8") as info_file:
 
         for line in info_file.readlines():
@@ -141,16 +149,14 @@ def parse_info_to_dict(path: Path) -> Dict:
             k, v = line_list[0], line_list[1]
 
             try:
-                v = float(v)
+                info_dict[k] = float(v)
             except ValueError:
-                pass
-
-            info_dict[k] = v
+                info_dict[k] = v
 
     return info_dict
 
 
-def find_scan(path: Path, scan: int) -> list:
+def find_scan(path: Path, scan: int) -> List[Path]:
     """Search function to locate the scan folder
     Args:
         path: Path object for data from the default config file
