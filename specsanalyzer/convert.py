@@ -164,9 +164,8 @@ def get_rr_da(
 
     try:
         dim3 = len(base_dict[rr_array[0]]["Da1"])
-    except KeyError as exc:
-        raise Da1Error() from exc
-
+    except KeyError:
+        raise KeyError
     da_matrix = np.zeros([dim1, dim2, dim3])
     for count, item in enumerate(rr_array):
         a_inner = base_dict[item]["aInner"]
@@ -251,7 +250,8 @@ def zinner(
         dapolymatrix (np.ndarray): matrix with polynomial coefficients
 
     Returns:
-        float: zinner,
+        float: returns the calcualted position on the mcp,
+        valid for low angles  (< ainner)
     """
     out = 0
 
@@ -280,7 +280,9 @@ def zinner_diff(
         dapolymatrix (np.ndarray): polinomial matrix
 
     Returns:
-        float: zinner_diff
+        float: zinner_diff the correction for the
+        zinner position on the MCP for high  (>ainner)
+        angles,
     """
 
     out = 0
@@ -311,8 +313,8 @@ def mcp_position_mm(
         ek (float): kinetic energy
         angle (float): photoemission angle
         a_inner (float): inner angle parameter of the lens mode
-        dapolymatrix (np.ndarray): matrix with
-
+        dapolymatrix (np.ndarray): matrix with the polynomial correction
+        coefficients for calculating the arrival position on the MCP
     Returns:
         np.ndarray: lateral position of photoelectron on the mcp (angular dis
         persing axis)
@@ -350,9 +352,9 @@ def calculate_matrix_correction(
 
     Args:
         lens_mode (str): analyser lens mode
-        kinetic_energy (float): photoelectorn kin energy
+        kinetic_energy (float): photoelectorn kinetic energy
         pass_energy (float): analyser set pass energy
-        work_function (float): analyser set worj function
+        work_function (float): analyser set work function
         binning (int): image binning
         config_dict (dict): dictionary containing the calibration files
 
@@ -553,6 +555,6 @@ def physical_unit_data(
 # error class for the Da s
 
 
-class Da1Error(KeyError):
-    def __init__(self):
-        super().__init__("Da values do not exist for the given mode.")
+# class Da1Error(KeyError):
+#    def __init__(self):
+#        super().__init__("Da values do not exist for the given mode.")

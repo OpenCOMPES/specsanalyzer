@@ -1,6 +1,7 @@
 """This is the specsanalyzer core class
 
 """
+# from csv import DictReader
 import os
 from typing import Any
 from typing import Dict
@@ -234,7 +235,17 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
         return data_array
 
 
-def mergedicts(dict1, dict2):
+def mergedicts(dict1 : dict, dict2 : dict):
+    """Merge two dictionaries, overwriting only existing values and retaining
+    previously present values
+
+    Args:
+        dict1 (dict): dictionary 1
+        dict2 (dict): dictiontary 2
+
+    Yields:
+        _type_: _description_
+    """
     for k in set(dict1.keys()).union(dict2.keys()):
         if k in dict1 and k in dict2:
             if isinstance(dict1[k], dict) and isinstance(dict2[k], dict):
