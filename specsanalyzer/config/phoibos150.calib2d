@@ -16,7 +16,7 @@ Da3    = 0 0 0 # mm_z/unit^3
 Da5    = 0 0 0 # mm_z/unit^5
 Da7    = 0 0 0 # mm_z/unit^7
 
-# =================== LowAngularDispersion ===================
+# =================== LowAngularDispersion =================== 
 
 [LowAngularDispersion defaults]
 aUnit  = "deg"
@@ -247,7 +247,7 @@ Da3 = -0.3245 -0.2503 -0.1618 # mm_z/deg^3
 Da5 = 0.02241 0.02883 0.03431 # mm_z/deg^5
 Da7 = -0.5853 -0.6076 -0.6187 # mm_z/deg^7
 
-# =================== MediumAngularDispersion ===================
+# =================== MediumAngularDispersion =================== 
 
 [MediumAngularDispersion defaults]
 aUnit  = "deg"
@@ -1004,8 +1004,8 @@ aInner = 4 # deg
 Da1 = 2.359 2.629 2.896 # mm_z/deg^1
 Da3 = -0.6328 -0.3053 0.07609 # mm_z/deg^3
 Da5 = -3.972 -4.131 -4.224 # mm_z/deg^5
-
-# =================== HighAngularDispersion ===================
+ 
+# =================== HighAngularDispersion =================== 
 
 [HighAngularDispersion defaults]
 aUnit  = "deg"
@@ -1275,7 +1275,7 @@ aInner = 3 # deg
 Da1 = 3.062 3.123 3.143 # mm_z/deg^1
 Da3 = 2.455 3.025 3.624 # mm_z/deg^3
 
-# =================== WideAngleMode ===================
+# =================== WideAngleMode =================== 
 
 [WideAngleMode defaults]
 aUnit  = "deg"
@@ -1514,7 +1514,7 @@ Da3 = 0.06753 0.1067 0.1475 # mm_z/deg^3
 Da5 = -0.08081 -0.09454 -0.1064 # mm_z/deg^5
 Da7 = 0.0087 0.01423 0.01943 # mm_z/deg^7
 
-# =================== LargeArea ===================
+# =================== LargeArea =================== 
 
 [LargeArea defaults]
 aUnit  = "mm"
@@ -1529,7 +1529,7 @@ Da1    = 1 1 1 # mm_z/mm
 [LargeArea@1000]
 
 
-# =================== MediumArea ===================
+# =================== MediumArea =================== 
 
 [MediumArea defaults]
 aUnit  = "mm"
@@ -1544,7 +1544,7 @@ Da1    = 3 3 3 # mm_z/mm
 [MediumArea@500]
 
 
-# =================== SmallArea ===================
+# =================== SmallArea =================== 
 
 [SmallArea defaults]
 aUnit  = "mm"
@@ -1559,7 +1559,7 @@ Da1    = 10 10 10 # mm_z/mm
 [SmallArea@1500]
 
 
-# =================== SmallArea2 ===================
+# =================== SmallArea2 =================== 
 
 [SmallArea2 defaults]
 aUnit  = "mm"
@@ -1574,7 +1574,7 @@ Da1    = 10 10 10 # mm_z/mm
 [SmallArea2@300]
 
 
-# =================== HighMagnification2 ===================
+# =================== HighMagnification2 =================== 
 
 [HighMagnification2 defaults]
 aUnit  = "mm"
@@ -1589,7 +1589,7 @@ Da1    = 10 10 10 # mm_z/mm
 [HighMagnification2@300]
 
 
-# =================== HighMagnification ===================
+# =================== HighMagnification =================== 
 
 [HighMagnification defaults]
 aUnit  = "mm"
@@ -1604,7 +1604,7 @@ Da1    = 10 10 10 # mm_z/mm
 [HighMagnification@1500]
 
 
-# =================== MediumMagnification ===================
+# =================== MediumMagnification =================== 
 
 [MediumMagnification defaults]
 aUnit  = "mm"
@@ -1619,7 +1619,7 @@ Da1    = 3 3 3 # mm_z/mm
 [MediumMagnification@1500]
 
 
-# =================== LowMagnification ===================
+# =================== LowMagnification =================== 
 
 [LowMagnification defaults]
 aUnit  = "mm"
@@ -1633,7 +1633,7 @@ Da1    = 1 1 1 # mm_z/mm
 
 [LowMagnification@1500]
 
-# =================== SuperWideAngleMode ===================
+# =================== SuperWideAngleMode =================== 
 
 [SuperWideAngleMode defaults]
 aUnit  = "deg"
