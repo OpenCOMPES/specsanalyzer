@@ -26,8 +26,8 @@ def get_damatrix_fromcalib2d(
         for angulat correction
 
     Returns:
-        Tuple[float,np.ndarray]: a_inner, damatrix    interpolated damatrix and
-        a_inner, needed for the
+        Tuple[float,np.ndarray]: a_inner, damatrix
+            interpolated damatrix and a_inner, needed for the coordinate conversion
     """
 
     # retardation ratio
