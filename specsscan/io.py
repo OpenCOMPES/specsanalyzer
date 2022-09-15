@@ -1,4 +1,10 @@
+"""This module contains file input/output functions for the specsanalyzer module
+
+"""
 from pathlib import Path
+from typing import Any
+from typing import Dict
+from typing import List
 from typing import Sequence
 from typing import Union
 
@@ -6,6 +12,31 @@ import h5py
 import numpy as np
 import tifffile
 import xarray as xr
+
+_IMAGEJ_DIMS_ORDER = "TZCYXS"
+_IMAGEJ_DIMS_ALIAS = {
+    "T": [
+        "delayStage",
+        "pumpProbeTime",
+        "time",
+        "delay",
+        "T",
+    ],
+    "Z": [
+        "dldTime",
+        "t",
+        "energy",
+        "e",
+        "E",
+        "binding_energy",
+        "energies",
+        "binding_energies",
+    ],
+    "C": ["C"],
+    "Y": ["dldPosY", "ky", "y", "ypos", "Y"],
+    "X": ["dldPosX", "kx", "x", "xpos", "X"],
+    "S": ["S"],
+}
 
 
 def recursive_write_metadata(h5group: h5py.Group, node: dict):
@@ -22,7 +53,16 @@ def recursive_write_metadata(h5group: h5py.Group, node: dict):
     for key, item in node.items():
         if isinstance(
             item,
-            (np.ndarray, np.int64, np.float64, str, bytes, int, float, list),
+            (
+                np.ndarray,
+                np.int64,
+                np.float64,
+                str,
+                bytes,
+                int,
+                float,
+                list,
+            ),
         ):
             try:
                 h5group.create_dataset(key, data=item)
@@ -30,17 +70,16 @@ def recursive_write_metadata(h5group: h5py.Group, node: dict):
                 h5group.create_dataset(key, data=str(item))
                 print(f"Saved {key} as string.")
         elif isinstance(item, dict):
-            print(key)
             group = h5group.create_group(key)
             recursive_write_metadata(group, item)
         else:
             try:
                 h5group.create_dataset(key, data=str(item))
                 print(f"Saved {key} as string.")
-            except BaseException:
+            except BaseException as exc:
                 raise Exception(
                     f"Unknown error occured, cannot save {item} of type {type(item)}.",
-                )
+                ) from exc
 
 
 def recursive_parse_metadata(
@@ -60,13 +99,13 @@ def recursive_parse_metadata(
             dictionary[key] = recursive_parse_metadata(value)
 
     else:
-        dictionary = node[...]
+        entry = node[...]
         try:
-            dictionary = dictionary.item()
+            dictionary = entry.item()
             if isinstance(dictionary, (bytes, bytearray)):
                 dictionary = dictionary.decode()
         except ValueError:
-            pass
+            dictionary = entry
 
     return dictionary
 
@@ -85,12 +124,12 @@ def to_h5(data: xr.DataArray, faddr: str, mode: str = "w"):
 
     Returns:
     """
-    with h5py.File(faddr, mode) as h5File:
+    with h5py.File(faddr, mode) as h5_file:
 
         print(f"saving data to {faddr}")
 
         # Saving data, make a single dataset
-        dataset = h5File.create_dataset("binned/BinnedData", data=data.data)
+        dataset = h5_file.create_dataset("binned/BinnedData", data=data.data)
         try:
             dataset.attrs["units"] = data.attrs["units"]
             dataset.attrs["long_name"] = data.attrs["long_name"]
@@ -98,27 +137,27 @@ def to_h5(data: xr.DataArray, faddr: str, mode: str = "w"):
             pass
 
         # Saving axes
-        axesGroup = h5File.create_group("axes")
-        axesNumber = 0
-        for binName in data.dims:
-            axis = axesGroup.create_dataset(
-                f"ax{axesNumber}",
-                data=data.coords[binName],
+        axes_group = h5_file.create_group("axes")
+        axes_number = 0
+        for bin_name in data.dims:
+            axis = axes_group.create_dataset(
+                f"ax{axes_number}",
+                data=data.coords[bin_name],
             )
-            axis.attrs["name"] = binName
+            axis.attrs["name"] = bin_name
             try:
-                axis.attrs["unit"] = data.coords[binName].attrs["unit"]
+                axis.attrs["unit"] = data.coords[bin_name].attrs["unit"]
             except KeyError:
                 pass
-            axesNumber += 1
+            axes_number += 1
 
         if "metadata" in data.attrs and isinstance(
             data.attrs["metadata"],
             dict,
         ):
-            metaGroup = h5File.create_group("metadata")
+            meta_group = h5_file.create_group("metadata")
 
-            recursive_write_metadata(metaGroup, data.attrs["metadata"])
+            recursive_write_metadata(meta_group, data.attrs["metadata"])
 
     print("Saving complete!")
 
@@ -136,22 +175,25 @@ def load_h5(faddr: str, mode: str = "r") -> xr.DataArray:
     with h5py.File(faddr, mode) as h5_file:
         # Reading data array
         try:
-            data = h5_file["binned"]["BinnedData"]
-        except KeyError:
+            data = np.asarray(h5_file["binned"]["BinnedData"])
+        except KeyError as exc:
             raise Exception(
-                "Wrong Data Format, the BinnedData were not found.",
-            )
+                "Wrong Data Format, the BinnedData were not found. "
+                f"The error was{exc}.",
+            ) from exc
 
         # Reading the axes
-        binAxes = []
-        binNames = []
+        bin_axes = []
+        bin_names = []
 
         try:
             for axis in h5_file["axes"]:
-                binAxes.append(h5_file["axes"][axis])
-                binNames.append(h5_file["axes"][axis].attrs["name"])
-        except KeyError:
-            raise Exception("Wrong Data Format, the axes were not found.")
+                bin_axes.append(h5_file["axes"][axis])
+                bin_names.append(h5_file["axes"][axis].attrs["name"])
+        except KeyError as exc:
+            raise Exception(
+                f"Wrong Data Format, the axes were not found. The error was {exc}",
+            ) from exc
 
         # load metadata
         metadata = None
@@ -159,23 +201,23 @@ def load_h5(faddr: str, mode: str = "r") -> xr.DataArray:
             metadata = recursive_parse_metadata(h5_file["metadata"])
 
         coords = {}
-        for name, vals in zip(binNames, binAxes):
+        for name, vals in zip(bin_names, bin_axes):
             coords[name] = vals
 
-        xarray = xr.DataArray(data, dims=binNames, coords=coords)
+        xarray = xr.DataArray(data, dims=bin_names, coords=coords)
 
         try:
-            for name in binNames:
-                xarray[name].attrs["unit"] = h5_file["axes"][axis].attrs[
-                    "unit"
-                ]
+            for axis in range(len(bin_axes)):
+                xarray[bin_names[axis]].attrs["unit"] = h5_file["axes"][
+                    f"ax{axis}"
+                ].attrs["unit"]
             xarray.attrs["units"] = h5_file["binned"]["BinnedData"].attrs[
                 "units"
             ]
             xarray.attrs["long_name"] = h5_file["binned"]["BinnedData"].attrs[
                 "long_name"
             ]
-        except KeyError:
+        except (KeyError, TypeError):
             pass
 
         if metadata is not None:
@@ -187,114 +229,136 @@ def load_h5(faddr: str, mode: str = "r") -> xr.DataArray:
 def to_tiff(
     data: Union[xr.DataArray, np.ndarray],
     faddr: Union[Path, str],
-    axis_dict: dict = None,
-    ret_axes_order: bool = False,
+    alias_dict: dict = None,
 ) -> None:
-    """Save an array as a  .tiff stack compatible with ImageJ
+    """Save an array as a .tiff stack compatible with ImageJ
 
     Args:
         data: data to be saved. If a np.ndarray, the order is retained. If it
-        is an xarray.DataArray, the order is inferred from axis_dict instead.
-         ImageJ likes tiff files with axis order as
-        TZCYXS. Therefore, best axis order in input should be: Time, Energy,
-        posY, posX. The channels 'C' and 'S' are automatically added and can
-        be ignored.
+            is an xarray.DataArray, the order is inferred from axis_dict instead.
+            ImageJ likes tiff files with axis order as
+            TZCYXS. Therefore, best axis order in input should be: Time, Energy,
+            posY, posX. The channels 'C' and 'S' are automatically added and can
+            be ignored.
         faddr: full path and name of file to save.
-        axis_dict: name pairs for correct axis ordering. Keys should be any of
-        T,Z,C,Y,X,S. The Corresponding value will be searched among the
-        dimensions of the xarray, and placed in the right order for imagej
-        stacks metadata. If None it tries to guess the order from the name of
-        the axes. Defaults to None
+        alias_dict: name pairs for correct axis ordering. Keys should be any of
+            T,Z,C,Y,X,S. The Corresponding value should be a dimension of the xarray or
+            the dimension number if a numpy array. This is used to sort the data in the
+            correct order for imagej standards. If None it tries to guess the order
+            from the name of the axes or assumes T,Z,C,Y,X,S order for numpy arrays.
+            Defaults to None
 
     Raise:
         AttributeError: if more than one axis corresponds to a single dimension
         NotImplementedError: if data is not 2,3 or 4 dimensional
         TypeError: if data is not a np.ndarray or an xarray.DataArray
     """
-    _imagej_axes_order = ["T", "Z", "C", "Y", "X", "S"]
 
+    out: Union[np.ndarray, xr.DataArray] = None
     if isinstance(data, np.ndarray):
+        # TODO: add sorting by dictionary keys
         dim_expansions = {2: [0, 1, 2, 5], 3: [0, 2, 5], 4: [2, 5]}
-        dims_order = data.dims
+        dims = {
+            2: ["x", "y"],
+            3: ["x", "y", "energy"],
+            4: ["x", "y", "energy", "delay"],
+        }
         try:
             out = np.expand_dims(data, dim_expansions[data.ndim])
         except KeyError:
-            raise NotImplementedError(
+            raise NotImplementedError(  # pylint: disable=W0707
                 f"Only 2-3-4D arrays supported when data is a {type(data)}",
             )
 
+        dims_order = dims[data.ndim]
+
     elif isinstance(data, xr.DataArray):
-        dims_to_add = {"C": 1, "S": 1}
-        dims_order = []
-
-        if axis_dict is None:
-            axis_dict = {
-                "T": [
-                    "delayStage",
-                    "pumpProbeTime",
-                    "time",
-                    "delay",
-                ],
-                "Z": [
-                    "dldTime",
-                    "t",
-                    "energy",
-                    "e",
-                    "binding_energy",
-                    "energies",
-                    "binding_energies",
-                ],
-                "C": ["C"],
-                "Y": ["dldPosY", "ky", "y", "ypos", "Y"],
-                "X": ["dldPosX", "kx", "x", "xpos", "X"],
-                "S": ["S"],
-            }
-        else:
-            for key in _imagej_axes_order:
-                if key not in axis_dict.keys():
-                    axis_dict[key] = key
-
-        # Sort the dimensions in the correct order, and fill with one-point dimensions
-        # the missing axes.
-        for key in _imagej_axes_order:
-            axis_name_list = [
-                name for name in axis_dict[key] if name in data.dims
-            ]
-            if len(axis_name_list) > 1:
-                raise AttributeError(f"Too many dimensions for {key} axis.")
-            elif len(axis_name_list) == 1:
-                dims_order.append(*axis_name_list)
-            else:
-                dims_to_add[key] = 1
-                dims_order.append(key)
-
-        out = data.expand_dims(dims_to_add)
-        out = out.transpose(*dims_order).values
+        dims_order = _fill_missing_dims(list(data.dims), alias_dict=alias_dict)
+        out = data.expand_dims(
+            {dim: 1 for dim in dims_order if dim not in data.dims},
+        )
+        out = out.transpose(*dims_order)
     else:
         raise TypeError(f"Cannot handle data of type {data.type}")
 
     faddr = Path(faddr).with_suffix(".tiff")
 
     tifffile.imwrite(faddr, out.astype(np.float32), imagej=True)
-    # clean up the temporary axes names
-    for ax in _imagej_axes_order:
-        if ax not in data.dims:
-            try:
-                dims_order.remove(ax)
-            except ValueError:
-                pass
 
     print(f"Successfully saved {faddr}\n Axes order: {dims_order}")
-    if ret_axes_order:
-        return dims_order
+    # return dims_order
+
+
+def _sort_dims_for_imagej(dims: list, alias_dict: dict = None) -> list:
+    """Guess the order of the dimensions from the alias dictionary
+
+    Args:
+        dims: the list of dimensions to sort
+
+    Raises:
+        ValueError: for duplicate entries for a single imagej dimension
+        NameError: when a dimension cannot be found in the alias dictionary
+
+    Returns:
+        _description_
+    """
+    order = _fill_missing_dims(dims=dims, alias_dict=alias_dict)
+    return [d for d in order if d in dims]
+
+
+def _fill_missing_dims(dims: list, alias_dict: dict = None) -> list:
+    """Guess the order of the dimensions from the alias dictionary
+
+    Args:
+        dims: the list of dimensions to sort
+
+    Raises:
+        ValueError: for duplicate entries for a single imagej dimension
+        NameError: when a dimension cannot be found in the alias dictionary
+
+    Returns:
+        _description_
+    """
+    order: list = []
+    # overwrite the default values with the provided dict
+    if alias_dict is None:
+        alias_dict = {}
+    else:
+        for k, v in alias_dict.items():
+            assert k in _IMAGEJ_DIMS_ORDER, (
+                "keys must all be one of " f"{_IMAGEJ_DIMS_ALIAS}"
+            )
+            if not isinstance(v, (list, tuple)):
+                alias_dict[k] = [v]
+
+    alias_dict = {**_IMAGEJ_DIMS_ALIAS, **alias_dict}
+    added_dims = 0
+    for imgj_dim in _IMAGEJ_DIMS_ORDER:
+        found_one = False
+        for dim in dims:
+            if dim in alias_dict[imgj_dim]:
+                if found_one:
+                    raise ValueError(
+                        f"Duplicate entries for {imgj_dim}: {dim} and {order[-1]} ",
+                    )
+                order.append(dim)
+                found_one = True
+        if not found_one:
+            order.append(imgj_dim)
+            added_dims += 1
+    if len(order) != len(dims) + added_dims:
+        raise NameError(
+            f"Could not interpret dimensions {[d for d in dims if d not in order]}",
+        )
+    return order
 
 
 def load_tiff(
     faddr: Union[str, Path],
-    coords: Union[Sequence[str], dict] = None,
+    coords: Dict = None,
     dims: Sequence = None,
     attrs: dict = None,
-) -> Union[np.ndarray, xr.DataArray]:
+) -> xr.DataArray:
     """Loads a tiff stack to an xarray.
 
     The .tiff format does not retain information on the axes, so these need to
@@ -310,17 +374,125 @@ def load_tiff(
         attrs: dictionary to add as attributes to the xarray.DataArray
 
     Returns:
-        data: a np.array or xarray representing the data loaded from the .tiff
+        data: an xarray representing the data loaded from the .tiff
         file
     """
-    data = tifffile.imread(faddr).squeeze()
+    data = tifffile.imread(faddr)
+
     if coords is None:
-        return data
+        coords = {
+            k.replace("_", ""): np.linspace(0, n, n)
+            for k, n in zip(
+                _IMAGEJ_DIMS_ORDER,
+                data.shape,
+            )
+            if n > 1
+        }
+
+    data = data.squeeze()
+
+    if dims is None:
+        dims = list(coords.keys())
+
+    assert data.ndim == len(dims), (
+        f"Data dimension {data.ndim} must coincide number of coordinates "
+        f"{len(coords)} and dimensions {len(dims)} provided,"
+    )
+    return xr.DataArray(data=data, coords=coords, dims=dims, attrs=attrs)
+
+
+def get_pair_from_list(list_line: List[Any]) -> List[Any]:
+    """Returns key value pair for the read function
+    where a line in the file contains '=' character.
+
+    Args:
+        list_line: list of splitted line from the file.
+
+    Returns:
+        list: List of a tuple containing key value pair.
+    """
+    k, v = list_line[0], list_line[1]
+    k = k.strip()
+    if "#" in v:
+        v = v[: v.index("#")].strip()
+
+    if len(v.split()) > 1:
+        try:
+            v = [float(i) for i in v.split()]
+        except ValueError:  # to handle one edge case
+            return [(k, float(v.strip('"m')))]
+
     else:
-        if dims is None:
-            dims = list(coords.keys())
-        assert data.ndim == len(coords) == len(dims), (
-            f"Data dimension {data.ndim} must coincide number of coordinates"
-            f"{len(coords)} and dimensions {len(dims)} provided,"
-        )
-        return xr.DataArray(data=data, coords=coords, dims=dims, attrs=attrs)
+        try:
+            v = float(v)
+        except ValueError:
+            v = v.strip(' " ')
+
+    return [(k, v)]
+
+
+def read_calib2d(filepath: str) -> List[Any]:
+    """Reads the calib2d file into a convenient list for the parser
+    function containing useful and cleaned data.
+
+    Args:
+        filepath: Path to file to load.
+
+    Returns:
+        list: List containing dictionary, string and float objects.
+    """
+    with open(filepath, encoding="utf-8") as file:
+        lines = file.readlines()
+
+    listf: List[Any] = []
+    for line in lines:
+
+        if line[0] == "\n" or line[0] == "#":
+            continue
+        line_list = line.strip("[]\n").split("=")
+        if len(line_list) > 1:
+            listf.append(dict(get_pair_from_list(line_list)))
+        else:
+            line_str = line_list[0]
+            if "defaults" in line_str:
+                listf.append(line_str.split()[0])
+            elif "@" in line_str:
+                listf.append(float(line_str.split("@")[1]))
+            else:
+                pass
+
+    return listf
+
+
+def parse_calib2d_to_dict(filepath: str) -> Dict[Any, Any]:
+    """Parses the given calib2d file into a nested dictionary structure
+    to provide parameters for image conversion.
+
+    Args:
+        filepath: Path to file to load.
+
+    Returns:
+        calib_dict: Populated nested dictionary parsed from the provided
+        calib2d file.
+    """
+    listf = read_calib2d(filepath)
+
+    calib_dict: Dict[Any, Any] = {}
+    mode = None
+    retardation_ratio = None
+    for elem in listf:
+        if isinstance(elem, str):  # Initialize mode dict
+            mode = elem
+            calib_dict[mode] = {"rr": {}, "default": {}}
+            retardation_ratio = None
+        elif isinstance(elem, (int, float)):  # Initialize rr nested dict
+            retardation_ratio = elem
+            calib_dict[mode]["rr"][retardation_ratio] = {}
+        else:  # populate the dict
+            if retardation_ratio:
+                calib_dict[mode]["rr"][retardation_ratio].update(elem)
+            elif mode:
+                calib_dict[mode]["default"].update(elem)
+            else:
+                calib_dict.update(elem)
+    return calib_dict
