@@ -49,8 +49,9 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
         if self._config is None:
             pretty_str = "No configuration available"
         else:
-            for key in self._config:
-                pretty_str += print(f"{self._config[key]}\n")
+            pretty_str = ""
+            for k in self._config:
+                pretty_str += f"{k} = {self._config[k]}\n"
         # TODO Proper report with scan number, dimensions, configuration etc.
         return pretty_str if pretty_str is not None else ""
 
@@ -217,7 +218,7 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
         return data_array
 
 
-def mergedicts(dict1 : dict, dict2 : dict):
+def mergedicts(dict1: dict, dict2: dict) -> dict:
     """Merge two dictionaries, overwriting only existing values and retaining
     previously present values
 
@@ -226,7 +227,7 @@ def mergedicts(dict1 : dict, dict2 : dict):
         dict2 (dict): dictiontary 2
 
     Yields:
-        _type_: _description_
+        dict: merged dictionary generator
     """
     for k in set(dict1.keys()).union(dict2.keys()):
         if k in dict1 and k in dict2:
