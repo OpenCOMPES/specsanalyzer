@@ -19,13 +19,15 @@ def get_damatrix_fromcalib2d(
 
     Args:
         lens_mode (string): the lens mode string description
-        kinetic_energy (float): _description_
-        pass_energy (float): _description_
-        work_function (float): _description_
-        config_dict (dict): _description_
+        kinetic_energy (float): kinetic energy of the photoelectron
+        pass_energy (float): analyser pass energy
+        work_function (float): work function settings
+        config_dict (dict): dictionary containing the configuration parameters
+        for angulat correction
 
     Returns:
-        Tuple[float,np.ndarray]: _description_
+        Tuple[float,np.ndarray]: a_inner, damatrix    interpolated damatrix and
+        a_inner, needed for the
     """
 
     # retardation ratio
@@ -70,13 +72,13 @@ def get_damatrix_fromcalib2d(
     return a_inner, damatrix
 
 
-# Auxiliary function to find the closest rr index
-# from https://stackoverflow.com/questions/2566412/
-# find-nearest-value-in-numpy-array
-
-
 def bisection(array: np.ndarray, value: float) -> int:
-    """ "" Given an ``array`` , and given a ``value`` , returns an index
+    """
+    Auxiliary function to find the closest rr index
+    from https://stackoverflow.com/questions/2566412/
+    find-nearest-value-in-numpy-array
+
+    Given an ``array`` , and given a ``value`` , returns an index
     j such that ``value`` is between array[j]
     and array[j+1]. ``array`` must be monotonic
     increasing. j=-1 or j=len(array) is returned
@@ -191,13 +193,15 @@ def calculate_polynomial_coef_da(
     The dapolymatrix is also saved in the scanparameters dictionary
 
     Args:
-        da_matrix (np.ndarray): _description_
-        kinetic_energy (float): _description_
-        pass_energy (float): _description_
-        eshift (float): _description_
+        da_matrix (np.ndarray): the matrix of interpolated da coefficients
+        kinetic_energy (float): photoelectorn kinetic energy
+        pass_energy (float): analyser pass energy
+        eshift (float): e shift parameter, defining the energy
+        range around the center for the polynomial fit of the da coefficients
 
     Returns:
-        np.ndarray: _description_
+        np.ndarray: dapolymatrix containg the fit results (row0 da1, row1
+        da3, ..)
     """
     # get the Das from the damatrix
     # da1=currentdamatrix[0][:]
@@ -299,16 +303,19 @@ def mcp_position_mm(
     a_inner: float,
     dapolymatrix: np.ndarray,
 ) -> np.ndarray:
-    """_summary_
+    """calculated the position of the photoelectron on the mcp, for
+    a certain kinetic energy and emission angle. This is determined for
+    the given lens mode (as defined by the a_inner and dapolymatrix)
 
     Args:
-        ek (float): _description_
-        angle (float): _description_
-        a_inner (float): _description_
-        dapolymatrix (np.ndarray): _description_
+        ek (float): kinetic energy
+        angle (float): photoemission angle
+        a_inner (float): inner angle parameter of the lens mode
+        dapolymatrix (np.ndarray): matrix with
 
     Returns:
-        np.ndarray: _description_
+        np.ndarray: lateral position of photoelectron on the mcp (angular dis
+        persing axis)
     """
 
     # define two angular regions: within and outsied the a_inner boundaries
@@ -337,26 +344,29 @@ def calculate_matrix_correction(
     binning: int,
     config_dict: dict,
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    """Calculate the matrix correction function for the interpoolation
+    """Calculate the angular and
+    energy interpolation matrices for
+    the currection function
 
     Args:
-        lens_mode (str): _description_
-        kinetic_energy (float): _description_
-        pass_energy (float): _description_
-        work_function (float): _description_
-        binning (int): _description_
-        config_dict (dict): _description_
+        lens_mode (str): analyser lens mode
+        kinetic_energy (float): photoelectorn kin energy
+        pass_energy (float): analyser set pass energy
+        work_function (float): analyser set worj function
+        binning (int): image binning
+        config_dict (dict): dictionary containing the calibration files
 
     Returns:
         tuple[np.ndarray,
         np.ndarray,
         np.ndarray,
         np.ndarray,
-        np.ndarray]: returns ek_axis,
-        angle_axis,
-        angular_correction_matrix,
-        e_correction,
-        jacobian_determinant,
+        np.ndarray]: returns ek_axis,  kinetic energy axis
+        angle_axis, angle of emissio axis
+        angular_correction_matrix, the matrix for angular interpolation
+        e_correction, the matrix for energy interpolation
+        jacobian_determinant, the transformation jacobian for area preserving
+        transformation
     """
     eshift = np.array(config_dict["calib2d_dict"]["eShift"])
 
@@ -478,7 +488,7 @@ def calculate_jacobian(
         angle_axis (np.ndarray): angle axis
 
     Returns:
-        np.ndarray: _description_
+        np.ndarray: jacobian_determinanant matrix
     """
     w_dyde = np.gradient(angular_correction_matrix, ek_axis, axis=1)
     w_dyda = np.gradient(angular_correction_matrix, angle_axis, axis=0)
