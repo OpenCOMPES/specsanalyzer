@@ -185,7 +185,7 @@ def calculate_polynomial_coef_da(
     da_matrix: np.ndarray,
     kinetic_energy: float,
     pass_energy: float,
-    eshift: float,
+    e_shift: np.ndarray,
 ) -> np.ndarray:
     """Given the da coeffiecients contained in the
     scanpareters, the program calculate the energy range based
@@ -212,23 +212,23 @@ def calculate_polynomial_coef_da(
     # da7=currentdamatrix[3][:]
 
     # calcualte the energy values for each da, given the eshift
-    da_energy = eshift * pass_energy + kinetic_energy * np.ones(eshift.shape)
+    da_energy = e_shift * pass_energy + kinetic_energy * np.ones(e_shift.shape)
 
     # create the polinomial coeffiecient matrix,
     # each is a second order polinomial
 
-    dapolymatrix = np.zeros(da_matrix.shape)
+    da_poly_matrix = np.zeros(da_matrix.shape)
 
     for i in range(0, da_matrix.shape[0]):
         # igor uses the fit poly 3, which should be a parabola
-        dapolymatrix[i][:] = np.polyfit(
+        da_poly_matrix[i][:] = np.polyfit(
             da_energy,
             da_matrix[i][:],
             2,
         ).transpose()
 
     # scanparameters['dapolymatrix'] = dapolymatrix
-    return dapolymatrix
+    return da_poly_matrix
 
 
 # the function now returns a matrix of the fit coeffiecients,
@@ -238,10 +238,10 @@ def calculate_polynomial_coef_da(
 
 
 def zinner(
-    kinetic_energy: float,
-    angle: float,
+    kinetic_energy: np.ndarray,
+    angle: np.ndarray,
     da_poly_matrix: np.ndarray,
-) -> float:
+) -> np.ndarray:
     """Auxiliary function for mcp_position_mm, uses kinetic energy and angle
     starting from the dapolymatrix, to get
     the zinner coefficient to calculate the electron arrival position on the
@@ -256,7 +256,7 @@ def zinner(
         float: returns the calcualted position on the mcp,
         valid for low angles  (< ainner)
     """
-    out = 0
+    out = np.zeros(angle.shape, float)
 
     for i in np.arange(0, da_poly_matrix.shape[0], 1):
         out = out + (
@@ -268,10 +268,10 @@ def zinner(
 
 
 def zinner_diff(
-    kinetic_energy: float,
-    angle: float,
+    kinetic_energy: np.ndarray,
+    angle: np.ndarray,
     da_poly_matrix: np.ndarray,
-) -> float:
+) -> np.ndarray:
     """Auxiliary function for mcp_position_mm, uses kinetic energy and angle
     starting from the dapolymatrix, to get
     the zinner_diff coefficient to coorect the electron arrival position on the
@@ -288,7 +288,7 @@ def zinner_diff(
         angles,
     """
 
-    out = 0
+    out = np.zeros(angle.shape, float)
 
     for i in np.arange(0, da_poly_matrix.shape[0], 1):
 
@@ -303,8 +303,8 @@ def zinner_diff(
 
 
 def mcp_position_mm(
-    kinetic_energy: float,
-    angle: float,
+    kinetic_energy: np.ndarray,
+    angle: np.ndarray,
     a_inner: float,
     da_poly_matrix: np.ndarray,
 ) -> np.ndarray:
