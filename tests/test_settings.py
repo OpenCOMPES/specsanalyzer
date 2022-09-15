@@ -36,10 +36,10 @@ def test_load_dict():
 def test_load_config():
     """Test if the config loader can handle json and yaml files."""
     config_json = load_config(
-        f"{package_dir}/../tests/data/config/config.json",
+        f"{package_dir}/../tests/data/config.json",
     )
     config_yaml = load_config(
-        f"{package_dir}/../tests/data/config/config.yaml",
+        f"{package_dir}/../tests/data/config.yaml",
     )
     assert config_json == config_yaml
 
