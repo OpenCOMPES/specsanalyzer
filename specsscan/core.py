@@ -105,23 +105,47 @@ class SpecsScan:
                 )
             path = path_scan_list[0]
 
+        avg_path = path.joinpath("AVG")
+        # raw_path = path.joinpath("RAW")
+
         try:
             self._scan_info = parse_info_to_dict(path)
 
         except FileNotFoundError:
             print("info.txt file not found.")
-            # raise FileNotFoundError("info.txt file not found.")
             raise
-        (scan_type, lens_mode, kin_energy, pass_energy) = (
+
+        (scan_type, lens_mode, kin_energy, pass_energy, work_function) = (
             self._scan_info["ScanType"],
             self._scan_info["LensMode"],
             self._scan_info["KineticEnergy"],
             self._scan_info["PassEnergy"],
+            self._scan_info["WorkFunction"],
         )
 
         # Treat the data based on the scan type.
+        if scan_type == "single":
+            data = load_single(avg_path)
 
-        return xr.DataArray(np.zeros((10, 10), float))
+        res_xarray = self.spa.convert_image(
+            data,
+            lens_mode,
+            kin_energy,
+            pass_energy,
+            work_function,
+        )
+
+        return res_xarray
+
+
+def load_single(
+    avg_path: Path,
+) -> np.ndarray:
+
+    with open(avg_path.joinpath("000.tsv")) as file:
+        tsv_data = np.loadtxt(file, delimiter="\t")
+
+    return tsv_data
 
 
 def parse_info_to_dict(path: Path) -> Dict:
