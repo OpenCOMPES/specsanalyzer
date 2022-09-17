@@ -1,3 +1,7 @@
+"""This module contains a settings/config library for loading yaml/json files into
+dicts
+
+"""
 import json
 import os
 from pathlib import Path
@@ -8,7 +12,7 @@ import yaml
 package_dir = os.path.dirname(__file__)
 
 
-def parse_config(
+def parse_config(  # pylint: disable=dangerous-default-value
     config: Union[dict, str] = {},
     default_config: Union[
         dict,
@@ -18,9 +22,9 @@ def parse_config(
     """Handle config dictionary or files.
 
     Args:
-        config: config dictionary, file path or Path object.
+        config: config dictionary or file path.
                 Files can be json or yaml.
-        default_config: default config dictionary, file path Path object.
+        default_config: default config dictionary or file path.
                 The loaded dictionary is completed with the default values.
 
     Raises:
@@ -49,7 +53,7 @@ def load_config(config_path: str) -> dict:
     """Loads config parameter files.
 
     Args:
-        config_path: path to the config file. Json or Yaml format are supported.
+        config_path: Path to the config file. Json or Yaml format are supported.
 
     Raises:
         TypeError, FileNotFoundError
@@ -65,10 +69,10 @@ def load_config(config_path: str) -> dict:
         )
 
     if config_file.suffix == ".json":
-        with open(config_file) as stream:
+        with open(config_file, encoding="utf-8") as stream:
             config_dict = json.load(stream)
     elif config_file.suffix == ".yaml":
-        with open(config_file) as stream:
+        with open(config_file, encoding="utf-8") as stream:
             config_dict = yaml.safe_load(stream)
     else:
         raise TypeError("config file must be of type json or yaml!")
