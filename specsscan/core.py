@@ -141,8 +141,15 @@ class SpecsScan:
 def load_single(
     avg_path: Path,
 ) -> np.ndarray:
+    """opens the tsv file of scan type 'single'
+    Args:
+        avg_path: object of class Path pointing
+                to the AVG folder of the scan
+    Returns:
+        tsv_data: numpy array consisting of raw data
+    """
 
-    with open(avg_path.joinpath("000.tsv")) as file:
+    with open(avg_path.joinpath("000.tsv"), encoding="utf-8") as file:
         tsv_data = np.loadtxt(file, delimiter="\t")
 
     return tsv_data
@@ -170,12 +177,12 @@ def parse_info_to_dict(path: Path) -> Dict:
             else:
                 continue
 
-            k, v = line_list[0], line_list[1]
+            key, value = line_list[0], line_list[1]
 
             try:
-                info_dict[k] = float(v)
+                info_dict[key] = float(value)
             except ValueError:
-                info_dict[k] = v
+                info_dict[key] = value
 
     return info_dict
 
