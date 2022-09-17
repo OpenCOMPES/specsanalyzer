@@ -1,4 +1,4 @@
-data_path: "nap32//topfloor/trARPES/PESData/"
+data_path: "//nap32/topfloor/trARPES/PESData/"
 spa_params:
   calib2d_file: "../tests/data/Phoibos150.calib2d"
   nx_pixel: 1376
