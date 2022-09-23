@@ -156,12 +156,15 @@ def get_rr_da(
         non angle resolved lens modes do not posses das.
 
     """
+    # we should distinguish 2 case: 1 angle resolved modes and spatial resolved modes. 
+    # shall I rather write these distinction in the class? 
+
     rr_array = np.array(list(config_dict["calib2d_dict"][lens_mode]["rr"]))
 
     dim1 = rr_array.shape[0]
     base_dict = config_dict["calib2d_dict"][lens_mode]["rr"]
     dim2 = len(base_dict[rr_array[0]])
-
+    
     try:
         dim3 = len(base_dict[rr_array[0]]["Da1"])
     except KeyError:
