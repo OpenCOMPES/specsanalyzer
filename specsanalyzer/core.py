@@ -43,9 +43,33 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
                 os.path.join(package_dir, self._config["calib2d_file"]),
             )
 
+        
         self._attributes = MetaHandler(meta=metadata)
 
-        self._correction_matrix_dict: Dict[Any, Any] = {}
+        self._correction_matrix_dict: Dict[Any, Any] = {
+                "supported_lens_modes": {
+                    "lens_modes_angle": [
+        "WideAngleMode",
+        "LowAngularDispersion",
+        "MediumAngularDispersion",
+        "HighAngularDispersion",
+        "WideAngleMode",
+        "SuperWideAngleMode"
+        ],
+                    "lens_modes_space": [
+            "LargeArea",
+            "MediumArea",
+            "SmallArea",
+            "SmallArea2",
+            "HighMagnification2",
+            "HighMagnification",
+            "MediumMagnification",
+            "LowMagnification"
+        ]
+                },
+        }
+        
+
 
     def __repr__(self):
         if self._config is None:
