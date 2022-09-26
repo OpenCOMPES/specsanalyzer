@@ -39,11 +39,23 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
             self._config["calib2d_dict"] = io.parse_calib2d_to_dict(
                 self._config["calib2d_file"],
             )
+            
+            
         except FileNotFoundError:  # default location relative to package directory
             self._config["calib2d_dict"] = io.parse_calib2d_to_dict(
                 os.path.join(package_dir, self._config["calib2d_file"]),
             )
 
+        try:
+            # add the supported lens modes on init
+            supported_angle_modes, supported_space_modes = (
+                get_modes_from_calib_dict(self._config['calib2d_dict']))
+            self._config['calib2d_dict'][
+                'supported_angle_modes'] = supported_angle_modes
+            self._config['calib2d_dict'][
+                'supported_space_modes'] = supported_space_modes
+        except KeyError:
+            KeyError("doesn't work")
         self._attributes = MetaHandler(meta=metadata)
 
         self._correction_matrix_dict: Dict[Any, Any] = {}
