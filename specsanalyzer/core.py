@@ -3,6 +3,7 @@
 """
 # from csv import DictReader
 import os
+import sys
 from typing import Any
 from typing import Dict
 from typing import Generator
@@ -43,34 +44,10 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
                 os.path.join(package_dir, self._config["calib2d_file"]),
             )
 
-        
         self._attributes = MetaHandler(meta=metadata)
 
-        self._correction_matrix_dict: Dict[Any, Any] = {
-                "supported_lens_modes": {
-                    "lens_modes_angle": [
-        "WideAngleMode",
-        "LowAngularDispersion",
-        "MediumAngularDispersion",
-        "HighAngularDispersion",
-        "WideAngleMode",
-        "SuperWideAngleMode"
-        ],
-                    "lens_modes_space": [
-            "LargeArea",
-            "MediumArea",
-            "SmallArea",
-            "SmallArea2",
-            "HighMagnification2",
-            "HighMagnification",
-            "MediumMagnification",
-            "LowMagnification"
-        ]
-                },
-        }
-        
-
-
+        self._correction_matrix_dict: Dict[Any, Any] = {}
+   
     def __repr__(self):
         if self._config is None:
             pretty_str = "No configuration available"
@@ -144,7 +121,23 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
         # TODO add image rotation
 
         # TODO check valid lens modes
-
+        # look for the lens mode in the 
+        try:        
+            supported_angle_modes, supported_space_modes = (
+                get_modes_from_calib_dict(self._config['calib2d_dict']))
+            self._config['calib2d_dict'][
+                'supported_angle_modes'] = supported_angle_modes
+            self._config['calib2d_dict'][
+                'supported_space_modes'] = supported_space_modes
+            if lens_mode in supported_angle_modes:
+                lens_mode_is_angle = True
+            elif lens_mode in supported_space_modes:
+                lens_mode_is_angle = False
+            else:
+                sys.exit("Unsupported lens mode: " + lens_mode)
+        except KeyError:
+            KeyError("Cannot find list of modes in calib file")
+        
         # check if the correction matrix dic
         # contains already the angular correction for the
         # current kinetic_energy, pass_energy, work_function
@@ -217,12 +210,19 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
         )
 
         # TODO: annotate with metadata
-        data_array = xr.DataArray(
-            data=conv_img,
-            coords={"Angle": angle_axis, "Ekin": ek_axis},
-            dims=["Angle", "Ekin"],
-        )
-
+        
+        if lens_mode_is_angle:
+            data_array = xr.DataArray(
+                data=conv_img,
+                coords={"Angle": angle_axis, "Ekin": ek_axis},
+                dims=["Angle", "Ekin"],
+            )
+        else:
+            data_array = xr.DataArray(
+                data=conv_img,
+                coords={"Position": angle_axis, "Ekin": ek_axis},
+                dims=["Position", "Ekin"],
+            )
         # TODO discuss how to handle cropping. Can he store one set of cropping
         # parameters in the config, or should we store one set per pass energy/
         # lens mode/ kinetic energy in the dict?
@@ -273,3 +273,28 @@ def mergedicts(
             yield (k, dict1[k])
         else:
             yield (k, dict2[k])
+
+
+def get_modes_from_calib_dict(
+        calib_dict: dict):
+    """create a list of supported modes, divided in spatial and angular modes
+    
+
+    Args:
+        calib_dict (dict): the calibration dictionary, created with the io 
+        parse_calib2d_to_dict
+
+    Returns:
+        _type_: _description_
+    """   
+    key_list = list(calib_dict.keys())
+    supported_angle_modes = []
+    supported_space_modes = []
+    for elem in key_list:
+        if "AngleMode" in elem or "AngularDispersion" in elem:
+            # this is an angular mode
+            supported_angle_modes.append(elem)
+        if "Area" in elem or "Magnification" in elem:
+            # this is an spatial mode
+            supported_space_modes.append(elem)              
+    return supported_angle_modes, supported_space_modes
