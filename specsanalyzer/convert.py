@@ -33,42 +33,64 @@ def get_damatrix_fromcalib2d(
     # retardation ratio
     retardation_ratio = (kinetic_energy - work_function) / pass_energy
 
-    # given the lens mode get all the retardation ratios available
-    rr_vec, damatrix_full = get_rr_da(lens_mode, config_dict)
-    # find closest retardation ratio in table
-    closest_rr_index = bisection(rr_vec, retardation_ratio)
+    # check the angular mode type
+    try:
+        supported_angle_modes = config_dict['calib2d_dict'][
+                    'supported_angle_modes']
+        supported_space_modes = config_dict['calib2d_dict'][
+                    'supported_space_modes']
+    except KeyError:
+        KeyError("Missing supported mode list")
+        
+    if lens_mode in supported_angle_modes:
 
-    # return as the closest rr index the smallest index in
-    # case of -1 output from bisection
+        # given the lens mode get all the retardation ratios available
+        rr_vec, damatrix_full = get_rr_da(lens_mode, config_dict)
+        # find closest retardation ratio in table
+        closest_rr_index = bisection(rr_vec, retardation_ratio)
 
-    if closest_rr_index == -1:
-        closest_rr_index = 0
-    # now compare the distance with the neighboring indexes,
-    # we need the second nearest rr
-    second_closest_rr_index = second_closest_rr(rr_vec, closest_rr_index)
+        # return as the closest rr index the smallest index in
+        # case of -1 output from bisection
 
-    # compute the rr_factor, which in igor done by a BinarySearchInterp
-    # this is a fraction from the current rr to next rr in the table
-    # array of array indexes
-    rr_index = np.arange(0, rr_vec.shape[0], 1)
-    # the factor is obtained by linear interpolation
-    rr_factor = (
-        np.interp(retardation_ratio, rr_vec, rr_index) - closest_rr_index
-    )
+        if closest_rr_index == -1:
+            closest_rr_index = 0
+        # now compare the distance with the neighboring indexes,
+        # we need the second nearest rr
+        second_closest_rr_index = second_closest_rr(rr_vec, closest_rr_index)
 
-    damatrix_close = damatrix_full[closest_rr_index][:][:]
-    damatrix_second = damatrix_full[second_closest_rr_index][:][:]
-    one_mat = np.ones(damatrix_close.shape)
-    rr_factor_mat = np.ones(damatrix_close.shape) * rr_factor
-    # weighted average between two neighboring da matrices
-    damatrix = (
-        damatrix_close * (one_mat - rr_factor_mat)
-        + damatrix_second * rr_factor_mat
-    )
-    # separate the first line (aInner) from the da coefficients
-    a_inner = damatrix[0][0]
-    damatrix = damatrix[1:][:]
+        # compute the rr_factor, which in igor done by a BinarySearchInterp
+        # this is a fraction from the current rr to next rr in the table
+        # array of array indexes
+        rr_index = np.arange(0, rr_vec.shape[0], 1)
+        # the factor is obtained by linear interpolation
+        rr_factor = (
+            np.interp(retardation_ratio, rr_vec, rr_index) - closest_rr_index
+        )
 
+        damatrix_close = damatrix_full[closest_rr_index][:][:]
+        damatrix_second = damatrix_full[second_closest_rr_index][:][:]
+        one_mat = np.ones(damatrix_close.shape)
+        rr_factor_mat = np.ones(damatrix_close.shape) * rr_factor
+        # weighted average between two neighboring da matrices
+        damatrix = (
+            damatrix_close * (one_mat - rr_factor_mat)
+            + damatrix_second * rr_factor_mat
+        )
+        # separate the first line (aInner) from the da coefficients
+        a_inner = damatrix[0][0]
+        damatrix = damatrix[1:][:]
+    elif lens_mode in supported_space_modes:
+        # use the mode defaults
+        print("This is a spatial mode, using default " + lens_mode + " config")
+        rr_vec, damatrix_full = get_rr_da(lens_mode, config_dict)
+        a_inner = damatrix_full[0][0]
+        damatrix = damatrix_full[1:][:]
+    else:
+        # use the defaults
+        print("Unrecognized mode, using default config")
+        rr_vec, damatrix_full = get_rr_da(lens_mode, config_dict)
+        a_inner = damatrix_full[0][0]
+        damatrix = damatrix_full[1:][:]
     return a_inner, damatrix
 
 
@@ -156,28 +178,58 @@ def get_rr_da(
         non angle resolved lens modes do not posses das.
 
     """
-    # we should distinguish 2 case: 1 angle resolved modes and spatial resolved modes. 
-    # shall I rather write these distinction in the class? 
-
-    rr_array = np.array(list(config_dict["calib2d_dict"][lens_mode]["rr"]))
-
-    dim1 = rr_array.shape[0]
-    base_dict = config_dict["calib2d_dict"][lens_mode]["rr"]
-    dim2 = len(base_dict[rr_array[0]])
-    
+    # check if this is spatial or an angular mode
+    # check the angular mode type
     try:
-        dim3 = len(base_dict[rr_array[0]]["Da1"])
+        supported_angle_modes = config_dict['calib2d_dict'][
+                    'supported_angle_modes']
+        supported_space_modes = config_dict['calib2d_dict'][
+                    'supported_space_modes']
     except KeyError:
-        raise ValueError("Da values do not exist for the given mode.")
-    da_matrix = np.zeros([dim1, dim2, dim3])
-    for count, item in enumerate(rr_array):
-        a_inner = base_dict[item]["aInner"]
-        da_block = np.concatenate(
-            tuple([v] for k, v in base_dict[item].items() if k != "aInner"),
-        )
-        da_matrix[count] = np.concatenate(
-            (np.array([[a_inner] * dim3]), da_block),
-        )
+        KeyError("Calib2d missing supported lens modes")
+            
+    if lens_mode in supported_angle_modes:
+    
+        rr_array = np.array(list(config_dict["calib2d_dict"][lens_mode]["rr"]))
+
+        dim1 = rr_array.shape[0]
+        base_dict = config_dict["calib2d_dict"][lens_mode]["rr"]
+        dim2 = len(base_dict[rr_array[0]])
+        
+        try:
+            dim3 = len(base_dict[rr_array[0]]["Da1"])
+        except KeyError:
+            raise ValueError("Da values do not exist for the given mode.")
+        da_matrix = np.zeros([dim1, dim2, dim3])
+        for count, item in enumerate(rr_array):
+            a_inner = base_dict[item]["aInner"]
+            da_block = np.concatenate(
+                tuple([v] for k, v in base_dict[item].items() if k != "aInner"),
+            )
+            da_matrix[count] = np.concatenate(
+                (np.array([[a_inner] * dim3]), da_block),
+            )
+    elif lens_mode in supported_space_modes:
+        # ok we are in a spatial mode, the calib2d does
+        # not contain an rr_array and we should build the da_matrix from the
+        # defaults without interpolation
+        
+        base_dict = config_dict["calib2d_dict"][lens_mode]["default"]
+        da1 = np.array(base_dict['Da1'])
+        ainner = base_dict['aInner']
+        rr_array = np.ones(1)
+        da_matrix = np.zeros((4, 3))
+        da_matrix[0, :] = np.ones(3)*ainner
+        da_matrix[1, :] = da1
+    else:
+        # this should not occur, but let's just use the global defaults
+        base_dict = config_dict["calib2d_dict"]
+        da1 = np.array(base_dict['Da1'])
+        ainner = base_dict['aInner']
+        rr_array = np.ones(1)
+        da_matrix = np.zeros((4, 3))
+        da_matrix[0, :] = np.ones(3)*ainner
+        da_matrix[1, :] = da1
     return rr_array, da_matrix
 
 
@@ -373,9 +425,28 @@ def calculate_matrix_correction(
         jacobian_determinant, the transformation jacobian for area preserving
         transformation
     """
+    # check which kind of mode we are dealing with
+    
+    # # check the angular mode type
+    # try:
+    #     supported_angle_modes = config_dict['calib2d_dict'][
+    #                 'supported_angle_modes']
+    #     supported_space_modes = config_dict['calib2d_dict'][
+    #                 'supported_space_modes']
+    # except KeyError:
+    #     KeyError("Calib2d missing supported lens modes")
+        
     eshift = np.array(config_dict["calib2d_dict"]["eShift"])
-
-    aInner, damatrix = get_damatrix_fromcalib2d(
+    de1 = [config_dict["calib2d_dict"]["De1"]]
+    erange = config_dict["calib2d_dict"]["eRange"]
+    arange = config_dict["calib2d_dict"][lens_mode]["default"]["aRange"]
+    
+    nx_pixel = config_dict["nx_pixel"]
+    ny_pixel = config_dict["ny_pixel"]
+    pixelsize = config_dict["pixel_size"]
+    magnification = config_dict["magnification"]
+    
+    aInner, da_matrix = get_damatrix_fromcalib2d(
         lens_mode,
         kinetic_energy,
         pass_energy,
@@ -384,19 +455,11 @@ def calculate_matrix_correction(
     )
 
     dapolymatrix = calculate_polynomial_coef_da(
-        damatrix,
+        da_matrix,
         kinetic_energy,
         pass_energy,
         eshift,
     )
-
-    de1 = [config_dict["calib2d_dict"]["De1"]]
-    erange = config_dict["calib2d_dict"]["eRange"]
-    arange = config_dict["calib2d_dict"][lens_mode]["default"]["aRange"]
-    nx_pixel = config_dict["nx_pixel"]
-    ny_pixel = config_dict["ny_pixel"]
-    pixelsize = config_dict["pixel_size"]
-    magnification = config_dict["magnification"]
 
     nx_bins = int(nx_pixel / binning)
     ny_bins = int(ny_pixel / binning)
