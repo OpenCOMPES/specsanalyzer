@@ -23,17 +23,17 @@ jobs:
       run: |
         python -m pip install .
     - name: pycodestyle
-      continue-on-error: true
       run: |
         python -m pycodestyle --ignore=E501,W503 specsanalyzer tests
     - name: pylint
-      continue-on-error: true
+      if: ${{ always() }}
       run: |
-        python -m pylint --good-names=i,j,k,ex,x,y,k,v specsanalyzer tests
+        python -m pylint --good-names=i,j,k,ex,x,y,k,v --disable=fixme specsanalyzer tests
     - name: mypy
-      continue-on-error: true
+      if: ${{ always() }}
       run: |
         python -m mypy --ignore-missing-imports --follow-imports=silent --no-strict-optional specsanalyzer tests
     - name: Test with pytest
+      if: ${{ always() }}
       run: |
         python -m pytest -sv tests
