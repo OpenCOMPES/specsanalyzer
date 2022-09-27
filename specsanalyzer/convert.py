@@ -40,8 +40,7 @@ def get_damatrix_fromcalib2d(
         supported_space_modes = config_dict['calib2d_dict'][
                     'supported_space_modes']
     except KeyError:
-        KeyError("Missing supported mode list")
-        
+        KeyError("Missing supported mode list") 
     if lens_mode in supported_angle_modes:
 
         # given the lens mode get all the retardation ratios available
@@ -187,9 +186,7 @@ def get_rr_da(
                     'supported_space_modes']
     except KeyError:
         KeyError("Calib2d missing supported lens modes")
-            
     if lens_mode in supported_angle_modes:
-    
         rr_array = np.array(list(config_dict["calib2d_dict"][lens_mode]["rr"]))
 
         dim1 = rr_array.shape[0]
