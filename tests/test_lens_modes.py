@@ -11,12 +11,12 @@ test_dir = os.path.dirname(__file__)
 # noqa: EF841
 
 lensmodes_angle = [
-        "WideAngleMode",
-        "LowAngularDispersion",
-        "MediumAngularDispersion",
-        "HighAngularDispersion",
-        "WideAngleMode",
-        "SuperWideAngleMode",
+    "WideAngleMode",
+    "LowAngularDispersion",
+    "MediumAngularDispersion",
+    "HighAngularDispersion",
+    "WideAngleMode",
+    "SuperWideAngleMode",
 ]
 lensmodes_space = [
     "LargeArea",
@@ -29,14 +29,13 @@ lensmodes_space = [
     "LowMagnification",
 ]
 test_io = []
-for mode in (lensmodes_angle+lensmodes_space):
+for mode in lensmodes_angle + lensmodes_space:
     test_io.append((mode, True))
 
 
 @pytest.mark.parametrize("lens_mode,expected", test_io)
 def test_lens_modes(lens_mode, expected):
-    """Test that all the supported lens modes run without error
-    """
+    """Test that all the supported lens modes run without error"""
     raw_image_name = os.fspath(
         f"{test_dir}/data/dataEPFL/R9132/Data9132_RAWDATA.tsv",
     )

@@ -37,11 +37,11 @@ def get_damatrix_fromcalib2d(  # pylint: disable=too-many-locals
 
     # check the angular mode type
     try:
-        supported_angle_modes = config_dict['calib2d_dict'][
-                    'supported_angle_modes'
+        supported_angle_modes = config_dict["calib2d_dict"][
+            "supported_angle_modes"
         ]
-        supported_space_modes = config_dict['calib2d_dict'][
-                    'supported_space_modes'
+        supported_space_modes = config_dict["calib2d_dict"][
+            "supported_space_modes"
         ]
     except KeyError:
         KeyError("Missing supported mode list")
@@ -185,11 +185,11 @@ def get_rr_da(
     # check if this is spatial or an angular mode
     # check the angular mode type
     try:
-        supported_angle_modes = config_dict['calib2d_dict'][
-                    'supported_angle_modes'
+        supported_angle_modes = config_dict["calib2d_dict"][
+            "supported_angle_modes"
         ]
-        supported_space_modes = config_dict['calib2d_dict'][
-                    'supported_space_modes'
+        supported_space_modes = config_dict["calib2d_dict"][
+            "supported_space_modes"
         ]
     except KeyError:
         KeyError("Calib2d missing supported lens modes")
@@ -208,7 +208,9 @@ def get_rr_da(
         for count, item in enumerate(rr_array):
             a_inner = base_dict[item]["aInner"]
             da_block = np.concatenate(
-                tuple([v] for k, v in base_dict[item].items() if k != "aInner"),
+                tuple(
+                    [v] for k, v in base_dict[item].items() if k != "aInner"
+                ),
             )
             da_matrix[count] = np.concatenate(
                 (np.array([[a_inner] * dim3]), da_block),
@@ -219,20 +221,20 @@ def get_rr_da(
         # defaults without interpolation
 
         base_dict = config_dict["calib2d_dict"][lens_mode]["default"]
-        da1 = np.array(base_dict['Da1'])
-        a_inner = base_dict['aInner']
+        da1 = np.array(base_dict["Da1"])
+        a_inner = base_dict["aInner"]
         rr_array = np.ones(1)
         da_matrix = np.zeros((4, 3))
-        da_matrix[0, :] = np.ones(3)*a_inner
+        da_matrix[0, :] = np.ones(3) * a_inner
         da_matrix[1, :] = da1
     else:
         # this should not occur, but let's just use the global defaults
         base_dict = config_dict["calib2d_dict"]
-        da1 = np.array(base_dict['Da1'])
-        a_inner = base_dict['aInner']
+        da1 = np.array(base_dict["Da1"])
+        a_inner = base_dict["aInner"]
         rr_array = np.ones(1)
         da_matrix = np.zeros((4, 3))
-        da_matrix[0, :] = np.ones(3)*a_inner
+        da_matrix[0, :] = np.ones(3) * a_inner
         da_matrix[1, :] = da1
     return rr_array, da_matrix
 
