@@ -39,7 +39,7 @@ def test_lens_modes(lens_mode, expected):
     raw_image_name = os.fspath(
         f"{test_dir}/data/dataEPFL/R9132/Data9132_RAWDATA.tsv",
     )
-    with open(raw_image_name) as file:
+    with open(raw_image_name) as file:  # pylint: disable=W1514
         tsv_data = np.loadtxt(file, delimiter="\t")
 
     configpath = os.fspath(f"{test_dir}/data/dataEPFL/config/config.yaml")
@@ -49,7 +49,7 @@ def test_lens_modes(lens_mode, expected):
     work_function = 4.2
 
     try:
-        converted = spa.convert_image(  # noqa: F841
+        converted = spa.convert_image(  # noqa: F841 # pylint: disable=W0612
             raw_img=tsv_data,
             lens_mode=lens_mode,
             kinetic_energy=kinetic_energy,
