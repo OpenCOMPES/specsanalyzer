@@ -49,7 +49,7 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
         try:
             # add the supported lens modes on init
             supported_angle_modes, supported_space_modes = (
-                get_modes_from_calib_dict(self._config['calib2d_dict']))
+                io.get_modes_from_calib_dict(self._config['calib2d_dict']))
             self._config['calib2d_dict'][
                 'supported_angle_modes'] = supported_angle_modes
             self._config['calib2d_dict'][
@@ -136,7 +136,7 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
         # look for the lens mode in the 
         try:        
             supported_angle_modes, supported_space_modes = (
-                get_modes_from_calib_dict(self._config['calib2d_dict']))
+                io.get_modes_from_calib_dict(self._config['calib2d_dict']))
             self._config['calib2d_dict'][
                 'supported_angle_modes'] = supported_angle_modes
             self._config['calib2d_dict'][
@@ -146,7 +146,8 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
             elif lens_mode in supported_space_modes:
                 lens_mode_is_angle = False
             else:
-                sys.exit("Unsupported lens mode: " + lens_mode)
+                # sys.exit()
+                KeyError("Unsupported lens mode: " + lens_mode)
         except KeyError:
             KeyError("Cannot find list of modes in calib file")
         
@@ -286,27 +287,3 @@ def mergedicts(
         else:
             yield (k, dict2[k])
 
-
-def get_modes_from_calib_dict(
-        calib_dict: dict):
-    """create a list of supported modes, divided in spatial and angular modes
-    
-
-    Args:
-        calib_dict (dict): the calibration dictionary, created with the io 
-        parse_calib2d_to_dict
-
-    Returns:
-        _type_: _description_
-    """   
-    key_list = list(calib_dict.keys())
-    supported_angle_modes = []
-    supported_space_modes = []
-    for elem in key_list:
-        if "AngleMode" in elem or "AngularDispersion" in elem:
-            # this is an angular mode
-            supported_angle_modes.append(elem)
-        if "Area" in elem or "Magnification" in elem:
-            # this is an spatial mode
-            supported_space_modes.append(elem)              
-    return supported_angle_modes, supported_space_modes
