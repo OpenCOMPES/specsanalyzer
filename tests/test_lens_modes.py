@@ -1,12 +1,11 @@
 """This is a code that performs several tests for the convert functions
 """
 import os
-from typing import Concatenate
 
 import numpy as np
+import pytest
 
 from specsanalyzer import SpecsAnalyzer
-import pytest
 
 test_dir = os.path.dirname(__file__)
 # noqa: EF841
@@ -17,8 +16,8 @@ lensmodes_angle = [
         "MediumAngularDispersion",
         "HighAngularDispersion",
         "WideAngleMode",
-        "SuperWideAngleMode"
-    ]
+        "SuperWideAngleMode",
+]
 lensmodes_space = [
     "LargeArea",
     "MediumArea",
@@ -27,15 +26,15 @@ lensmodes_space = [
     "HighMagnification2",
     "HighMagnification",
     "MediumMagnification",
-    "LowMagnification"
+    "LowMagnification",
 ]
-test_io=[]
+test_io = []
 for mode in (lensmodes_angle+lensmodes_space):
-    test_io.append( (mode,True) )
+    test_io.append((mode, True))
 
 
-@pytest.mark.parametrize("lens_mode,expected", test_io)   
-def test_lens_modes(lens_mode,expected):  
+@pytest.mark.parametrize("lens_mode,expected", test_io)
+def test_lens_modes(lens_mode, expected):
     """Test that all the supported lens modes run without error
     """
     raw_image_name = os.fspath(
@@ -43,16 +42,15 @@ def test_lens_modes(lens_mode,expected):
     )
     with open(raw_image_name) as file:
         tsv_data = np.loadtxt(file, delimiter="\t")
-    
+
     configpath = os.fspath(f"{test_dir}/data/dataEPFL/config/config.yaml")
     spa = SpecsAnalyzer(config=configpath)
     kinetic_energy = 35.000000
     pass_energy = 35.000000
     work_function = 4.2
-    
 
-    try: 
-        converted = spa.convert_image(  # noqa: EF841
+    try:
+        converted = spa.convert_image(  # noqa: F841
             raw_img=tsv_data,
             lens_mode=lens_mode,
             kinetic_energy=kinetic_energy,

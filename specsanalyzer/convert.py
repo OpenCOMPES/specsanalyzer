@@ -36,11 +36,13 @@ def get_damatrix_fromcalib2d(
     # check the angular mode type
     try:
         supported_angle_modes = config_dict['calib2d_dict'][
-                    'supported_angle_modes']
+                    'supported_angle_modes'
+        ]
         supported_space_modes = config_dict['calib2d_dict'][
-                    'supported_space_modes']
+                    'supported_space_modes'
+        ]
     except KeyError:
-        KeyError("Missing supported mode list") 
+        KeyError("Missing supported mode list")
     if lens_mode in supported_angle_modes:
 
         # given the lens mode get all the retardation ratios available
@@ -181,9 +183,11 @@ def get_rr_da(
     # check the angular mode type
     try:
         supported_angle_modes = config_dict['calib2d_dict'][
-                    'supported_angle_modes']
+                    'supported_angle_modes'
+        ]
         supported_space_modes = config_dict['calib2d_dict'][
-                    'supported_space_modes']
+                    'supported_space_modes'
+        ]
     except KeyError:
         KeyError("Calib2d missing supported lens modes")
     if lens_mode in supported_angle_modes:
@@ -192,7 +196,7 @@ def get_rr_da(
         dim1 = rr_array.shape[0]
         base_dict = config_dict["calib2d_dict"][lens_mode]["rr"]
         dim2 = len(base_dict[rr_array[0]])
-        
+
         try:
             dim3 = len(base_dict[rr_array[0]]["Da1"])
         except KeyError:
@@ -210,7 +214,7 @@ def get_rr_da(
         # ok we are in a spatial mode, the calib2d does
         # not contain an rr_array and we should build the da_matrix from the
         # defaults without interpolation
-        
+
         base_dict = config_dict["calib2d_dict"][lens_mode]["default"]
         da1 = np.array(base_dict['Da1'])
         ainner = base_dict['aInner']
@@ -423,7 +427,7 @@ def calculate_matrix_correction(
         transformation
     """
     # check which kind of mode we are dealing with
-    
+
     # # check the angular mode type
     # try:
     #     supported_angle_modes = config_dict['calib2d_dict'][
@@ -432,17 +436,17 @@ def calculate_matrix_correction(
     #                 'supported_space_modes']
     # except KeyError:
     #     KeyError("Calib2d missing supported lens modes")
-        
+
     eshift = np.array(config_dict["calib2d_dict"]["eShift"])
     de1 = [config_dict["calib2d_dict"]["De1"]]
     erange = config_dict["calib2d_dict"]["eRange"]
     arange = config_dict["calib2d_dict"][lens_mode]["default"]["aRange"]
-    
+
     nx_pixel = config_dict["nx_pixel"]
     ny_pixel = config_dict["ny_pixel"]
     pixelsize = config_dict["pixel_size"]
     magnification = config_dict["magnification"]
-    
+
     aInner, da_matrix = get_damatrix_fromcalib2d(
         lens_mode,
         kinetic_energy,

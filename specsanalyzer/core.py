@@ -3,7 +3,6 @@
 """
 # from csv import DictReader
 import os
-import sys
 from typing import Any
 from typing import Dict
 from typing import Generator
@@ -39,8 +38,7 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
             self._config["calib2d_dict"] = io.parse_calib2d_to_dict(
                 self._config["calib2d_file"],
             )
-            
-            
+
         except FileNotFoundError:  # default location relative to package directory
             self._config["calib2d_dict"] = io.parse_calib2d_to_dict(
                 os.path.join(package_dir, self._config["calib2d_file"]),
@@ -49,17 +47,20 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
         try:
             # add the supported lens modes on init
             supported_angle_modes, supported_space_modes = (
-                io.get_modes_from_calib_dict(self._config['calib2d_dict']))
+                io.get_modes_from_calib_dict(self._config['calib2d_dict'])
+            )
             self._config['calib2d_dict'][
-                'supported_angle_modes'] = supported_angle_modes
+                'supported_angle_modes'
+            ] = supported_angle_modes
             self._config['calib2d_dict'][
-                'supported_space_modes'] = supported_space_modes
+                'supported_space_modes'
+            ] = supported_space_modes
         except KeyError:
             KeyError("doesn't work")
         self._attributes = MetaHandler(meta=metadata)
 
         self._correction_matrix_dict: Dict[Any, Any] = {}
-   
+
     def __repr__(self):
         if self._config is None:
             pretty_str = "No configuration available"
@@ -133,14 +134,17 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
         # TODO add image rotation
 
         # TODO check valid lens modes
-        # look for the lens mode in the 
-        try:        
+        # look for the lens mode in the
+        try:
             supported_angle_modes, supported_space_modes = (
-                io.get_modes_from_calib_dict(self._config['calib2d_dict']))
+                io.get_modes_from_calib_dict(self._config['calib2d_dict'])
+            )
             self._config['calib2d_dict'][
-                'supported_angle_modes'] = supported_angle_modes
+                'supported_angle_modes'
+            ] = supported_angle_modes
             self._config['calib2d_dict'][
-                'supported_space_modes'] = supported_space_modes
+                'supported_space_modes'
+            ] = supported_space_modes
             if lens_mode in supported_angle_modes:
                 lens_mode_is_angle = True
             elif lens_mode in supported_space_modes:
@@ -150,7 +154,7 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
                 KeyError("Unsupported lens mode: " + lens_mode)
         except KeyError:
             KeyError("Cannot find list of modes in calib file")
-        
+
         # check if the correction matrix dic
         # contains already the angular correction for the
         # current kinetic_energy, pass_energy, work_function
@@ -223,7 +227,7 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
         )
 
         # TODO: annotate with metadata
-        
+
         if lens_mode_is_angle:
             data_array = xr.DataArray(
                 data=conv_img,
@@ -286,4 +290,3 @@ def mergedicts(
             yield (k, dict1[k])
         else:
             yield (k, dict2[k])
-

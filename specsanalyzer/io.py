@@ -499,17 +499,15 @@ def parse_calib2d_to_dict(filepath: str) -> Dict[Any, Any]:
 
 
 def get_modes_from_calib_dict(
-        calib_dict: dict):
+        calib_dict: dict,
+):
     """create a list of supported modes, divided in spatial and angular modes
-    
-
     Args:
-        calib_dict (dict): the calibration dictionary, created with the io 
+        calib_dict (dict): the calibration dictionary, created with the io
         parse_calib2d_to_dict
-
     Returns:
         _type_: _description_
-    """   
+    """
     key_list = list(calib_dict.keys())
     supported_angle_modes = []
     supported_space_modes = []
@@ -519,5 +517,5 @@ def get_modes_from_calib_dict(
             supported_angle_modes.append(elem)
         if "Area" in elem or "Magnification" in elem:
             # this is an spatial mode
-            supported_space_modes.append(elem)              
+            supported_space_modes.append(elem)
     return supported_angle_modes, supported_space_modes

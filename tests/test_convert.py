@@ -51,7 +51,7 @@ def test_da_matrix():
     kinetic_energy = 35.000000
     pass_energy = 35.000000
     work_function = 4.2
-    
+
     # converted = spa.convert_image(
     #     raw_img=np.zeros((512,512)),
     #     lens_mode=lens_mode,
@@ -60,7 +60,7 @@ def test_da_matrix():
     #     work_function=work_function,
     #     apply_fft_filter=False,
     # )
-    
+
     # get the matrix_correction
     eshift = np.array(config_dict["calib2d_dict"]["eShift"])
     a_inner, damatrix = get_damatrix_fromcalib2d(
