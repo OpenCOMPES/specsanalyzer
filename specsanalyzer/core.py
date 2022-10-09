@@ -86,7 +86,7 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
         """Get correction_matrix_dict"""
         return self._correction_matrix_dict
 
-    def convert_image(  # pylint: disable=too-many-locals
+    def convert_image(  # pylint: disable=too-many-arguments,too-many-locals
         self,
         raw_img: np.ndarray,
         lens_mode: str,
