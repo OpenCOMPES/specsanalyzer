@@ -499,7 +499,7 @@ def parse_calib2d_to_dict(filepath: str) -> Dict[Any, Any]:
 
 
 def get_modes_from_calib_dict(
-        calib_dict: dict,
+    calib_dict: dict,
 ):
     """create a list of supported modes, divided in spatial and angular modes
     Args:

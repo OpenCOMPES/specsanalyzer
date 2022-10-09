@@ -46,14 +46,15 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
 
         try:
             # add the supported lens modes on init
-            supported_angle_modes, supported_space_modes = (
-                io.get_modes_from_calib_dict(self._config['calib2d_dict'])
-            )
-            self._config['calib2d_dict'][
-                'supported_angle_modes'
+            (
+                supported_angle_modes,
+                supported_space_modes,
+            ) = io.get_modes_from_calib_dict(self._config["calib2d_dict"])
+            self._config["calib2d_dict"][
+                "supported_angle_modes"
             ] = supported_angle_modes
-            self._config['calib2d_dict'][
-                'supported_space_modes'
+            self._config["calib2d_dict"][
+                "supported_space_modes"
             ] = supported_space_modes
         except KeyError:
             KeyError("doesn't work")
@@ -136,14 +137,15 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
         # TODO check valid lens modes
         # look for the lens mode in the
         try:
-            supported_angle_modes, supported_space_modes = (
-                io.get_modes_from_calib_dict(self._config['calib2d_dict'])
-            )
-            self._config['calib2d_dict'][
-                'supported_angle_modes'
+            (
+                supported_angle_modes,
+                supported_space_modes,
+            ) = io.get_modes_from_calib_dict(self._config["calib2d_dict"])
+            self._config["calib2d_dict"][
+                "supported_angle_modes"
             ] = supported_angle_modes
-            self._config['calib2d_dict'][
-                'supported_space_modes'
+            self._config["calib2d_dict"][
+                "supported_space_modes"
             ] = supported_space_modes
             if lens_mode in supported_angle_modes:
                 lens_mode_is_angle = True
