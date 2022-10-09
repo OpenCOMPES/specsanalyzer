@@ -220,19 +220,19 @@ def get_rr_da(
 
         base_dict = config_dict["calib2d_dict"][lens_mode]["default"]
         da1 = np.array(base_dict['Da1'])
-        ainner = base_dict['aInner']
+        a_inner = base_dict['aInner']
         rr_array = np.ones(1)
         da_matrix = np.zeros((4, 3))
-        da_matrix[0, :] = np.ones(3)*ainner
+        da_matrix[0, :] = np.ones(3)*a_inner
         da_matrix[1, :] = da1
     else:
         # this should not occur, but let's just use the global defaults
         base_dict = config_dict["calib2d_dict"]
         da1 = np.array(base_dict['Da1'])
-        ainner = base_dict['aInner']
+        a_inner = base_dict['aInner']
         rr_array = np.ones(1)
         da_matrix = np.zeros((4, 3))
-        da_matrix[0, :] = np.ones(3)*ainner
+        da_matrix[0, :] = np.ones(3)*a_inner
         da_matrix[1, :] = da1
     return rr_array, da_matrix
 
@@ -429,34 +429,18 @@ def calculate_matrix_correction(  # pylint: disable=too-many-arguments, too-many
         jacobian_determinant, the transformation jacobian for area preserving
         transformation
     """
-<<<<<<< HEAD
-    # check which kind of mode we are dealing with
 
-    # # check the angular mode type
-    # try:
-    #     supported_angle_modes = config_dict['calib2d_dict'][
-    #                 'supported_angle_modes']
-    #     supported_space_modes = config_dict['calib2d_dict'][
-    #                 'supported_space_modes']
-    # except KeyError:
-    #     KeyError("Calib2d missing supported lens modes")
-
-    eshift = np.array(config_dict["calib2d_dict"]["eShift"])
+    e_shift = np.array(config_dict["calib2d_dict"]["eShift"])
     de1 = [config_dict["calib2d_dict"]["De1"]]
-    erange = config_dict["calib2d_dict"]["eRange"]
-    arange = config_dict["calib2d_dict"][lens_mode]["default"]["aRange"]
+    e_range = config_dict["calib2d_dict"]["eRange"]
+    a_range = config_dict["calib2d_dict"][lens_mode]["default"]["aRange"]
 
     nx_pixel = config_dict["nx_pixel"]
     ny_pixel = config_dict["ny_pixel"]
-    pixelsize = config_dict["pixel_size"]
+    pixel_size = config_dict["pixel_size"]
     magnification = config_dict["magnification"]
 
-    aInner, da_matrix = get_damatrix_fromcalib2d(
-=======
-    e_shift = np.array(config_dict["calib2d_dict"]["eShift"])
-
-    (a_inner, da_matrix) = get_damatrix_fromcalib2d(
->>>>>>> origin/main
+    a_inner, da_matrix = get_damatrix_fromcalib2d(
         lens_mode,
         kinetic_energy,
         pass_energy,
@@ -464,28 +448,13 @@ def calculate_matrix_correction(  # pylint: disable=too-many-arguments, too-many
         config_dict,
     )
 
-<<<<<<< HEAD
-    dapolymatrix = calculate_polynomial_coef_da(
-=======
     da_poly_matrix = calculate_polynomial_coef_da(
->>>>>>> origin/main
         da_matrix,
         kinetic_energy,
         pass_energy,
         e_shift,
     )
 
-<<<<<<< HEAD
-=======
-    de1 = [config_dict["calib2d_dict"]["De1"]]
-    e_range = config_dict["calib2d_dict"]["eRange"]
-    a_range = config_dict["calib2d_dict"][lens_mode]["default"]["aRange"]
-    nx_pixel = config_dict["nx_pixel"]
-    ny_pixel = config_dict["ny_pixel"]
-    pixel_size = config_dict["pixel_size"]
-    magnification = config_dict["magnification"]
-
->>>>>>> origin/main
     nx_bins = int(nx_pixel / binning)
     ny_bins = int(ny_pixel / binning)
 
