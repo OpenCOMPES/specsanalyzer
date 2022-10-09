@@ -203,7 +203,8 @@ def get_rr_da(
         try:
             dim3 = len(base_dict[rr_array[0]]["Da1"])
         except KeyError:
-            raise ValueError("Da values do not exist for the given mode.")
+            raise ValueError(   # pylint: disable=W0707
+                "Da values do not exist for the given mode.")
         da_matrix = np.zeros([dim1, dim2, dim3])
         for count, item in enumerate(rr_array):
             a_inner = base_dict[item]["aInner"]
