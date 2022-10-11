@@ -111,13 +111,27 @@ class SpecsScan:
             path = path_scan_list[0]
 
         scan_list = kwds.pop("scan_list", [])
-        iter = kwds.pop("iterations", 0)
+        iterations = kwds.pop("iterations", 0)
 
         if not scan_list:
             scan_list = [
                 file.stem for file in path.joinpath("AVG").iterdir()
                 if file.suffix == ".tsv"
             ]
+
+        if iterations:
+            raw_list = [
+                file.stem for file in path.joinpath("RAW").iterdir()
+                if file.stem.split("_")[0] in scan_list
+            ]
+
+            scan_list = sorted(raw_list[:(iterations*len(scan_list))])
+
+        data = load_images(
+            path,
+            scan_list=scan_list,
+            iterations=iterations,
+        )
 
         try:
             self._scan_info = parse_info_to_dict(path)
@@ -132,12 +146,6 @@ class SpecsScan:
             self._scan_info["KineticEnergy"],
             self._scan_info["PassEnergy"],
             self._scan_info["WorkFunction"],
-        )
-
-        data = load_images(
-            path,
-            scan_list=scan_list,
-            iterations=iter,
         )
 
         xr_list = []
@@ -181,35 +189,49 @@ def load_images(
         data: Concatenated numpy array consisting of raw data
     """
 
-    if not iterations:
-        # Handles scantype "single"
+    folder = "RAW" if iterations else "AVG"
+
+    # Handles scantype "single"
+    try:
         with open(
-            scan_path.joinpath(f"AVG/{scan_list[0]}.tsv"),
+            scan_path.joinpath(f"{folder}/{scan_list[0]}.tsv"),
             encoding="utf-8",
         ) as file:
             data = np.loadtxt(file, delimiter="\t")
 
         data = data.reshape(1, data.shape[0], data.shape[1])
 
-        # Handles scantypes "delay", "mirror", "temperature" etc.
-        # Concatenates the images along a third axes
-        if len(scan_list) > 1:
+    except IndexError:
+        print(f"{folder} folder empty. Try without iterations")
+        raise
 
-            for image in scan_list[1:]:
-                with open(
-                    scan_path.joinpath(f"AVG/{image}.tsv"),
-                    encoding="utf-8",
-                ) as file:
+    except FileNotFoundError:
+        print(f"Image {folder}/{scan_list[0]}.tsv not found.")
+        raise
 
-                    new_im = np.loadtxt(file, delimiter="\t")
-                    data = np.concatenate(
-                        (
-                            data,
-                            new_im.reshape(1, new_im.shape[0], new_im.shape[1]),
+    # Handles scantypes "delay", "mirror", "temperature" etc.
+    # Concatenates the images along a third axes
+    if len(scan_list) > 1:
+
+        for image in scan_list[1:]:
+            with open(
+                scan_path.joinpath(f"{folder}/{image}.tsv"),
+                encoding="utf-8",
+            ) as file:
+
+                new_im = np.loadtxt(file, delimiter="\t")
+                data = np.concatenate(
+                    (
+                        data,
+                        new_im.reshape(
+                            1,
+                            new_im.shape[0],
+                            new_im.shape[1],
                         ),
-                    )
+                    ),
+                )
 
-    else:  # Average over images for the given iterations
+    if iterations:  # Average over the same delay scans
         pass
 
     return data
