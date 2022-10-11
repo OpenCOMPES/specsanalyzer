@@ -232,7 +232,20 @@ def load_images(
                 )
 
     if iterations:  # Average over the same delay scans
-        pass
+
+        # TODO: Add checks for other scan types
+        # TODO: Generalize iterations to a list
+
+        data = np.average(
+            data.reshape(  # Average over rows in 4-D
+                int(len(data)/iterations),
+                iterations,
+                data[0].shape[0],
+                data[0].shape[1],
+            ),
+            axis=1,
+
+        )
 
     return data
 
