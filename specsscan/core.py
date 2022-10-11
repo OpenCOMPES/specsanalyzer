@@ -80,13 +80,18 @@ class SpecsScan:
             path: Either a string of the path to the folder
                 containing the scan or a Path object
             cycles:
+        Kwargs:
+            scan_list: The list of images in the given scan
+                that need to be concatenated
+            iterations: The integer number of iterations over
+                which the images are to be averaged.
 
         Raises:
             FileNotFoundError
 
         Returns:
-            xres: xarray DataArray object with kinetic energy and angle/position as
-                coordinates
+            xres: xarray DataArray object with kinetic energy, angle/position
+                and optionally delay as coordinates.
         """
         if path:
             path = Path(path).joinpath(str(scan))
@@ -105,8 +110,14 @@ class SpecsScan:
                 )
             path = path_scan_list[0]
 
-        avg_path = path.joinpath("AVG")
-        # raw_path = path.joinpath("RAW")
+        scan_list = kwds.pop("scan_list", [])
+        iter = kwds.pop("iterations", 0)
+
+        if not scan_list:
+            scan_list = [
+                file.stem for file in path.joinpath("AVG").iterdir()
+                if file.suffix == ".tsv"
+            ]
 
         try:
             self._scan_info = parse_info_to_dict(path)
@@ -123,36 +134,85 @@ class SpecsScan:
             self._scan_info["WorkFunction"],
         )
 
-        # Treat the data based on the scan type.
-        if scan_type == "single":
-            data = load_single(avg_path)
-
-        res_xarray = self.spa.convert_image(
-            data,
-            lens_mode,
-            kin_energy,
-            pass_energy,
-            work_function,
+        data = load_images(
+            path,
+            scan_list=scan_list,
+            iterations=iter,
         )
+
+        xr_list = []
+        for image in data:
+            xr_list.append(
+                self.spa.convert_image(
+                    image,
+                    lens_mode,
+                    kin_energy,
+                    pass_energy,
+                    work_function,
+                ),
+            )
+
+        # Handle as per scantype
+        # xr.concat() relies on same coords
+        if scan_type == "single":
+            res_xarray = xr_list[0]
+        elif scan_type == "delay":
+            res_xarray = xr.concat(xr_list, dim="Delay")  # Coords needed from LUT
+        elif scan_type == "mirror":
+            res_xarray = xr.concat(xr_list, dim="MirrorX")
+        elif scan_type == "temperature":
+            res_xarray = xr.concat(xr_list, dim="Temperature")
 
         return res_xarray
 
 
-def load_single(
-    avg_path: Path,
+def load_images(
+    scan_path: Path,
+    scan_list: List[str] = None,
+    iterations: int = None,
 ) -> np.ndarray:
-    """opens the tsv file of scan type 'single'
+    """Loads a 2D/3D numpy array of images provided
+        in the scan_list with an optional averaging
+        over the given iterations
     Args:
-        avg_path: object of class Path pointing
-                to the AVG folder of the scan
+        scan_path: object of class Path pointing
+                to the scan folder
     Returns:
-        tsv_data: numpy array consisting of raw data
+        data: Concatenated numpy array consisting of raw data
     """
 
-    with open(avg_path.joinpath("000.tsv"), encoding="utf-8") as file:
-        tsv_data = np.loadtxt(file, delimiter="\t")
+    if not iterations:
+        # Handles scantype "single"
+        with open(
+            scan_path.joinpath(f"AVG/{scan_list[0]}.tsv"),
+            encoding="utf-8",
+        ) as file:
+            data = np.loadtxt(file, delimiter="\t")
 
-    return tsv_data
+        data = data.reshape(1, data.shape[0], data.shape[1])
+
+        # Handles scantypes "delay", "mirror", "temperature" etc.
+        # Concatenates the images along a third axes
+        if len(scan_list) > 1:
+
+            for image in scan_list[1:]:
+                with open(
+                    scan_path.joinpath(f"AVG/{image}.tsv"),
+                    encoding="utf-8",
+                ) as file:
+
+                    new_im = np.loadtxt(file, delimiter="\t")
+                    data = np.concatenate(
+                        (
+                            data,
+                            new_im.reshape(1, new_im.shape[0], new_im.shape[1]),
+                        ),
+                    )
+
+    else:  # Average over images for the given iterations
+        pass
+
+    return data
 
 
 def parse_info_to_dict(path: Path) -> Dict:
