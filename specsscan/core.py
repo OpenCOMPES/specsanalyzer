@@ -11,6 +11,7 @@ from typing import Union
 import numpy as np
 import xarray as xr
 from specsanalyzer import SpecsAnalyzer
+from tqdm import tqdm
 
 from specsscan.metadata import MetaHandler
 from specsscan.settings import parse_config
@@ -71,6 +72,7 @@ class SpecsScan:
         scan: int,
         path: Union[str, Path] = "",
         cycles: Sequence = None,
+        iterations: Union[list, np.array] = None,
         **kwds,
     ) -> xr.DataArray:
         """Load scan with given scan number.
@@ -110,26 +112,8 @@ class SpecsScan:
                 )
             path = path_scan_list[0]
 
-        scan_list = kwds.pop("scan_list", [])
-        iterations = kwds.pop("iterations", 0)
-
-        if not scan_list:
-            scan_list = [
-                file.stem for file in path.joinpath("AVG").iterdir()
-                if file.suffix == ".tsv"
-            ]
-
-        if iterations:
-            raw_list = [
-                file.stem for file in path.joinpath("RAW").iterdir()
-                if file.stem.split("_")[0] in scan_list
-            ]
-
-            scan_list = sorted(raw_list[:(iterations*len(scan_list))])
-
         data = load_images(
             path,
-            scan_list=scan_list,
             iterations=iterations,
         )
 
@@ -176,11 +160,10 @@ class SpecsScan:
 
 def load_images(
     scan_path: Path,
-    scan_list: List[str] = None,
-    iterations: int = None,
+    iterations: Union[list, np.array] = None,
 ) -> np.ndarray:
-    """Loads a 2D/3D numpy array of images provided
-        in the scan_list with an optional averaging
+    """Loads a 2D/3D numpy array of images for the given
+        scan path with an optional averaging
         over the given iterations
     Args:
         scan_path: object of class Path pointing
@@ -189,65 +172,161 @@ def load_images(
         data: Concatenated numpy array consisting of raw data
     """
 
-    folder = "RAW" if iterations else "AVG"
+    scan_list = [
+        file.stem for file in scan_path.joinpath("AVG").iterdir()
+        if file.suffix == ".tsv"
+    ]
+
+    if iterations is not None:
+        print("Building raw scans array...")
+        raw_list = np.array(
+            [
+                file.stem for file in scan_path.joinpath("RAW").iterdir()
+                if file.suffix == ".tsv"
+            ],
+        )
+
+        if raw_list.size == 0:
+            raise Exception(
+                "RAW folder empty. "
+                "Try without passing iterations in case of a single scan.",
+            )
+
+        raw_2d = get_raw2d(scan_list, raw_list)
+
+        # Slicing along the given iterations
+        raw_2d_iter = slice_raw2d(raw_2d, iterations)
 
     # Handles scantype "single"
     try:
         with open(
-            scan_path.joinpath(f"{folder}/{scan_list[0]}.tsv"),
+            scan_path.joinpath(f"AVG/{scan_list[0]}.tsv"),
             encoding="utf-8",
         ) as file:
             data = np.loadtxt(file, delimiter="\t")
 
-        data = data.reshape(1, data.shape[0], data.shape[1])
+        data = data[np.newaxis]  # turn data into a 3D array
 
     except IndexError:
-        print(f"{folder} folder empty. Try without iterations")
-        raise
-
-    except FileNotFoundError:
-        print(f"Image {folder}/{scan_list[0]}.tsv not found.")
+        print("AVG folder empty.")
         raise
 
     # Handles scantypes "delay", "mirror", "temperature" etc.
     # Concatenates the images along a third axes
     if len(scan_list) > 1:
+        if iterations is None:
 
-        for image in scan_list[1:]:
-            with open(
-                scan_path.joinpath(f"{folder}/{image}.tsv"),
-                encoding="utf-8",
-            ) as file:
+            for image in tqdm(scan_list[1:]):
+                with open(
+                    scan_path.joinpath(f"AVG/{image}.tsv"),
+                    encoding="utf-8",
+                ) as file:
 
-                new_im = np.loadtxt(file, delimiter="\t")
-                data = np.concatenate(
-                    (
-                        data,
-                        new_im.reshape(
-                            1,
-                            new_im.shape[0],
-                            new_im.shape[1],
+                    new_im = np.loadtxt(file, delimiter="\t")[np.newaxis]
+                    data = np.concatenate(
+                        (
+                            data,
+                            new_im,
                         ),
-                    ),
+                    )
+        else:
+            print("Averaging over iterations...")
+            data = np.empty(
+                (
+                    len(raw_2d_iter),
+                    data.shape[1],
+                    data.shape[2],
+                ),
+            )
+            for i in tqdm(range(len(raw_2d_iter))):
+                avg_list = []
+                for iter in raw_2d_iter[i]:
+                    if iter != "nan":
+
+                        with open(
+                            scan_path.joinpath(f"RAW/{iter}.tsv"),
+                            encoding="utf-8",
+                        ) as file:
+                            new_im = np.loadtxt(file, delimiter="\t")
+                            avg_list.append(new_im)
+
+                data[i] = np.average(
+                    np.array(avg_list)[np.newaxis],
+                    axis=1,
                 )
 
-    if iterations:  # Average over the same delay scans
+    return data
 
-        # TODO: Add checks for other scan types
-        # TODO: Generalize iterations to a list
 
-        data = np.average(
-            data.reshape(  # Average over rows in 4-D
-                int(len(data)/iterations),
-                iterations,
-                data[0].shape[0],
-                data[0].shape[1],
-            ),
-            axis=1,
+def get_raw2d(
+    scan_list: List[str],
+    raw_list: np.array,
+) -> np.array:
+    """Convert a 1-D array of raw scan names
+        into 2-D based on the number of iterations
+    Args:
+        scan_list: A list of AVG scan names.
+        raw_list: 1-D array of RAW scan names.
+    Returns:
+        raw_2d: 2-D numpy array of size for ex., (delays, total_iterations)
+                for a delay scan.
+    """
 
+    total_iterations = len(
+        [
+            im for im in raw_list if f"{scan_list[0]}_" in im
+        ],
+    )
+
+    delays = len(scan_list)
+    diff = delays*(total_iterations-1) - len(raw_list)
+
+    if diff:  # Ongoing or aborted scan
+        raw_2d = raw_list[:diff].reshape(
+            total_iterations-1,
+            delays,
+        ).T
+
+        last_iter_array = np.full(
+            (delays, 1),
+            fill_value="nan",
+            dtype="object",
         )
 
-    return data
+        last_iter_array[:-diff, 0] = raw_list[diff:]
+        raw_2d = np.concatenate(
+            (raw_2d, last_iter_array),
+            axis=1,
+        )
+    else:  # Complete scan
+        raw_2d = raw_list.reshape(total_iterations-1, delays).T
+
+    return raw_2d
+
+
+def slice_raw2d(
+    raw_2d: np.array,
+    iterations: Union[List, np.array],
+) -> np.array:
+    """Slices the raw_2d array obtained from
+        get_raw2d() based on the given iterations.
+    Args:
+        raw_2d: A 2-D array of scan names.
+        iterations: Array of iterations provided
+    Returns:
+        raw_2d_iter: Numpy array of size (delays, iterations)
+                    for a delay scan.
+    """
+
+    # Slicing along the given iterations
+    raw_2d_iter = []
+
+    for iter in iterations:
+        raw_2d_iter.append(raw_2d[:, iter-1])
+
+    raw_2d_iter = np.array(raw_2d_iter).T
+
+    return raw_2d_iter
 
 
 def parse_info_to_dict(path: Path) -> Dict:
