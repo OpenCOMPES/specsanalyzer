@@ -5,7 +5,6 @@ from pathlib import Path
 from typing import Any
 from typing import Dict
 from typing import List
-from typing import Sequence
 from typing import Union
 
 import numpy as np
@@ -71,9 +70,7 @@ class SpecsScan:
         self,
         scan: int,
         path: Union[str, Path] = "",
-        cycles: Sequence = None,
-        iterations: Union[list, np.array] = None,
-        **kwds,
+        iterations: Union[list, np.ndarray] = None,
     ) -> xr.DataArray:
         """Load scan with given scan number.
 
@@ -160,7 +157,7 @@ class SpecsScan:
 
 def load_images(
     scan_path: Path,
-    iterations: Union[list, np.array] = None,
+    iterations: Union[list, np.ndarray] = None,
 ) -> np.ndarray:
     """Loads a 2D/3D numpy array of images for the given
         scan path with an optional averaging
@@ -240,11 +237,11 @@ def load_images(
             )
             for i in tqdm(range(len(raw_2d_iter))):
                 avg_list = []
-                for iter in raw_2d_iter[i]:
-                    if iter != "nan":
+                for image in raw_2d_iter[i]:
+                    if image != "nan":
 
                         with open(
-                            scan_path.joinpath(f"RAW/{iter}.tsv"),
+                            scan_path.joinpath(f"RAW/{image}.tsv"),
                             encoding="utf-8",
                         ) as file:
                             new_im = np.loadtxt(file, delimiter="\t")
@@ -260,8 +257,8 @@ def load_images(
 
 def get_raw2d(
     scan_list: List[str],
-    raw_list: np.array,
-) -> np.array:
+    raw_list: np.ndarray,
+) -> np.ndarray:
     """Convert a 1-D array of raw scan names
         into 2-D based on the number of iterations
     Args:
@@ -279,11 +276,11 @@ def get_raw2d(
     )
 
     delays = len(scan_list)
-    diff = delays*(total_iterations-1) - len(raw_list)
+    diff = delays * (total_iterations - 1) - len(raw_list)
 
     if diff:  # Ongoing or aborted scan
         raw_2d = raw_list[:diff].reshape(
-            total_iterations-1,
+            total_iterations - 1,
             delays,
         ).T
 
@@ -299,15 +296,15 @@ def get_raw2d(
             axis=1,
         )
     else:  # Complete scan
-        raw_2d = raw_list.reshape(total_iterations-1, delays).T
+        raw_2d = raw_list.reshape(total_iterations - 1, delays).T
 
     return raw_2d
 
 
 def slice_raw2d(
-    raw_2d: np.array,
-    iterations: Union[List, np.array],
-) -> np.array:
+    raw_2d: np.ndarray,
+    iterations: Union[List, np.ndarray],
+) -> np.ndarray:
     """Slices the raw_2d array obtained from
         get_raw2d() based on the given iterations.
     Args:
@@ -319,12 +316,12 @@ def slice_raw2d(
     """
 
     # Slicing along the given iterations
-    raw_2d_iter = []
+    raw_2d_list = []
 
-    for iter in iterations:
-        raw_2d_iter.append(raw_2d[:, iter-1])
+    for i in iterations:
+        raw_2d_list.append(raw_2d[:, i - 1])
 
-    raw_2d_iter = np.array(raw_2d_iter).T
+    raw_2d_iter = np.asarray(raw_2d_list).T
 
     return raw_2d_iter
 
