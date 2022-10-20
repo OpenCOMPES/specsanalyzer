@@ -113,7 +113,7 @@ class SpecsScan:
             path,
             iterations=iterations,
         )
-
+        
         try:
             self._scan_info = parse_info_to_dict(path)
 
@@ -176,11 +176,11 @@ def load_images(
 
     if iterations is not None:
         print("Building raw scans array...")
+        raw_gen = scan_path.joinpath("RAW").glob("*.tsv")
         raw_list = np.array(
             [
-                file.stem for file in scan_path.joinpath("RAW").iterdir()
-                if file.suffix == ".tsv"
-            ],
+                file.stem for file in raw_gen
+            ]
         )
 
         if raw_list.size == 0:
@@ -194,63 +194,41 @@ def load_images(
         # Slicing along the given iterations
         raw_2d_iter = slice_raw2d(raw_2d, iterations)
 
-    # Handles scantype "single"
-    try:
-        with open(
-            scan_path.joinpath(f"AVG/{scan_list[0]}.tsv"),
-            encoding="utf-8",
-        ) as file:
-            data = np.loadtxt(file, delimiter="\t")
+    data = []
+    if iterations is None:
+        for image in tqdm(scan_list):
+            with open(
+                scan_path.joinpath(
+                    f"AVG/{image}.tsv"
+                ),
+                encoding="utf-8",
+            ) as file:
 
-        data = data[np.newaxis]  # turn data into a 3D array
+                new_im = np.loadtxt(file, delimiter="\t")
+                data.append(new_im)
 
-    except IndexError:
-        print("AVG folder empty.")
-        raise
+    else:
+        print("Averaging over iterations...")
 
-    # Handles scantypes "delay", "mirror", "temperature" etc.
-    # Concatenates the images along a third axes
-    if len(scan_list) > 1:
-        if iterations is None:
+        for delay in tqdm(raw_2d_iter):
+            avg_list = []
+            for image in delay:
+                if image != "nan":
 
-            for image in tqdm(scan_list[1:]):
-                with open(
-                    scan_path.joinpath(f"AVG/{image}.tsv"),
-                    encoding="utf-8",
-                ) as file:
+                    with open(
+                        scan_path.joinpath(f"RAW/{image}.tsv"),
+                        encoding="utf-8",
+                    ) as file:
+                        new_im = np.loadtxt(file, delimiter="\t")
+                        avg_list.append(new_im)
 
-                    new_im = np.loadtxt(file, delimiter="\t")[np.newaxis]
-                    data = np.concatenate(
-                        (
-                            data,
-                            new_im,
-                        ),
-                    )
-        else:
-            print("Averaging over iterations...")
-            data = np.empty(
-                (
-                    len(raw_2d_iter),
-                    data.shape[1],
-                    data.shape[2],
+            data.append(
+                np.average(
+                    np.array(avg_list),
+                    axis=0,
                 ),
             )
-            for i in tqdm(range(len(raw_2d_iter))):
-                avg_list = []
-                for image in raw_2d_iter[i]:
-                    if image != "nan":
-
-                        with open(
-                            scan_path.joinpath(f"RAW/{image}.tsv"),
-                            encoding="utf-8",
-                        ) as file:
-                            new_im = np.loadtxt(file, delimiter="\t")
-                            avg_list.append(new_im)
-
-                data[i] = np.average(
-                    np.array(avg_list)[np.newaxis],
-                    axis=1,
-                )
+    data = np.asarray(data)
 
     return data
 
