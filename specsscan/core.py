@@ -2,7 +2,7 @@
 
 """
 from pathlib import Path
-from typing import Any
+from typing import Any, Tuple
 from typing import Dict
 from typing import List
 from typing import Union
@@ -70,7 +70,11 @@ class SpecsScan:
         self,
         scan: int,
         path: Union[str, Path] = "",
-        iterations: Union[list, np.ndarray] = None,
+        iterations: Union[
+            list,
+            np.ndarray,
+            Tuple[int, slice],
+        ] = None,
     ) -> xr.DataArray:
         """Load scan with given scan number.
 
@@ -78,12 +82,12 @@ class SpecsScan:
             scan: The run number of interest
             path: Either a string of the path to the folder
                 containing the scan or a Path object
-            cycles:
-        Kwargs:
-            scan_list: The list of images in the given scan
-                that need to be concatenated
-            iterations: The integer number of iterations over
-                which the images are to be averaged.
+            iterations: A 1-D array of the number of iterations over
+                which the images are to be averaged. The array
+                can be a list, numpy array or a Tuple consisting of
+                slice objects and integers. For ex.,
+                np.s_[1:10, 15, -1] would be a valid input for
+                iterations.
 
         Raises:
             FileNotFoundError
@@ -113,7 +117,7 @@ class SpecsScan:
             path,
             iterations=iterations,
         )
-        
+
         try:
             self._scan_info = parse_info_to_dict(path)
 
@@ -157,7 +161,11 @@ class SpecsScan:
 
 def load_images(
     scan_path: Path,
-    iterations: Union[list, np.ndarray] = None,
+    iterations: Union[
+        list,
+        np.ndarray,
+        Tuple[int, slice],
+    ] = None,
 ) -> np.ndarray:
     """Loads a 2D/3D numpy array of images for the given
         scan path with an optional averaging
@@ -165,8 +173,15 @@ def load_images(
     Args:
         scan_path: object of class Path pointing
                 to the scan folder
+        iterations: A 1-D array of the number of iterations over
+                which the images are to be averaged. The array
+                can be a list, numpy array or a Tuple consisting of
+                slice objects and integers. For ex.,
+                np.s_[1:10, 15, -1] would be a valid input for
+                iterations.
     Returns:
-        data: Concatenated numpy array consisting of raw data
+        data: A 2-D or 3-D (concatenated) numpy array consisting
+            of raw data
     """
 
     scan_list = [
@@ -192,7 +207,8 @@ def load_images(
         raw_2d = get_raw2d(scan_list, raw_list)
 
         # Slicing along the given iterations
-        raw_2d_iter = slice_raw2d(raw_2d, iterations)
+        raw_2d_iter = raw_2d[np.r_[iterations]].T
+
 
     data = []
     if iterations is None:
@@ -237,14 +253,14 @@ def get_raw2d(
     scan_list: List[str],
     raw_list: np.ndarray,
 ) -> np.ndarray:
-    """Convert a 1-D array of raw scan names
+    """Converts a 1-D array of raw scan names
         into 2-D based on the number of iterations
     Args:
         scan_list: A list of AVG scan names.
         raw_list: 1-D array of RAW scan names.
     Returns:
-        raw_2d: 2-D numpy array of size for ex., (delays, total_iterations)
-                for a delay scan.
+        raw_2d: 2-D numpy array of size for ex., 
+            (total_iterations, delays) for a delay scan.
     """
 
     total_iterations = len(
@@ -254,54 +270,29 @@ def get_raw2d(
     )
 
     delays = len(scan_list)
-    diff = delays * (total_iterations - 1) - len(raw_list)
+    diff = delays * (total_iterations) - len(raw_list)
 
     if diff:  # Ongoing or aborted scan
-        raw_2d = raw_list[:diff].reshape(
+        diff = delays - diff  # Number of scans in the last iteration
+        raw_2d = raw_list[:-diff].reshape(
             total_iterations - 1,
             delays,
-        ).T
+        )
 
         last_iter_array = np.full(
-            (delays, 1),
+            (1, delays),
             fill_value="nan",
             dtype="object",
         )
 
-        last_iter_array[:-diff, 0] = raw_list[diff:]
+        last_iter_array[0, :diff] = raw_list[-diff:]
         raw_2d = np.concatenate(
             (raw_2d, last_iter_array),
-            axis=1,
         )
     else:  # Complete scan
-        raw_2d = raw_list.reshape(total_iterations - 1, delays).T
+        raw_2d = raw_list.reshape(total_iterations, delays)
 
     return raw_2d
-
-
-def slice_raw2d(
-    raw_2d: np.ndarray,
-    iterations: Union[List, np.ndarray],
-) -> np.ndarray:
-    """Slices the raw_2d array obtained from
-        get_raw2d() based on the given iterations.
-    Args:
-        raw_2d: A 2-D array of scan names.
-        iterations: Array of iterations provided
-    Returns:
-        raw_2d_iter: Numpy array of size (delays, iterations)
-                    for a delay scan.
-    """
-
-    # Slicing along the given iterations
-    raw_2d_list = []
-
-    for i in iterations:
-        raw_2d_list.append(raw_2d[:, i - 1])
-
-    raw_2d_iter = np.asarray(raw_2d_list).T
-
-    return raw_2d_iter
 
 
 def parse_info_to_dict(path: Path) -> Dict:
