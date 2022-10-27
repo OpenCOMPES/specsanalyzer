@@ -8,6 +8,7 @@ from typing import List
 from typing import Union
 
 import numpy as np
+import pandas as pd
 import xarray as xr
 from specsanalyzer import SpecsAnalyzer
 from tqdm import tqdm
@@ -66,7 +67,7 @@ class SpecsScan:
         except KeyError:
             self.spa = SpecsAnalyzer()
 
-    def load_scan(
+    def load_scan(  # pylint:disable=too-many-locals
         self,
         scan: int,
         path: Union[str, Path] = "",
@@ -113,8 +114,11 @@ class SpecsScan:
                 )
             path = path_scan_list[0]
 
+        df_lut = parse_lut_to_df(path)  # TODO: storing metadata from df_lut
+
         data = load_images(
             path,
+            df_lut=df_lut,
             iterations=iterations,
         )
 
@@ -145,14 +149,25 @@ class SpecsScan:
                 ),
             )
 
+        coords = get_coords(  # df_lut can be used instead
+            path,
+            scan_type,
+            self._scan_info,
+        )
         # Handle as per scantype
-        # xr.concat() relies on same coords
         if scan_type == "single":
             res_xarray = xr_list[0]
         elif scan_type == "delay":
-            res_xarray = xr.concat(xr_list, dim="Delay")  # Coords needed from LUT
+            res_xarray = xr.concat(
+                xr_list,
+                dim=xr.DataArray(coords, dims="Delay", name="Delay"),
+            )
         elif scan_type == "mirror":
-            res_xarray = xr.concat(xr_list, dim="MirrorX")
+            res_xarray = xr.concat(
+                xr_list,
+                dim="Mirror"
+                # dim=xr.DataArray(coords, dims=["MirrorX"], name="Mirror"),
+            )
         elif scan_type == "temperature":
             res_xarray = xr.concat(xr_list, dim="Temperature")
 
@@ -161,8 +176,9 @@ class SpecsScan:
 
 def load_images(
     scan_path: Path,
+    df_lut: Union[pd.DataFrame, None] = None,
     iterations: Union[
-        list,
+        List[int],
         np.ndarray,
         Tuple[int, slice],
     ] = None,
@@ -173,6 +189,8 @@ def load_images(
     Args:
         scan_path: object of class Path pointing
                 to the scan folder
+        raw_array: 1-D numpy array containing the scan names from
+                the RAW folder.
         iterations: A 1-D array of the number of iterations over
                 which the images are to be averaged. The array
                 can be a list, numpy array or a Tuple consisting of
@@ -189,50 +207,29 @@ def load_images(
         if file.suffix == ".tsv"
     ]
 
+    data = []
     if iterations is not None:
-        print("Building raw scans array...")
-        raw_gen = scan_path.joinpath("RAW").glob("*.tsv")
-        raw_list = np.array(
-            [
-                file.stem for file in raw_gen
-            ]
-        )
 
-        if raw_list.size == 0:
+        if df_lut is not None:
+            raw_array = df_lut["filename"].to_numpy()
+        else:
             raise Exception(
                 "RAW folder empty. "
                 "Try without passing iterations in case of a single scan.",
             )
 
-        raw_2d = get_raw2d(scan_list, raw_list)
-
+        raw_2d = get_raw2d(scan_list, raw_array)
         # Slicing along the given iterations
         raw_2d_iter = raw_2d[np.r_[iterations]].T
 
-
-    data = []
-    if iterations is None:
-        for image in tqdm(scan_list):
-            with open(
-                scan_path.joinpath(
-                    f"AVG/{image}.tsv"
-                ),
-                encoding="utf-8",
-            ) as file:
-
-                new_im = np.loadtxt(file, delimiter="\t")
-                data.append(new_im)
-
-    else:
         print("Averaging over iterations...")
-
         for delay in tqdm(raw_2d_iter):
             avg_list = []
             for image in delay:
                 if image != "nan":
 
                     with open(
-                        scan_path.joinpath(f"RAW/{image}.tsv"),
+                        scan_path.joinpath(f"RAW/{image}"),
                         encoding="utf-8",
                     ) as file:
                         new_im = np.loadtxt(file, delimiter="\t")
@@ -244,14 +241,24 @@ def load_images(
                     axis=0,
                 ),
             )
-    data = np.asarray(data)
+    else:
+        for image in tqdm(scan_list):
+            with open(
+                scan_path.joinpath(
+                    f"AVG/{image}.tsv"
+                ),
+                encoding="utf-8",
+            ) as file:
 
-    return data
+                new_im = np.loadtxt(file, delimiter="\t")
+                data.append(new_im)
+
+    return np.array(data)
 
 
 def get_raw2d(
     scan_list: List[str],
-    raw_list: np.ndarray,
+    raw_array: np.ndarray,
 ) -> np.ndarray:
     """Converts a 1-D array of raw scan names
         into 2-D based on the number of iterations
@@ -259,22 +266,22 @@ def get_raw2d(
         scan_list: A list of AVG scan names.
         raw_list: 1-D array of RAW scan names.
     Returns:
-        raw_2d: 2-D numpy array of size for ex., 
+        raw_2d: 2-D numpy array of size for ex.,
             (total_iterations, delays) for a delay scan.
     """
 
     total_iterations = len(
         [
-            im for im in raw_list if f"{scan_list[0]}_" in im
+            im for im in raw_array if f"{scan_list[0]}_" in im
         ],
     )
 
     delays = len(scan_list)
-    diff = delays * (total_iterations) - len(raw_list)
+    diff = delays * (total_iterations) - len(raw_array)
 
     if diff:  # Ongoing or aborted scan
         diff = delays - diff  # Number of scans in the last iteration
-        raw_2d = raw_list[:-diff].reshape(
+        raw_2d = raw_array[:-diff].reshape(
             total_iterations - 1,
             delays,
         )
@@ -285,14 +292,78 @@ def get_raw2d(
             dtype="object",
         )
 
-        last_iter_array[0, :diff] = raw_list[-diff:]
+        last_iter_array[0, :diff] = raw_array[-diff:]
         raw_2d = np.concatenate(
             (raw_2d, last_iter_array),
         )
     else:  # Complete scan
-        raw_2d = raw_list.reshape(total_iterations, delays)
+        raw_2d = raw_array.reshape(total_iterations, delays)
 
     return raw_2d
+
+
+def parse_lut_to_df(scan_path: Path) -> Union[pd.DataFrame, None]:
+    """Loads the contents of LUT.txt file into a pandas
+        data frame to be used as metadata.
+    Args:
+        scan_path: Path object for the scan path
+    Returns: A pandas DataFrame
+    """
+    try:
+        df_lut = pd.read_csv(scan_path.joinpath("RAW/LUT.txt"), sep="\t")
+        df_lut.reset_index(inplace=True)
+        new_cols = df_lut.columns.to_list()[1:]
+        new_cols.insert(3, "delay (fs)")  # Correct the column names
+        df_lut.columns = new_cols
+
+    except FileNotFoundError:
+        print(
+            "LUT.txt not found. "
+            "Storing metadata from info.txt"
+        )
+        return None
+
+    return df_lut
+
+
+def get_coords(
+    scan_path: Path,
+    scan_type: str,
+    scan_info: Dict[Any, Any],
+) -> np.ndarray:
+    """Reads the contents of scanvector.txt file
+        into a numpy array.
+    Args:
+        scan_path: Path object for the scan path
+        scan_type: Type of scan (delay, mirror etc.)
+        scan_info: scan_info class dict
+    Raises:
+        FileNotFoundError
+    Returns:
+        coords: 1-D/2-D numpy array containing coordinates
+                of the scanned axis.
+    """
+    try:
+        with open(
+            scan_path.joinpath("scanvector.txt"),
+            encoding="utf-8",
+        ) as file:
+            coords = np.loadtxt(file)
+
+    except FileNotFoundError as exc:
+        if scan_type == "single":
+            return None
+
+        raise FileNotFoundError(
+            "scanvector.txt file not found!"
+        ) from exc
+
+    if scan_type == "delay":
+        t_0 = scan_info["TimeZero"]
+        coords -= t_0
+        coords *= 2 / (3 * 10**11) * 10**15
+
+    return coords
 
 
 def parse_info_to_dict(path: Path) -> Dict:
