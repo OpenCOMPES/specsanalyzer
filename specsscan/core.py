@@ -202,10 +202,12 @@ def load_images(
             of raw data
     """
 
-    scan_list = [
+    scan_list = sorted(
+        [
         file.stem for file in scan_path.joinpath("AVG").iterdir()
         if file.suffix == ".tsv"
-    ]
+        ]
+    )
 
     data = []
     if iterations is not None:
