@@ -204,8 +204,8 @@ def load_images(
 
     scan_list = sorted(
         [
-        file.stem for file in scan_path.joinpath("AVG").iterdir()
-        if file.suffix == ".tsv"
+            file.stem for file in scan_path.joinpath("AVG").iterdir()
+            if file.suffix == ".tsv"
         ]
     )
 
