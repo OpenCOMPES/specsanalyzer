@@ -1,21 +1,21 @@
 """This script performs tests for the helper functions
     in the core.py script to support the load_scan method.
 """
-from pathlib import Path
 import os
+from pathlib import Path
+
 import numpy as np
 import pytest
 
 import specsscan
-from specsscan import __version__
 from specsscan.core import load_images
 from specsscan.core import parse_lut_to_df
 
 package_dir = os.path.dirname(specsscan.__file__)
 # Path to a sample 3-D scan
-scan_path_delay = Path(f"{package_dir}/../tests/data/Scan_4450")
+scan_path_delay = Path(f"{package_dir}/../tests/data/4450")
 # Path to a sample 2-D scan
-scan_path_single = Path(f"{package_dir}/../tests/data/Scan_3610")
+scan_path_single = Path(f"{package_dir}/../tests/data/3610")
 
 df_lut = parse_lut_to_df(scan_path_delay)
 
@@ -46,7 +46,6 @@ def test_load_averages(scan):
     assert np.array_equal(data[scan], data_avg)
 
 
-# def test_load_incomplete_scan():
 def test_single():
     """Tests loading of single scans with and without iterations"""
     data = load_images(scan_path_single)
@@ -70,5 +69,5 @@ def test_iterations_type():
     data_array = load_images(scan_path_delay, df_lut, iter_array)
     data_slice = load_images(scan_path_delay, df_lut, iter_slice)
 
-    assert np.array_equal(data_list, data_array) & \
-        np.array_equal(data_array, data_slice)
+    assert np.array_equal(data_list, data_array)
+    assert np.array_equal(data_array, data_slice)
