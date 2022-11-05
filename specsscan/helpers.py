@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Any
 from typing import Dict
 from typing import List
+from typing import Sequence
 from typing import Tuple
 from typing import Union
 
@@ -17,8 +18,9 @@ def load_images(
     iterations: Union[
         List[int],
         np.ndarray,
-        Tuple[int, slice],
-    ] = None,
+        slice,
+        Sequence,
+    ] = None,  # type: ignore
 ) -> np.ndarray:
     """Loads a 2D/3D numpy array of images for the given
         scan path with an optional averaging
@@ -26,8 +28,8 @@ def load_images(
     Args:
         scan_path: object of class Path pointing
                 to the scan folder
-        raw_array: 1-D numpy array containing the scan names from
-                the RAW folder.
+        df_lut: Pandas dataframe containing the contents of LUT.txt
+                as obtained from parse_lut_to_df()
         iterations: A 1-D array of the number of iterations over
                 which the images are to be averaged. The array
                 can be a list, numpy array or a Tuple consisting of
@@ -40,10 +42,8 @@ def load_images(
     """
 
     scan_list = sorted(
-
-            file.stem for file in scan_path.joinpath("AVG").iterdir()
-            if file.suffix == ".tsv"
-
+        file.stem for file in scan_path.joinpath("AVG").iterdir()
+        if file.suffix == ".tsv"
     )
 
     data = []
@@ -52,14 +52,22 @@ def load_images(
         if df_lut is not None:
             raw_array = df_lut["filename"].to_numpy()
         else:
-            raise Exception(
-                "RAW folder empty. "
-                "Try without passing iterations in case of a single scan.",
+            raw_gen = scan_path.joinpath("RAW").glob("*.tsv")
+            raw_array = np.array(
+                [
+                    file.stem + ".tsv" for file in raw_gen
+                ],
             )
 
         raw_2d = get_raw2d(scan_list, raw_array)
         # Slicing along the given iterations
-        raw_2d_iter = raw_2d[np.r_[iterations]].T
+        try:
+            raw_2d_iter = raw_2d[np.r_[iterations]].T
+        except IndexError as exc:
+            raise IndexError(
+                "Invalid iteration for the chosen data. "
+                "In case of a single scan, try without passing iterations.",
+            ) from exc
 
         print("Averaging over iterations...")
         for delay in tqdm(raw_2d_iter):
@@ -169,7 +177,8 @@ def get_coords(
     scan_path: Path,
     scan_type: str,
     scan_info: Dict[Any, Any],
-) -> np.ndarray:
+    df_lut: Union[pd.DataFrame, None] = None,
+) -> Tuple[np.ndarray, str]:
     """Reads the contents of scanvector.txt file
         into a numpy array.
     Args:
@@ -179,30 +188,80 @@ def get_coords(
     Raises:
         FileNotFoundError
     Returns:
-        coords: 1-D/2-D numpy array containing coordinates
+        coords: 1-D numpy array containing coordinates
                 of the scanned axis.
+        dim: string containing the name of the coordinate
     """
     try:
         with open(
             scan_path.joinpath("scanvector.txt"),
             encoding="utf-8",
         ) as file:
-            coords = np.loadtxt(file)
+            data = np.loadtxt(file, ndmin=2)
+
+        coords, index = compare_coords(data)
+        if scan_type == "mirror":
+            dim = ["mirrorX", "mirrorY"][index]
+        elif scan_type == "manipulator":
+            dim = [
+                "X", "Y", "Z", "polar", "tilt", "azimuth",
+            ][index]
+        else:
+            dim = scan_type
 
     except FileNotFoundError as exc:
         if scan_type == "single":
-            return None
+            return (np.array([]), "")
 
-        raise FileNotFoundError(
-            "scanvector.txt file not found!",
-        ) from exc
+        if df_lut:
+            print(
+                "scanvector.txt not found. "
+                "Obtaining coordinates from LUT",
+            )
+
+            df_new = df_lut.loc[:, df_lut.columns[2:]]  # type: ignore
+            max_col = df_new.columns[                  # and time
+                df_new.nunique() == df_new.nunique().max()  # Most changing column
+            ]
+            if len(max_col) == len(df_new.columns):  # for temperature scan etc.
+                raise IndexError("Coordinate not found in LUT.") from exc
+
+            dim = max_col[0]
+            coords = df_lut[dim].to_numpy()
+
+        else:
+            raise FileNotFoundError(
+                "scanvector.txt file not found!",
+            ) from exc
 
     if scan_type == "delay":
         t_0 = scan_info["TimeZero"]
         coords -= t_0
         coords *= 2 / (3 * 10**11) * 10**15
 
-    return coords
+    return coords, dim
+
+
+def compare_coords(
+    axis_data: np.ndarray,
+) -> Tuple[np.ndarray, int]:
+    """To check the most changing column in a given
+        2-D numpy array.
+    Args:
+        axis_data: 2-D numpy array containing LUT data
+    Returns:
+        coords: Maximum changing column as a coordinate
+        index: Index of the coords in the axis_data array
+    """
+
+    len_list = []
+    for column in axis_data.T:
+        len_list.append(len(set(column)))
+
+    index = len_list.index(max(len_list))
+    coords = axis_data[:, index]
+
+    return coords, index
 
 
 def parse_info_to_dict(path: Path) -> Dict:
@@ -214,25 +273,29 @@ def parse_info_to_dict(path: Path) -> Dict:
         info_dict: Parsed dictionary
     """
     info_dict: Dict[Any, Any] = {}
-    with open(path.joinpath("info.txt"), encoding="utf-8") as info_file:
+    try:
+        with open(path.joinpath("info.txt"), encoding="utf-8") as info_file:
 
-        for line in info_file.readlines():
+            for line in info_file.readlines():
 
-            if "=" in line:  # older scans
-                line_list = line.rstrip("\nV").split("=")
+                if "=" in line:  # older scans
+                    line_list = line.rstrip("\nV").split("=")
 
-            elif ":" in line:
-                line_list = line.rstrip("\nV").split(":")
+                elif ":" in line:
+                    line_list = line.rstrip("\nV").split(":")
 
-            else:
-                continue
+                else:
+                    continue
 
-            key, value = line_list[0], line_list[1]
+                key, value = line_list[0], line_list[1]
 
-            try:
-                info_dict[key] = float(value)
-            except ValueError:
-                info_dict[key] = value
+                try:
+                    info_dict[key] = float(value)
+                except ValueError:
+                    info_dict[key] = value
+
+    except FileNotFoundError as exc:
+        raise FileNotFoundError("info.txt file not found.") from exc
 
     return info_dict
 
@@ -264,4 +327,45 @@ def find_scan(path: Path, scan: int) -> List[Path]:
                 if scan_path:
                     print("Scan found at path:", scan_path[0])
                     break
+    else:
+        scan_path = []
     return scan_path
+
+
+def find_scan_type(  # pylint:disable=too-many-nested-blocks
+    path: Path,
+    scan_type: str,
+) -> None:
+    """Rudimentary function to print scan paths given the scan_type
+    Args:
+        path: Path object pointing to the year, for ex.,
+            Path("//nap32/topfloor/trARPES/PESData/2020")
+        scan_type: string containing the scan_type from the list
+            ["delay","temperature","manipulator","mirror","single"]
+    Returns:
+        None
+    """
+
+    if scan_type not in [
+        "delay",
+        "temperature",
+        "manipulator",
+        "mirror",
+        "single",
+    ]:
+        print("Invalid scan type!")
+        return None
+
+    for month in path.iterdir():
+        if month.is_dir():
+            for day in month.iterdir():
+                if day.is_dir():
+                    try:
+                        for scan_path in day.joinpath("Raw Data").iterdir():
+
+                            stype = parse_info_to_dict(scan_path)["ScanType"]
+                            if stype == scan_type:
+                                print(scan_path)
+                    except FileNotFoundError:
+                        pass
+    return None
