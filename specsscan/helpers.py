@@ -162,7 +162,7 @@ def parse_lut_to_df(scan_path: Path) -> Union[pd.DataFrame, None]:
 
     except FileNotFoundError:
         print(
-            "LUT.txt not found. " "Storing metadata from info.txt",
+            "LUT.txt not found. Storing metadata from info.txt",
         )
         return None
 
@@ -216,7 +216,7 @@ def get_coords(
 
         if df_lut:
             print(
-                "scanvector.txt not found. " "Obtaining coordinates from LUT",
+                "scanvector.txt not found. Obtaining coordinates from LUT",
             )
 
             df_new: pd.DataFrame = df_lut.loc[:, df_lut.columns[2:]]
