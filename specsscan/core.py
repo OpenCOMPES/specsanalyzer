@@ -4,7 +4,6 @@
 from pathlib import Path
 from typing import Any
 from typing import Dict
-from typing import List
 from typing import Sequence
 from typing import Union
 
@@ -70,10 +69,10 @@ class SpecsScan:
         scan: int,
         path: Union[str, Path] = "",
         iterations: Union[
-            List[int],
             np.ndarray,
             slice,
-            Sequence,
+            Sequence[int],
+            Sequence[slice],
         ] = None,  # type: ignore
     ) -> xr.DataArray:
         """Load scan with given scan number.
