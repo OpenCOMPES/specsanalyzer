@@ -98,7 +98,7 @@ class SpecsScan:
                 as coordinates.
         """
         if path:
-            path = Path(path).joinpath(str(scan))
+            path = Path(path).joinpath(str(scan).zfill(4))
             if not path.is_dir():
                 raise FileNotFoundError(
                     f"The provided path {path} was not found.",
@@ -157,7 +157,9 @@ class SpecsScan:
             res_xarray = xr.concat(
                 xr_list,
                 dim=xr.DataArray(
-                    coords[:len(data)],  # slice coords for aborted/ongoing scans
+                    coords[
+                        : len(data)
+                    ],  # slice coords for aborted/ongoing scans
                     dims=dim,
                     name=dim,
                 ),
@@ -167,4 +169,4 @@ class SpecsScan:
             else:
                 res_xarray = res_xarray.transpose("Angle", "Ekin", dim)
 
-        return res_xarray  # type:ignore
+        return res_xarray

@@ -16,11 +16,11 @@ def load_images(
     scan_path: Path,
     df_lut: Union[pd.DataFrame, None] = None,
     iterations: Union[
-        List[int],
         np.ndarray,
         slice,
-        Sequence,
-    ] = None,  # type: ignore
+        Sequence[int],
+        Sequence[slice],
+    ] = None,
 ) -> np.ndarray:
     """Loads a 2D/3D numpy array of images for the given
         scan path with an optional averaging
@@ -42,7 +42,8 @@ def load_images(
     """
 
     scan_list = sorted(
-        file.stem for file in scan_path.joinpath("AVG").iterdir()
+        file.stem
+        for file in scan_path.joinpath("AVG").iterdir()
         if file.suffix == ".tsv"
     )
 
@@ -54,9 +55,7 @@ def load_images(
         else:
             raw_gen = scan_path.joinpath("RAW").glob("*.tsv")
             raw_array = np.array(
-                [
-                    file.stem + ".tsv" for file in raw_gen
-                ],
+                [file.stem + ".tsv" for file in raw_gen],
             )
 
         raw_2d = get_raw2d(scan_list, raw_array)
@@ -118,9 +117,7 @@ def get_raw2d(
     """
 
     total_iterations = len(
-        [
-            im for im in raw_array if f"{scan_list[0]}_" in im
-        ],
+        [im for im in raw_array if f"{scan_list[0]}_" in im],
     )
 
     delays = len(scan_list)
@@ -165,8 +162,7 @@ def parse_lut_to_df(scan_path: Path) -> Union[pd.DataFrame, None]:
 
     except FileNotFoundError:
         print(
-            "LUT.txt not found. "
-            "Storing metadata from info.txt",
+            "LUT.txt not found. " "Storing metadata from info.txt",
         )
         return None
 
@@ -204,7 +200,12 @@ def get_coords(
             dim = ["mirrorX", "mirrorY"][index]
         elif scan_type == "manipulator":
             dim = [
-                "X", "Y", "Z", "polar", "tilt", "azimuth",
+                "X",
+                "Y",
+                "Z",
+                "polar",
+                "tilt",
+                "azimuth",
             ][index]
         else:
             dim = scan_type
@@ -215,15 +216,17 @@ def get_coords(
 
         if df_lut:
             print(
-                "scanvector.txt not found. "
-                "Obtaining coordinates from LUT",
+                "scanvector.txt not found. " "Obtaining coordinates from LUT",
             )
 
-            df_new = df_lut.loc[:, df_lut.columns[2:]]  # type: ignore
-            max_col = df_new.columns[                  # and time
-                df_new.nunique() == df_new.nunique().max()  # Most changing column
+            df_new: pd.DataFrame = df_lut.loc[:, df_lut.columns[2:]]
+            max_col = df_new.columns[  # and time
+                df_new.nunique()
+                == df_new.nunique().max()  # Most changing column
             ]
-            if len(max_col) == len(df_new.columns):  # for temperature scan etc.
+            if len(max_col) == len(
+                df_new.columns,
+            ):  # for temperature scan etc.
                 raise IndexError("Coordinate not found in LUT.") from exc
 
             dim = max_col[0]
@@ -366,6 +369,6 @@ def find_scan_type(  # pylint:disable=too-many-nested-blocks
                             stype = parse_info_to_dict(scan_path)["ScanType"]
                             if stype == scan_type:
                                 print(scan_path)
-                    except FileNotFoundError:
+                    except (FileNotFoundError, NotADirectoryError):
                         pass
     return None
