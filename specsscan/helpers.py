@@ -258,7 +258,7 @@ def compare_coords(
     index = diff_list.index(max(diff_list))
 
     if max(diff_list) == 0:
-        raise IndexError("Coordinates not found in LUT.")
+        raise ValueError("Coordinates not found in LUT.")
 
     coords = axis_data[:, index]
     return coords, index
