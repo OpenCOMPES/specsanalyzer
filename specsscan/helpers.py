@@ -20,7 +20,7 @@ def load_images(
         slice,
         Sequence[int],
         Sequence[slice],
-    ] = None,
+    ] = None,  # type: ignore
 ) -> np.ndarray:
     """Loads a 2D/3D numpy array of images for the given
         scan path with an optional averaging
@@ -156,8 +156,11 @@ def parse_lut_to_df(scan_path: Path) -> Union[pd.DataFrame, None]:
     try:
         df_lut = pd.read_csv(scan_path.joinpath("RAW/LUT.txt"), sep="\t")
         df_lut.reset_index(inplace=True)
+
         new_cols = df_lut.columns.to_list()[1:]
+        new_cols[new_cols.index("delaystage")] = "Delay"
         new_cols.insert(3, "delay (fs)")  # Correct the column names
+
         df_lut.columns = new_cols
 
     except FileNotFoundError:
@@ -214,23 +217,16 @@ def get_coords(
         if scan_type == "single":
             return (np.array([]), "")
 
-        if df_lut:
+        if df_lut is not None:
             print(
                 "scanvector.txt not found. Obtaining coordinates from LUT",
             )
 
             df_new: pd.DataFrame = df_lut.loc[:, df_lut.columns[2:]]
-            max_col = df_new.columns[  # and time
-                df_new.nunique()
-                == df_new.nunique().max()  # Most changing column
-            ]
-            if len(max_col) == len(
-                df_new.columns,
-            ):  # for temperature scan etc.
-                raise IndexError("Coordinate not found in LUT.") from exc
 
-            dim = max_col[0]
-            coords = df_lut[dim].to_numpy()
+            lut_data = [df_new.columns, df_new.to_numpy()]
+            coords, index = compare_coords(lut_data[1])
+            dim = lut_data[0][index]
 
         else:
             raise FileNotFoundError(
@@ -257,12 +253,16 @@ def compare_coords(
         index: Index of the coords in the axis_data array
     """
 
-    len_list = []
-    for column in axis_data.T:
-        len_list.append(len(set(column)))
+    diff_list = [abs(col[-1] - col[0]) for col in axis_data.T]
 
-    index = len_list.index(max(len_list))
-    coords = axis_data[:, index]
+    index = diff_list.index(max(diff_list))
+
+    if max(diff_list) == 0:
+        index = 100
+    try:
+        coords = axis_data[:, index]
+    except IndexError as exc:
+        raise IndexError("Coordinates not found in LUT.") from exc
 
     return coords, index
 
