@@ -20,7 +20,7 @@ def load_images(
         slice,
         Sequence[int],
         Sequence[slice],
-    ] = None,  # type: ignore
+    ] = None,
 ) -> np.ndarray:
     """Loads a 2D/3D numpy array of images for the given
         scan path with an optional averaging
@@ -159,9 +159,10 @@ def parse_lut_to_df(scan_path: Path) -> Union[pd.DataFrame, None]:
 
         new_cols = df_lut.columns.to_list()[1:]
         new_cols[new_cols.index("delaystage")] = "Delay"
-        new_cols.insert(3, "delay (fs)")  # Correct the column names
+        new_cols.insert(3, "delay (fs)")  # Create label to drop the column later
 
         df_lut.columns = new_cols
+        df_lut.drop(columns="delay (fs)", inplace=True)
 
     except FileNotFoundError:
         print(
@@ -224,9 +225,8 @@ def get_coords(
 
             df_new: pd.DataFrame = df_lut.loc[:, df_lut.columns[2:]]
 
-            lut_data = [df_new.columns, df_new.to_numpy()]
-            coords, index = compare_coords(lut_data[1])
-            dim = lut_data[0][index]
+            coords, index = compare_coords(df_new.to_numpy())
+            dim = df_new.columns[index]
 
         else:
             raise FileNotFoundError(
@@ -258,12 +258,9 @@ def compare_coords(
     index = diff_list.index(max(diff_list))
 
     if max(diff_list) == 0:
-        index = 100
-    try:
-        coords = axis_data[:, index]
-    except IndexError as exc:
-        raise IndexError("Coordinates not found in LUT.") from exc
+        raise IndexError("Coordinates not found in LUT.")
 
+    coords = axis_data[:, index]
     return coords, index
 
 
