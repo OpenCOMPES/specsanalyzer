@@ -73,7 +73,7 @@ class SpecsScan:
             slice,
             Sequence[int],
             Sequence[slice],
-        ] = None,  # type: ignore
+        ] = None,
     ) -> xr.DataArray:
         """Load scan with given scan number.
 
