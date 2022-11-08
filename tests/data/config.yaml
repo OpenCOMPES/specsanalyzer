@@ -1,10 +1,11 @@
-data_path: "/mnt/topfloor/trARPES/"
+data_path: "//nap32/topfloor/trARPES/PESData/"
 spa_params:
   calib2d_file: "../tests/data/Phoibos150.calib2d"
   nx_pixel: 1376
   ny_pixel: 1024
   pixel_size: 0.00645
   magnification: 4.54
+  crop: False
   apply_fft_filter: true
   fft_filter_peaks:
     - amplitude: 1
