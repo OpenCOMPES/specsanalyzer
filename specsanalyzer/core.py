@@ -144,7 +144,7 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
             supported_space_modes = self._config["calib2d_dict"][
                 "supported_space_modes"
             ]
-
+        # pylint: disable=duplicate-code
         except KeyError as exc:
             raise KeyError(
                 "The supported modes were not found in the calib2d dictionary",
@@ -163,7 +163,7 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
 
         except KeyError:
             old_matrix_check = False
-            (
+            (  # pylint: disable=duplicate-code
                 ek_axis,
                 angle_axis,
                 angular_correction_matrix,
