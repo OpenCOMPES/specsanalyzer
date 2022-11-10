@@ -12,7 +12,6 @@ test_dir = os.path.dirname(__file__)
 # noqa: EF841
 
 lensmodes_angle = [
-    "WideAngleMode",
     "LowAngularDispersion",
     "MediumAngularDispersion",
     "HighAngularDispersion",
@@ -94,7 +93,7 @@ def test_lens_raise():
     raw_image_name = os.fspath(
         f"{test_dir}/data/dataEPFL/R9132/Data9132_RAWDATA.tsv",
     )
-    with open(raw_image_name) as file:  # pylint: disable=W1514
+    with open(raw_image_name, encoding="utf-8") as file:
         tsv_data = np.loadtxt(file, delimiter="\t")
 
     configpath = os.fspath(f"{test_dir}/data/dataEPFL/config/config.yaml")
