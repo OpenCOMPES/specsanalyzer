@@ -3,6 +3,7 @@
 """
 # from csv import DictReader
 import os
+import sys
 from typing import Any
 from typing import Dict
 from typing import Generator
@@ -56,9 +57,11 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
             self._config["calib2d_dict"][
                 "supported_space_modes"
             ] = supported_space_modes
-        except KeyError as e:
-            print("Cannot find supported modes in calib2d_dict, ", str(e))
-        self._attributes = MetaHandler(meta=metadata)
+        except KeyError:
+            tb = sys.exc_info()[2]
+            raise KeyError(
+                "The supported modes were not found in the calib2d dictionary"
+            ).with_traceback(tb)
 
         self._correction_matrix_dict: Dict[Any, Any] = {}
 
@@ -137,29 +140,29 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
         # TODO check valid lens modes
         # look for the lens mode in the
         try:
-            (
-                supported_angle_modes,
-                supported_space_modes,
-            ) = io.get_modes_from_calib_dict(self._config["calib2d_dict"])
-            self._config["calib2d_dict"][
+
+            supported_angle_modes = self._config["calib2d_dict"][
                 "supported_angle_modes"
-            ] = supported_angle_modes
-            self._config["calib2d_dict"][
+            ]
+            supported_space_modes = self._config["calib2d_dict"][
                 "supported_space_modes"
-            ] = supported_space_modes
+            ]
+
             if lens_mode in supported_angle_modes:
                 lens_mode_is_angle = True
             elif lens_mode in supported_space_modes:
                 lens_mode_is_angle = False
             else:
                 # sys.exit()
-                raise ValueError("Unsupported lens mode: " + lens_mode)
-        except KeyError as e:
-            print("Initialization failed: ", str(e))
+                raise ValueError(
+                    "convert_image: unsupported lens mode: " + lens_mode
+                )
 
-        # check if the correction matrix dic
-        # contains already the angular correction for the
-        # current kinetic_energy, pass_energy, work_function
+        except KeyError:
+            tb = sys.exc_info()[2]
+            raise KeyError(
+                "The supported modes were not found in the calib2d dictionary"
+            ).with_traceback(tb)
 
         try:
             old_db = self._correction_matrix_dict[lens_mode][kinetic_energy][

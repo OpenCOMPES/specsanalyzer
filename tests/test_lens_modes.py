@@ -63,14 +63,12 @@ def test_lens_modes(lens_mode, expected):
     assert test_result == expected
 
 
-
-
 # test_io_2=(error_lens_mode,expected_out)
 # @pytest.mark.parametrize("error_lens_mode,expected_out", test_io_2)
 def test_lens_raise():
-    error_lens_mode="WideAngleModel"
-    expected_out="Unsupported lens mode: WideAngleModel"
-    
+    error_lens_mode = "WideAngleModel"
+    expected_out = "convert_image: unsupported lens mode: WideAngleModel"
+
     """Test if program raises suitable errors"""
     raw_image_name = os.fspath(
         f"{test_dir}/data/dataEPFL/R9132/Data9132_RAWDATA.tsv",
