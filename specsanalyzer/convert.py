@@ -4,6 +4,7 @@ from typing import Tuple
 
 import numpy as np
 from scipy.ndimage import map_coordinates
+import sys
 
 
 def get_damatrix_fromcalib2d(  # pylint: disable=too-many-locals
@@ -43,8 +44,11 @@ def get_damatrix_fromcalib2d(  # pylint: disable=too-many-locals
         supported_space_modes = config_dict["calib2d_dict"][
             "supported_space_modes"
         ]
-    except KeyError as e:
-        print("Keyerror", str(e))
+    except KeyError:
+        tb = sys.exc_info()[2]
+        raise KeyError(
+            "The supported modes were not found in the calib2d dictionary"
+        ).with_traceback(tb)
     if lens_mode in supported_angle_modes:
 
         # given the lens mode get all the retardation ratios available
@@ -192,8 +196,12 @@ def get_rr_da(
         supported_space_modes = config_dict["calib2d_dict"][
             "supported_space_modes"
         ]
-    except KeyError as e:
-        print("Keyerror", str(e))
+    except KeyError:
+        tb = sys.exc_info()[2]
+        raise KeyError(
+            "The supported modes were not found in the calib2d dictionary"
+        ).with_traceback(tb)
+
     if lens_mode in supported_angle_modes:
         rr_array = np.array(list(config_dict["calib2d_dict"][lens_mode]["rr"]))
 
@@ -203,9 +211,10 @@ def get_rr_da(
 
         try:
             dim3 = len(base_dict[rr_array[0]]["Da1"])
-        except KeyError:
-            raise ValueError(   # pylint: disable=W0707
-                "Da values do not exist for the given mode.")
+        except KeyError as e:
+            raise ValueError(  # pylint: disable=W0707
+                "Da values do not exist for the given mode.  ", str(e)
+            )
         da_matrix = np.zeros([dim1, dim2, dim3])
         for count, item in enumerate(rr_array):
             a_inner = base_dict[item]["aInner"]
