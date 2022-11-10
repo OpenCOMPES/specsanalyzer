@@ -92,12 +92,8 @@ def get_damatrix_fromcalib2d(  # pylint: disable=too-many-locals
         a_inner = damatrix_full[0][0]
         damatrix = damatrix_full[1:][:]
     else:
-        # use the defaults
-        raise ValueError("Unrecognized mode, abort")
-        # print("")
-        # rr_vec, damatrix_full = get_rr_da(lens_mode, config_dict)
-        # a_inner = damatrix_full[0][0]
-        # damatrix = damatrix_full[1:][:]
+        raise ValueError(f"Unrecognized lens mode '{lens_mode}")
+
     return a_inner, damatrix
 
 
@@ -166,7 +162,7 @@ def second_closest_rr(rrvec: np.ndarray, closest_rr_index: int) -> int:
     return second_closest_rr_index
 
 
-def get_rr_da(
+def get_rr_da(  # pylint: disable=too-many-locals
     lens_mode: str,
     config_dict: dict,
 ) -> Tuple[np.ndarray, np.ndarray]:
@@ -238,15 +234,8 @@ def get_rr_da(
         da_matrix[0, :] = np.ones(3) * a_inner
         da_matrix[1, :] = da1
     else:
-        raise ValueError("This lens mode is not supported.")
-        # # this should not occur, but let's just use the global defaults
-        # base_dict = config_dict["calib2d_dict"]
-        # da1 = np.array(base_dict["Da1"])
-        # a_inner = base_dict["aInner"]
-        # rr_array = np.ones(1)
-        # da_matrix = np.zeros((4, 3))
-        # da_matrix[0, :] = np.ones(3) * a_inner
-        # da_matrix[1, :] = da1
+        raise ValueError(f"Unrecognized lens mode '{lens_mode}")
+
     return rr_array, da_matrix
 
 
@@ -473,15 +462,11 @@ def calculate_matrix_correction(  # pylint: disable=too-many-arguments, too-many
 
     # the bins of the new image, defaul = the original image
     # get form the configuraton file an upsampling factor
-    try:
-        ke_upsampling_factor = config_dict["ke_upsampling_factor"]
-        angle_upsampling_factor = config_dict["angle_upsampling_factor"]
-    except KeyError:
-        ke_upsampling_factor = 1
-        angle_upsampling_factor = 1
+    ke_upsampling_factor = config_dict.get("ke_upsampling_factor", 1)
+    angle_upsampling_factor = config_dict.get("angle_upsampling_factor", 1)
 
-    n_ke_bins = ke_upsampling_factor * nx_bins
-    n_angle_bins = angle_upsampling_factor * ny_bins
+    n_ke_bins = np.round(ke_upsampling_factor * nx_bins)
+    n_angle_bins = np.round(angle_upsampling_factor * ny_bins)
 
     ek_low = kinetic_energy + e_range[0] * pass_energy
     ek_high = kinetic_energy + e_range[1] * pass_energy
@@ -512,8 +497,8 @@ def calculate_matrix_correction(  # pylint: disable=too-many-arguments, too-many
     )
 
     # read angular and energy offsets from configuration file
-    angle_offset_px = config_dict["Ang_Offset_px"]
-    energy_offset_px = config_dict["E_Offset_px"]
+    angle_offset_px = config_dict.get("Ang_Offset_px", 0)
+    energy_offset_px = config_dict.get("E_Offset_px", 0)
 
     angular_correction_matrix = (
         mcp_position_mm_matrix / magnification / (pixel_size * binning)

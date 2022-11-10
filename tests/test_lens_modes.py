@@ -4,6 +4,7 @@ import os
 
 import numpy as np
 import pytest
+import xarray as xr
 
 from specsanalyzer import SpecsAnalyzer
 
@@ -28,39 +29,35 @@ lensmodes_space = [
     "MediumMagnification",
     "LowMagnification",
 ]
-test_io = []
-for mode in lensmodes_angle + lensmodes_space:
-    test_io.append((mode, True))
 
 
-@pytest.mark.parametrize("lens_mode,expected", test_io)
-def test_lens_modes(lens_mode, expected):
+@pytest.mark.parametrize("lens_mode", lensmodes_angle)
+def test_lens_modes_angle(lens_mode):
     """Test that all the supported lens modes run without error"""
     raw_image_name = os.fspath(
         f"{test_dir}/data/dataEPFL/R9132/Data9132_RAWDATA.tsv",
     )
-    with open(raw_image_name) as file:  # pylint: disable=W1514
+    with open(raw_image_name, encoding="utf-8") as file:
         tsv_data = np.loadtxt(file, delimiter="\t")
 
     configpath = os.fspath(f"{test_dir}/data/dataEPFL/config/config.yaml")
     spa = SpecsAnalyzer(config=configpath)
-    kinetic_energy = 35.000000
-    pass_energy = 35.000000
+    kinetic_energy = np.random.uniform(20, 50)
+    pass_energy = np.random.uniform(20, 50)
     work_function = 4.2
 
-    try:
-        converted = spa.convert_image(  # noqa: F841 # pylint: disable=W0612
-            raw_img=tsv_data,
-            lens_mode=lens_mode,
-            kinetic_energy=kinetic_energy,
-            pass_energy=pass_energy,
-            work_function=work_function,
-            apply_fft_filter=False,
-        )
-        test_result = True
-    except KeyError:
-        test_result = False
-    assert test_result == expected
+    converted = spa.convert_image(
+        raw_img=tsv_data,
+        lens_mode=lens_mode,
+        kinetic_energy=kinetic_energy,
+        pass_energy=pass_energy,
+        work_function=work_function,
+        apply_fft_filter=False,
+    )
+
+    assert isinstance(converted, xr.DataArray)
+    assert "Angle" in converted.dims
+    assert "Ekin" in converted.dims
 
 
 # # test_io_2=(error_lens_mode,expected_out)
@@ -153,12 +150,13 @@ def test_lens_raise():
         with open(raw_image_name) as file:  # pylint: disable=W1514
             tsv_data = np.loadtxt(file, delimiter="\t")
 
-        configpath = os.fspath(f"{test_dir}/data/dataEPFL/config/config.yaml")
-        spa = SpecsAnalyzer(config=configpath)
-        kinetic_energy = 35.000000
-        pass_energy = 35.000000
-        work_function = 4.2
+    configpath = os.fspath(f"{test_dir}/data/dataEPFL/config/config.yaml")
+    spa = SpecsAnalyzer(config=configpath)
+    kinetic_energy = 35.000000
+    pass_energy = 35.000000
+    work_function = 4.2
 
+    try:
         converted = spa.convert_image(  # noqa: F841 # pylint: disable=W0612
             raw_img=tsv_data,
             lens_mode=error_lens_mode,
@@ -167,35 +165,53 @@ def test_lens_raise():
             work_function=work_function,
             apply_fft_filter=False,
         )
+        test_result = True
+    except ValueError as error:
+        print("Found value error: ")
+        print(str(error))
+        test_result = str(error)
+    assert test_result == expected_out
 
 
-def test_missingmodes_raise():
-    """Test if the config loader raises an error for missing config dictionary
-    key containing the supported modes."""
-    with pytest.raises(KeyError):
-        error_lens_mode = "WideAngleMode"
+def test_lens_traceback():
 
-        raw_image_name = os.fspath(
-            f"{test_dir}/data/dataEPFL/R9132/Data9132_RAWDATA.tsv",
-        )
-        with open(raw_image_name) as file:  # pylint: disable=W1514
-            tsv_data = np.loadtxt(file, delimiter="\t")
+    expected_out = (
+        "The supported modes were not found in the calib2d dictionary"
+    )
 
-        configpath = os.fspath(f"{test_dir}/data/dataEPFL/config/config.yaml")
-        spa = SpecsAnalyzer(config=configpath)
-        kinetic_energy = 35.000000
-        pass_energy = 35.000000
-        work_function = 4.2
-        # let's delibertaly remove the keys from the class config dictionary#
-        spa.config["calib2d_dict"].pop("supported_angle_modes")
-        spa.config["calib2d_dict"].pop("supported_space_modes")
-        #################################################################
+    """Test if program raises suitable errors"""
+    raw_image_name = os.fspath(
+        f"{test_dir}/data/dataEPFL/R9132/Data9132_RAWDATA.tsv",
+    )
+    with open(raw_image_name) as file:  # pylint: disable=W1514
+        tsv_data = np.loadtxt(file, delimiter="\t")
+
+    configpath = os.fspath(f"{test_dir}/data/dataEPFL/config/config.yaml")
+    spa = SpecsAnalyzer(config=configpath)
+    kinetic_energy = 35.000000
+    pass_energy = 35.000000
+    work_function = 4.2
+
+    # let's delibertaly remove the keys from the class config dictionary#
+    spa.config["calib2d_dict"].pop("supported_angle_modes")
+    spa.config["calib2d_dict"].pop("supported_space_modes")
+    #################################################################
+
+    try:
 
         converted = spa.convert_image(  # noqa: F841 # pylint: disable=W0612
             raw_img=tsv_data,
-            lens_mode=error_lens_mode,
+            lens_mode="WideAngleMode",
             kinetic_energy=kinetic_energy,
             pass_energy=pass_energy,
             work_function=work_function,
             apply_fft_filter=False,
         )
+
+        test_result = True
+    except KeyError as error:
+        print("Found key error: ")
+        print(str(error))
+        test_result = str(error)[1:-1]  # this removes the '
+    print(test_result, expected_out)
+    assert test_result == expected_out
