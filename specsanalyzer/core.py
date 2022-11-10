@@ -56,8 +56,8 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
             self._config["calib2d_dict"][
                 "supported_space_modes"
             ] = supported_space_modes
-        except KeyError:
-            KeyError("doesn't work")
+        except KeyError as e:
+            print("Cannot find supported modes in calib2d_dict, ", str(e))
         self._attributes = MetaHandler(meta=metadata)
 
         self._correction_matrix_dict: Dict[Any, Any] = {}
@@ -153,9 +153,9 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
                 lens_mode_is_angle = False
             else:
                 # sys.exit()
-                KeyError("Unsupported lens mode: " + lens_mode)
-        except KeyError:
-            KeyError("Cannot find list of modes in calib file")
+                raise ValueError("Unsupported lens mode: " + lens_mode)
+        except KeyError as e:
+            print("Initialization failed: ", str(e))
 
         # check if the correction matrix dic
         # contains already the angular correction for the

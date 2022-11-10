@@ -43,8 +43,8 @@ def get_damatrix_fromcalib2d(  # pylint: disable=too-many-locals
         supported_space_modes = config_dict["calib2d_dict"][
             "supported_space_modes"
         ]
-    except KeyError:
-        KeyError("Missing supported mode list")
+    except KeyError as e:
+        print("Keyerror", str(e))
     if lens_mode in supported_angle_modes:
 
         # given the lens mode get all the retardation ratios available
@@ -90,10 +90,11 @@ def get_damatrix_fromcalib2d(  # pylint: disable=too-many-locals
         damatrix = damatrix_full[1:][:]
     else:
         # use the defaults
-        print("Unrecognized mode, using default config")
-        rr_vec, damatrix_full = get_rr_da(lens_mode, config_dict)
-        a_inner = damatrix_full[0][0]
-        damatrix = damatrix_full[1:][:]
+        raise ValueError("Unrecognized mode, abort")
+        # print("")
+        # rr_vec, damatrix_full = get_rr_da(lens_mode, config_dict)
+        # a_inner = damatrix_full[0][0]
+        # damatrix = damatrix_full[1:][:]
     return a_inner, damatrix
 
 
@@ -191,8 +192,8 @@ def get_rr_da(
         supported_space_modes = config_dict["calib2d_dict"][
             "supported_space_modes"
         ]
-    except KeyError:
-        KeyError("Calib2d missing supported lens modes")
+    except KeyError as e:
+        print("Keyerror", str(e))
     if lens_mode in supported_angle_modes:
         rr_array = np.array(list(config_dict["calib2d_dict"][lens_mode]["rr"]))
 
@@ -229,14 +230,15 @@ def get_rr_da(
         da_matrix[0, :] = np.ones(3) * a_inner
         da_matrix[1, :] = da1
     else:
-        # this should not occur, but let's just use the global defaults
-        base_dict = config_dict["calib2d_dict"]
-        da1 = np.array(base_dict["Da1"])
-        a_inner = base_dict["aInner"]
-        rr_array = np.ones(1)
-        da_matrix = np.zeros((4, 3))
-        da_matrix[0, :] = np.ones(3) * a_inner
-        da_matrix[1, :] = da1
+        raise ValueError("This lens mode is not supported.")
+        # # this should not occur, but let's just use the global defaults
+        # base_dict = config_dict["calib2d_dict"]
+        # da1 = np.array(base_dict["Da1"])
+        # a_inner = base_dict["aInner"]
+        # rr_array = np.ones(1)
+        # da_matrix = np.zeros((4, 3))
+        # da_matrix[0, :] = np.ones(3) * a_inner
+        # da_matrix[1, :] = da1
     return rr_array, da_matrix
 
 
