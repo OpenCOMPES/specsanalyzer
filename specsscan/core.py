@@ -1,6 +1,8 @@
 """This is the SpecsScan core class
 
 """
+import os
+from importlib.util import find_spec
 from pathlib import Path
 from typing import Any
 from typing import Dict
@@ -10,14 +12,18 @@ from typing import Union
 import numpy as np
 import xarray as xr
 from specsanalyzer import SpecsAnalyzer
+from specsanalyzer.metadata import MetaHandler
+from specsanalyzer.settings import parse_config
 
 from specsscan.helpers import find_scan
 from specsscan.helpers import get_coords
 from specsscan.helpers import load_images
 from specsscan.helpers import parse_info_to_dict
 from specsscan.helpers import parse_lut_to_df
-from specsscan.metadata import MetaHandler
-from specsscan.settings import parse_config
+
+# from specsanalyzer.io import to_h5, load_h5, to_tiff, load_tiff
+
+package_dir = os.path.dirname(find_spec("specsscan").origin)
 
 
 class SpecsScan:
@@ -29,7 +35,10 @@ class SpecsScan:
         config: Union[dict, str] = {},
     ):
 
-        self._config = parse_config(config)
+        self._config = parse_config(
+            config,
+            default_config=f"{package_dir}/config/default.yaml",
+        )
 
         self._attributes = MetaHandler(meta=metadata)
 
@@ -58,7 +67,10 @@ class SpecsScan:
     @config.setter
     def config(self, config: Union[dict, str]):
         """Set config"""
-        self._config = parse_config(config)
+        self._config = parse_config(
+            config,
+            default_config=f"{package_dir}/config/default.yaml",
+        )
         try:
             self.spa = SpecsAnalyzer(config=self._config["spa_params"])
         except KeyError:
