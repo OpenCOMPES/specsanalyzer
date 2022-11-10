@@ -19,7 +19,9 @@ for n in range(4):
     shapes.append(tuple(np.random.randint(10) + 2 for i in range(n + 1)))
 axes_names = ["X", "Y", "T", "E"]
 random.shuffle(axes_names)
-binned_arrays = [simulate_binned_data(s, axes_names[: len(s)]) for s in shapes]
+binned_arrays = [
+    simulate_binned_data(s, axes_names[: len(s)]) for s in shapes
+]
 
 
 @pytest.mark.parametrize(
