@@ -2,12 +2,12 @@
 core class functions
 """
 import os
+from importlib.util import find_spec
 
-import specsanalyzer
 from specsanalyzer import __version__
 from specsanalyzer import SpecsAnalyzer
 
-package_dir = os.path.dirname(specsanalyzer.__file__)
+package_dir = os.path.dirname(find_spec("specsanalyzer").origin)
 
 
 def test_version():

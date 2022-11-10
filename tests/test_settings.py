@@ -2,15 +2,15 @@
 
 """
 import os
+from importlib.util import find_spec
 
 import pytest
 
-import specsanalyzer.settings
 from specsanalyzer.settings import insert_default_config
 from specsanalyzer.settings import load_config
 from specsanalyzer.settings import parse_config
 
-package_dir = os.path.dirname(specsanalyzer.__file__)
+package_dir = os.path.dirname(find_spec("specsanalyzer").origin)
 default_config_keys = [
     "calib2d_file",
     "nx_pixel",
