@@ -40,7 +40,8 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
                 self._config["calib2d_file"],
             )
 
-        except FileNotFoundError:  # default location relative to package directory
+        except FileNotFoundError:  # default location relative to package
+            # directory
             self._config["calib2d_dict"] = io.parse_calib2d_to_dict(
                 os.path.join(package_dir, self._config["calib2d_file"]),
             )
@@ -150,6 +151,11 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
                 "The supported modes were not found in the calib2d dictionary",
             ) from exc
 
+        if lens_mode not in [*supported_angle_modes, *supported_space_modes]:
+            raise ValueError(
+                f"convert_image: unsupported lens mode: '{lens_mode}'",
+            )
+
         try:
             old_db = self._correction_matrix_dict[lens_mode][kinetic_energy][
                 pass_energy
@@ -230,10 +236,6 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
                 data=conv_img,
                 coords={"Position": angle_axis, "Ekin": ek_axis},
                 dims=["Position", "Ekin"],
-            )
-        else:
-            raise ValueError(
-                f"convert_image: unsupported lens mode: '{lens_mode}'",
             )
 
         # TODO discuss how to handle cropping. Can he store one set of cropping
