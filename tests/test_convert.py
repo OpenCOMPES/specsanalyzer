@@ -53,8 +53,9 @@ def test_da_matrix():  # pylint: disable=too-many-locals
     pass_energy = 35.000000
     work_function = 4.2
 
+    # get the matrix_correction
     e_shift = np.array(config_dict["calib2d_dict"]["eShift"])
-    _, da_matrix = get_damatrix_fromcalib2d(
+    a_inner, da_matrix = get_damatrix_fromcalib2d(  # pylint: disable=W0612
         lens_mode,
         kinetic_energy,
         pass_energy,
