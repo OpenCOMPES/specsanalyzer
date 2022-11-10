@@ -57,11 +57,11 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
             self._config["calib2d_dict"][
                 "supported_space_modes"
             ] = supported_space_modes
-        except KeyError:
-            tb = sys.exc_info()[2]
+        except KeyError as exc:
+            t_b = sys.exc_info()[2]
             raise KeyError(
                 "The supported modes were not found in the calib2d dictionary"
-            ).with_traceback(tb)
+            ).with_traceback(t_b) from exc
 
         self._correction_matrix_dict: Dict[Any, Any] = {}
 
@@ -137,7 +137,6 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
 
         # TODO add image rotation
 
-        # TODO check valid lens modes
         # look for the lens mode in the
         try:
 
@@ -158,11 +157,11 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
                     "convert_image: unsupported lens mode: " + lens_mode
                 )
 
-        except KeyError:
-            tb = sys.exc_info()[2]
+        except KeyError as exc:
+            t_b = sys.exc_info()[2]
             raise KeyError(
                 "The supported modes were not found in the calib2d dictionary"
-            ).with_traceback(tb)
+            ).with_traceback(t_b) from exc
 
         try:
             old_db = self._correction_matrix_dict[lens_mode][kinetic_energy][
