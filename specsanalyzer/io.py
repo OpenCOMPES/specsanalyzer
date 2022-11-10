@@ -273,7 +273,9 @@ def to_tiff(
         dims_order = dims[data.ndim]
 
     elif isinstance(data, xr.DataArray):
-        dims_order = _fill_missing_dims(list(data.dims), alias_dict=alias_dict)
+        dims_order = _fill_missing_dims(
+            list(data.dims), alias_dict=alias_dict
+        )
         out = data.expand_dims(
             {dim: 1 for dim in dims_order if dim not in data.dims},
         )

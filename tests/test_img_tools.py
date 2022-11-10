@@ -39,7 +39,9 @@ def test_fourier_filter_2d():
 
     config_path = os.fspath(f"{test_dir}/data/config/config.yaml")
     data_path = os.fspath(f"{test_dir}/data/dataFHI/Scan1232.tsv")
-    filtered_path = os.fspath(f"{test_dir}/data/dataFHI/Scan1232_filtered.tsv")
+    filtered_path = os.fspath(
+        f"{test_dir}/data/dataFHI/Scan1232_filtered.tsv"
+    )
     config = parse_config(config_path)
     peaks = config["fft_filter_peaks"]
     with open(

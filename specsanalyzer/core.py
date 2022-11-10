@@ -40,7 +40,8 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
                 self._config["calib2d_file"],
             )
 
-        except FileNotFoundError:  # default location relative to package directory
+        except FileNotFoundError:  # default location relative to package
+            # directory
             self._config["calib2d_dict"] = io.parse_calib2d_to_dict(
                 os.path.join(package_dir, self._config["calib2d_file"]),
             )

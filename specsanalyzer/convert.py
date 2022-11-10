@@ -29,7 +29,8 @@ def get_damatrix_fromcalib2d(  # pylint: disable=too-many-locals
 
     Returns:
         Tuple[float,np.ndarray]: a_inner, damatrix
-            interpolated damatrix and a_inner, needed for the coordinate conversion
+            interpolated damatrix and a_inner, needed for the
+             coordinate conversion
     """
 
     # retardation ratio
@@ -87,7 +88,9 @@ def get_damatrix_fromcalib2d(  # pylint: disable=too-many-locals
         damatrix = damatrix[1:][:]
     elif lens_mode in supported_space_modes:
         # use the mode defaults
-        print("This is a spatial mode, using default " + lens_mode + " config")
+        print(
+            "This is a spatial mode, using default " + lens_mode + " config"
+        )
         rr_vec, damatrix_full = get_rr_da(lens_mode, config_dict)
         a_inner = damatrix_full[0][0]
         damatrix = damatrix_full[1:][:]
@@ -198,7 +201,9 @@ def get_rr_da(  # pylint: disable=too-many-locals
         ).with_traceback(t_b) from exc
 
     if lens_mode in supported_angle_modes:
-        rr_array = np.array(list(config_dict["calib2d_dict"][lens_mode]["rr"]))
+        rr_array = np.array(
+            list(config_dict["calib2d_dict"][lens_mode]["rr"])
+        )
 
         dim1 = rr_array.shape[0]
         base_dict = config_dict["calib2d_dict"][lens_mode]["rr"]
@@ -270,7 +275,9 @@ def calculate_polynomial_coef_da(
     # da7=currentdamatrix[3][:]
 
     # calcualte the energy values for each da, given the eshift
-    da_energy = e_shift * pass_energy + kinetic_energy * np.ones(e_shift.shape)
+    da_energy = e_shift * pass_energy + kinetic_energy * np.ones(
+        e_shift.shape
+    )
 
     # create the polinomial coeffiecient matrix,
     # each is a second order polinomial
@@ -378,7 +385,8 @@ def mcp_position_mm(
         coefficients for calculating the arrival position on the MCP
     Returns:
         np.ndarray:
-            lateral position of photoelectron on the mcp (angular dispersing axis)
+            lateral position of photoelectron on the mcp
+            (angular dispersing axis)
     """
 
     # define two angular regions: within and outsied the a_inner boundaries
@@ -399,7 +407,8 @@ def mcp_position_mm(
     return result
 
 
-def calculate_matrix_correction(  # pylint: disable=too-many-arguments, too-many-locals
+def calculate_matrix_correction(
+    # pylint: disable=too-many-arguments, too-many-locals
     lens_mode: str,
     kinetic_energy: float,
     pass_energy: float,

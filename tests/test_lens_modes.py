@@ -141,7 +141,7 @@ def test_lens_modes_angle(lens_mode):
 
 
 def test_lens_raise():
-    """Test if the conversion raises an error for a wrong or 
+    """Test if the conversion raises an error for a wrong or
     missing lens mode."""
     with pytest.raises(ValueError):
         error_lens_mode = "WideAngleModel"
@@ -158,7 +158,6 @@ def test_lens_raise():
         pass_energy = 35.000000
         work_function = 4.2
 
-   
         converted = spa.convert_image(  # noqa: F841 # pylint: disable=W0612
             raw_img=tsv_data,
             lens_mode=error_lens_mode,
@@ -167,12 +166,12 @@ def test_lens_raise():
             work_function=work_function,
             apply_fft_filter=False,
         )
-   
+
 
 def test_supported_modes_raise():
     """Test if the conversion raises an error for a missing
     entry in the config dict with the supported modes."""
-    
+
     with pytest.raises(KeyError):
         error_lens_mode = "WideAngleMode"
 
@@ -190,7 +189,7 @@ def test_supported_modes_raise():
 
         spa.config["calib2d_dict"].pop("supported_angle_modes")
         spa.config["calib2d_dict"].pop("supported_space_modes")
-    
+
         converted = spa.convert_image(  # noqa: F841 # pylint: disable=W0612
             raw_img=tsv_data,
             lens_mode=error_lens_mode,
