@@ -1,7 +1,6 @@
 """This is the specsanalyzer core class
 
 """
-# from csv import DictReader
 import os
 from typing import Any
 from typing import Dict
@@ -34,16 +33,17 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
 
         self._config = parse_config(config)
 
+        self._attributes = MetaHandler(meta=metadata)
+
         try:
             self._config["calib2d_dict"] = io.parse_calib2d_to_dict(
                 self._config["calib2d_file"],
             )
+
         except FileNotFoundError:  # default location relative to package directory
             self._config["calib2d_dict"] = io.parse_calib2d_to_dict(
                 os.path.join(package_dir, self._config["calib2d_file"]),
             )
-
-        self._attributes = MetaHandler(meta=metadata)
 
         self._correction_matrix_dict: Dict[Any, Any] = {}
 
@@ -101,9 +101,9 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
 
         apply_fft_filter = kwds.pop(
             "apply_fft_filter",
-            self._config["apply_fft_filter"],
+            self._config.get("apply_fft_filter", False),
         )
-        binning = kwds.pop("binning", self._config["binning"])
+        binning = kwds.pop("binning", self._config.get("binning", 1))
 
         if apply_fft_filter:
             try:
@@ -119,11 +119,24 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
 
         # TODO add image rotation
 
-        # TODO check valid lens modes
+        # look for the lens mode in the dictionary
+        try:
+            supported_angle_modes = self._config["calib2d_dict"][
+                "supported_angle_modes"
+            ]
+            supported_space_modes = self._config["calib2d_dict"][
+                "supported_space_modes"
+            ]
+        # pylint: disable=duplicate-code
+        except KeyError as exc:
+            raise KeyError(
+                "The supported modes were not found in the calib2d dictionary",
+            ) from exc
 
-        # check if the correction matrix dic
-        # contains already the angular correction for the
-        # current kinetic_energy, pass_energy, work_function
+        if lens_mode not in [*supported_angle_modes, *supported_space_modes]:
+            raise ValueError(
+                f"convert_image: unsupported lens mode: '{lens_mode}'",
+            )
 
         try:
             old_db = self._correction_matrix_dict[lens_mode][kinetic_energy][
@@ -138,7 +151,7 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
 
         except KeyError:
             old_matrix_check = False
-            (  # pylint: disable=R0801
+            (  # pylint: disable=duplicate-code
                 ek_axis,
                 angle_axis,
                 angular_correction_matrix,
@@ -171,11 +184,11 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
                 },
             }
 
-            # check if some correction energy matrix already exists in the
-            # dictionary
+            # add the new lens mode to the correction matrix dict
             self._correction_matrix_dict = dict(
                 mergedicts(self._correction_matrix_dict, current_correction),
             )
+
         else:
             old_matrix_check = True
 
@@ -193,29 +206,40 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
         )
 
         # TODO: annotate with metadata
-        data_array = xr.DataArray(
-            data=conv_img,
-            coords={"Angle": angle_axis, "Ekin": ek_axis},
-            dims=["Angle", "Ekin"],
-        )
+
+        if lens_mode in supported_angle_modes:
+            data_array = xr.DataArray(
+                data=conv_img,
+                coords={"Angle": angle_axis, "Ekin": ek_axis},
+                dims=["Angle", "Ekin"],
+            )
+        elif lens_mode in supported_space_modes:
+            data_array = xr.DataArray(
+                data=conv_img,
+                coords={"Position": angle_axis, "Ekin": ek_axis},
+                dims=["Position", "Ekin"],
+            )
 
         # TODO discuss how to handle cropping. Can he store one set of cropping
         # parameters in the config, or should we store one set per pass energy/
         # lens mode/ kinetic energy in the dict?
 
-        crop = kwds.pop("crop", self._config["crop"])
+        crop = kwds.pop("crop", self._config.get("crop", False))
         if crop:
-            ek_min = kwds.pop("ek_min", self._config["ek_min"])
-            ek_max = kwds.pop("ek_max", self._config["ek_max"])
-            ang_min = kwds.pop("ang_min", self._config["ang_min"])
-            ang_max = kwds.pop("ang_max", self._config["ang_max"])
-            data_array = crop_xarray(
-                data_array,
-                ang_min,
-                ang_max,
-                ek_min,
-                ek_max,
-            )
+            try:
+                ek_min = kwds.pop("ek_min", self._config["ek_min"])
+                ek_max = kwds.pop("ek_max", self._config["ek_max"])
+                ang_min = kwds.pop("ang_min", self._config["ang_min"])
+                ang_max = kwds.pop("ang_max", self._config["ang_max"])
+                data_array = crop_xarray(
+                    data_array,
+                    ang_min,
+                    ang_max,
+                    ek_min,
+                    ek_max,
+                )
+            except KeyError:
+                pass
 
         return data_array
 
