@@ -495,6 +495,13 @@ def parse_calib2d_to_dict(filepath: str) -> Dict[Any, Any]:
                 calib_dict[mode]["default"].update(elem)
             else:
                 calib_dict.update(elem)
+
+        # add the supported lens modes
+        (
+            calib_dict["supported_angle_modes"],
+            calib_dict["supported_space_modes"],
+        ) = get_modes_from_calib_dict(calib_dict)
+
     return calib_dict
 
 
