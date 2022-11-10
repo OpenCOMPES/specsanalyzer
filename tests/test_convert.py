@@ -10,7 +10,7 @@ from specsanalyzer.convert import calculate_matrix_correction
 from specsanalyzer.convert import calculate_polynomial_coef_da
 from specsanalyzer.convert import get_damatrix_fromcalib2d
 
-TEST_DIR = os.path.dirname(__file__)
+test_dir = os.path.dirname(__file__)
 
 # from specsanalyzer.convert import get_rr_da
 # from specsanalyzer.convert import mcp_position_mm
@@ -23,7 +23,7 @@ def test_da_matrix():  # pylint: disable=too-many-locals
 
     ########################################
     # Load the IGOR txt Di_coeff values for comparison
-    igor_data_path = os.fspath(f"{TEST_DIR}/data/dataEPFL/R9132")
+    igor_data_path = os.fspath(f"{test_dir}/data/dataEPFL/R9132")
 
     # get the Da coefficients
     di_file_list = [
@@ -45,7 +45,7 @@ def test_da_matrix():  # pylint: disable=too-many-locals
             igor_d_coef_list.append(np.loadtxt(f_handle, delimiter="\t"))
     igor_d_coef_matrix = np.flip(np.vstack(igor_d_coef_list), axis=1)
 
-    config_path = os.fspath(f"{TEST_DIR}/data/dataEPFL/config/config.yaml")
+    config_path = os.fspath(f"{test_dir}/data/dataEPFL/config/config.yaml")
     spa = SpecsAnalyzer(config=config_path)
     config_dict = spa.config
     lens_mode = "WideAngleMode"
@@ -77,8 +77,8 @@ def test_conversion_matrix():  # pylint:disable=too-many-locals
     """Check the consistency of the conversion matrix with the
     Igor calculations.
     """
-    igor_data_path = os.fspath(f"{TEST_DIR}/data/dataEPFL/R9132")
-    config_path = os.fspath(f"{TEST_DIR}/data/dataEPFL/config/config.yaml")
+    igor_data_path = os.fspath(f"{test_dir}/data/dataEPFL/R9132")
+    config_path = os.fspath(f"{test_dir}/data/dataEPFL/config/config.yaml")
     spa = SpecsAnalyzer(config=config_path)
     config_dict = spa.config
     lens_mode = "WideAngleMode"
@@ -164,19 +164,19 @@ def test_conversion():
 
     # get the raw data
     raw_image_name = os.fspath(
-        f"{TEST_DIR}/data/dataEPFL/R9132/Data9132_RAWDATA.tsv",
+        f"{test_dir}/data/dataEPFL/R9132/Data9132_RAWDATA.tsv",
     )
     with open(raw_image_name, encoding="utf-8") as file:
         tsv_data = np.loadtxt(file, delimiter="\t")
 
     # get the reference data
     reference_image_name = os.fspath(
-        f"{TEST_DIR}/data/dataEPFL/R9132/Data9132_IGOR_corrected.tsv",
+        f"{test_dir}/data/dataEPFL/R9132/Data9132_IGOR_corrected.tsv",
     )
     with open(reference_image_name, encoding="utf-8") as file:
         reference = np.loadtxt(file, delimiter="\t")
 
-    config_path = os.fspath(f"{TEST_DIR}/data/dataEPFL/config/config.yaml")
+    config_path = os.fspath(f"{test_dir}/data/dataEPFL/config/config.yaml")
     spa = SpecsAnalyzer(config=config_path)
     lens_mode = "WideAngleMode"
     kinetic_energy = 35.000000
@@ -207,12 +207,12 @@ def test_recycling():
     """
     # get the raw data
     raw_image_name = os.fspath(
-        f"{TEST_DIR}/data/dataEPFL/R9132/Data9132_RAWDATA.tsv",
+        f"{test_dir}/data/dataEPFL/R9132/Data9132_RAWDATA.tsv",
     )
     with open(raw_image_name, encoding="utf-8") as file:
         tsv_data = np.loadtxt(file, delimiter="\t")
 
-    config_path = os.fspath(f"{TEST_DIR}/data/dataEPFL/config/config.yaml")
+    config_path = os.fspath(f"{test_dir}/data/dataEPFL/config/config.yaml")
     spa = SpecsAnalyzer(config=config_path)
     lens_mode = "WideAngleMode"
     kinetic_energy = 35.000000
