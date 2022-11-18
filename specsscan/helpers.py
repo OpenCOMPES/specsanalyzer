@@ -12,15 +12,16 @@ import pandas as pd
 from tqdm.auto import tqdm
 
 
-def load_images(
+def load_images(  # pylint:disable=too-many-locals
     scan_path: Path,
     df_lut: Union[pd.DataFrame, None] = None,
-    iterations: Union[
+    avg_dim: Union[
         np.ndarray,
         slice,
         Sequence[int],
         Sequence[slice],
     ] = None,
+    check_scan: bool = False,
 ) -> np.ndarray:
     """Loads a 2D/3D numpy array of images for the given
         scan path with an optional averaging
@@ -30,12 +31,13 @@ def load_images(
                 to the scan folder
         df_lut: Pandas dataframe containing the contents of LUT.txt
                 as obtained from parse_lut_to_df()
-        iterations: A 1-D array of the number of iterations over
+        avg_dims: A 1-D array of the indices of iterations/delays over
                 which the images are to be averaged. The array
                 can be a list, numpy array or a Tuple consisting of
                 slice objects and integers. For ex.,
-                np.s_[1:10, 15, -1] would be a valid input for
-                iterations.
+                np.s_[1:10, 15, -1] would be a valid input.
+        check_scan: A boolean that is True for a check_scan and
+                false otherwise.
     Returns:
         data: A 2-D or 3-D (concatenated) numpy array consisting
             of raw data
@@ -48,7 +50,9 @@ def load_images(
     )
 
     data = []
-    if iterations is not None:
+    input_dim = ['iteration', 'delay'][check_scan]
+
+    if avg_dim is not None:
 
         if df_lut is not None:
             raw_array = df_lut["filename"].to_numpy()
@@ -58,20 +62,26 @@ def load_images(
                 [file.stem + ".tsv" for file in raw_gen],
             )
 
-        raw_2d = get_raw2d(scan_list, raw_array)
+        raw_2d = get_raw2d(
+            scan_list,
+            raw_array,
+            check_scan=check_scan,
+        )
         # Slicing along the given iterations
         try:
-            raw_2d_iter = raw_2d[np.r_[iterations]].T
+            raw_2d_sliced = raw_2d[np.r_[avg_dim]].T
         except IndexError as exc:
             raise IndexError(
-                "Invalid iteration for the chosen data. "
-                "In case of a single scan, try without passing iterations.",
+                f"Invalid {input_dim} for "
+                "the chosen data. In case of a single scan, "
+                f"try without passing {input_dim} inside the "
+                "load_scan() method.",
             ) from exc
 
-        print("Averaging over iterations...")
-        for delay in tqdm(raw_2d_iter):
+        print(f"Averaging over {input_dim}...")
+        for dim in tqdm(raw_2d_sliced):
             avg_list = []
-            for image in tqdm(delay, leave=False):
+            for image in tqdm(dim, leave=False):
                 if image != "nan":
 
                     with open(
@@ -105,12 +115,15 @@ def load_images(
 def get_raw2d(
     scan_list: List[str],
     raw_array: np.ndarray,
+    check_scan: bool,
 ) -> np.ndarray:
     """Converts a 1-D array of raw scan names
         into 2-D based on the number of iterations
     Args:
         scan_list: A list of AVG scan names.
         raw_list: 1-D array of RAW scan names.
+        check_scan: A boolean that is True for a check_scan and
+                    false otherwise.
     Returns:
         raw_2d: 2-D numpy array of size for ex.,
             (total_iterations, delays) for a delay scan.
@@ -142,6 +155,9 @@ def get_raw2d(
         )
     else:  # Complete scan
         raw_2d = raw_array.reshape(total_iterations, delays)
+
+    if check_scan:
+        raw_2d = raw_2d.T
 
     return raw_2d
 
