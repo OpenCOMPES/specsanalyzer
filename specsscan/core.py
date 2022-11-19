@@ -90,7 +90,7 @@ class SpecsScan:
         """Load scan with given scan number.
 
         Args:
-            scan: The run number of interest
+            scan: The scan number of interest
             path: Either a string of the path to the folder
                 containing the scan or a Path object
             iterations: A 1-D array of the number of iterations over
@@ -130,7 +130,7 @@ class SpecsScan:
         data = load_images(
             scan_path=path,
             df_lut=df_lut,
-            iterations=iterations,
+            avg_dim=iterations,
         )
 
         self._scan_info = parse_info_to_dict(path)
@@ -179,5 +179,82 @@ class SpecsScan:
                 res_xarray = res_xarray.transpose("Angle", dim, "Ekin")
             else:
                 res_xarray = res_xarray.transpose("Angle", "Ekin", dim)
+
+        return res_xarray
+
+    def checkscan(
+        self,
+        scan: int,
+        delay: Sequence[int],
+        path: Union[str, Path] = "",
+    ) -> xr.DataArray:
+        """Function to explore a given 3-D scan as a function
+            of iterations for a given range of delays
+        Args:
+            scan: The scan number of interest
+            delay: A single delay index or a range of delay indices
+                to be averaged over.
+            path: Either a string of the path to the folder
+                containing the scan or a Path object
+        Raises:
+            FileNotFoundError
+        Returns:
+            A 3-D numpy array of dimensions (Ekin, K, Iterations)
+        """
+
+        if path:
+            path = Path(path).joinpath(str(scan).zfill(4))
+            if not path.is_dir():
+                raise FileNotFoundError(
+                    f"The provided path {path} was not found.",
+                )
+        else:
+            # search for the given scan using the default path
+            path = Path(self._config["data_path"])
+            # path_scan = sorted(path.glob(f"20[1,2][9,0-9]/*/*/Raw Data/{scan}"))
+            path_scan_list = find_scan(path, scan)
+            if not path_scan_list:
+                raise FileNotFoundError(
+                    f"Scan number {scan} not found",
+                )
+            path = path_scan_list[0]
+
+        df_lut = parse_lut_to_df(path)
+
+        data = load_images(
+            scan_path=path,
+            df_lut=df_lut,
+            avg_dim=delay,
+            check_scan=True,
+        )
+        self._scan_info = parse_info_to_dict(path)
+
+        (lens_mode, kin_energy, pass_energy, work_function) = (
+            self._scan_info["LensMode"],
+            self._scan_info["KineticEnergy"],
+            self._scan_info["PassEnergy"],
+            self._scan_info["WorkFunction"],
+        )
+
+        xr_list = []
+        for image in data:
+            xr_list.append(
+                self.spa.convert_image(
+                    image,
+                    lens_mode,
+                    kin_energy,
+                    pass_energy,
+                    work_function,
+                ),
+            )
+        res_xarray = xr.concat(
+            xr_list,
+            dim=xr.DataArray(
+                np.arange(0, len(data)),  # slice coords for aborted/ongoing scans
+                dims="Iteration",
+                name="Iteration",
+            ),
+        )
+        res_xarray = res_xarray.transpose("Angle", "Ekin", "Iteration")
 
         return res_xarray
