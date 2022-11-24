@@ -86,8 +86,17 @@ class SpecsScan:
             Sequence[int],
             Sequence[slice],
         ] = None,
+        delays: Union[
+            np.ndarray,
+            slice,
+            int,
+            Sequence[int],
+            Sequence[slice],
+        ] = None,
     ) -> xr.DataArray:
-        """Load scan with given scan number.
+        """Load scan with given scan number. When iterations is
+            given, average is performed over the iterations with an
+            option to select the delays via the delays argument.
 
         Args:
             scan: The scan number of interest
@@ -99,7 +108,11 @@ class SpecsScan:
                 slice objects and integers. For ex.,
                 np.s_[1:10, 15, -1] would be a valid input for
                 iterations.
-
+            delays: A 1-D array of the index of delays that the
+                data should contain. The array can be a list,
+                numpy array or a Tuple consisting of slice objects
+                and integers. For ex., np.s_[1:10, 15, -1] would
+                be a valid input for delays.
         Raises:
             FileNotFoundError, IndexError
 
@@ -127,13 +140,24 @@ class SpecsScan:
 
         df_lut = parse_lut_to_df(path)  # TODO: storing metadata from df_lut
 
+        if iterations is None and delays is not None:
+            raise ValueError(
+                "Invalid input. Delays can only be provided along "
+                "with iterations. For selecting delays, slice the resulting "
+                "xarray without passing delays. For averaging over the delays "
+                "use the check_scan function instead.",
+            )
+
         data = load_images(
             scan_path=path,
             df_lut=df_lut,
-            avg_dim=iterations,
+            iterations=iterations,
+            delays=delays,
         )
 
         self._scan_info = parse_info_to_dict(path)
+        # self._scan_info['name'] = "scan_info_meta"
+        # self._attributes.add(self._scan_info)
 
         (scan_type, lens_mode, kin_energy, pass_energy, work_function) = (
             self._scan_info["ScanType"],
@@ -180,12 +204,17 @@ class SpecsScan:
             else:
                 res_xarray = res_xarray.transpose("Angle", "Ekin", dim)
 
+        # res_xarray.attrs["metadata"] = self._attributes
+
         return res_xarray
 
-    def checkscan(
+    def check_scan(
         self,
         scan: int,
-        delay: Sequence[int],
+        delays: Union[
+            Sequence[int],
+            int,
+        ],
         path: Union[str, Path] = "",
     ) -> xr.DataArray:
         """Function to explore a given 3-D scan as a function
@@ -224,8 +253,7 @@ class SpecsScan:
         data = load_images(
             scan_path=path,
             df_lut=df_lut,
-            avg_dim=delay,
-            check_scan=True,
+            delays=delays,
         )
         self._scan_info = parse_info_to_dict(path)
 
