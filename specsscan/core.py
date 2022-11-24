@@ -86,17 +86,10 @@ class SpecsScan:
             Sequence[int],
             Sequence[slice],
         ] = None,
-        delays: Union[
-            np.ndarray,
-            slice,
-            int,
-            Sequence[int],
-            Sequence[slice],
-        ] = None,
     ) -> xr.DataArray:
         """Load scan with given scan number. When iterations is
-            given, average is performed over the iterations with an
-            option to select the delays via the delays argument.
+            given, average is performed over the iterations over
+            all delays.
 
         Args:
             scan: The scan number of interest
@@ -108,11 +101,6 @@ class SpecsScan:
                 slice objects and integers. For ex.,
                 np.s_[1:10, 15, -1] would be a valid input for
                 iterations.
-            delays: A 1-D array of the index of delays that the
-                data should contain. The array can be a list,
-                numpy array or a Tuple consisting of slice objects
-                and integers. For ex., np.s_[1:10, 15, -1] would
-                be a valid input for delays.
         Raises:
             FileNotFoundError, IndexError
 
@@ -140,19 +128,10 @@ class SpecsScan:
 
         df_lut = parse_lut_to_df(path)  # TODO: storing metadata from df_lut
 
-        if iterations is None and delays is not None:
-            raise ValueError(
-                "Invalid input. Delays can only be provided along "
-                "with iterations. For selecting delays, slice the resulting "
-                "xarray without passing delays. For averaging over the delays "
-                "use the check_scan function instead.",
-            )
-
         data = load_images(
             scan_path=path,
             df_lut=df_lut,
             iterations=iterations,
-            delays=delays,
         )
 
         self._scan_info = parse_info_to_dict(path)
@@ -257,13 +236,18 @@ class SpecsScan:
         )
         self._scan_info = parse_info_to_dict(path)
 
-        (lens_mode, kin_energy, pass_energy, work_function) = (
+        (scan_type, lens_mode, kin_energy, pass_energy, work_function) = (
+            self._scan_info["ScanType"],
             self._scan_info["LensMode"],
             self._scan_info["KineticEnergy"],
             self._scan_info["PassEnergy"],
             self._scan_info["WorkFunction"],
         )
-
+        if scan_type == "single":
+            raise ValueError(
+                "Invalid input. A 3-D scan is expected, "
+                "a 2-D single scan was provided instead.",
+            )
         xr_list = []
         for image in data:
             xr_list.append(

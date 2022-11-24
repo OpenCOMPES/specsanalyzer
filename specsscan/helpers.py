@@ -33,11 +33,9 @@ def load_images(  # pylint:disable=too-many-locals
         scan path with an optional averaging
         over the given iterations/delays. The function provides
         functionality to both load_scan and check_scan methods of
-        the SpecsScan class. When iterations is given, average is
-        performed over the iterations with an option to select the
-        delays via the delays argument. When only delays is provided
-        from the two, average is performed over the delays for all
-        iterations.
+        the SpecsScan class. When iterations/delays is provided,
+        average is performed over the iterations/delays for all
+        delays/iterations.
     Args:
         scan_path: object of class Path pointing
                 to the scan folder
@@ -49,10 +47,9 @@ def load_images(  # pylint:disable=too-many-locals
                 slice objects and integers. For ex.,
                 np.s_[1:10, 15, -1] would be a valid input.
         delays: A 1-D array of the indices of delays over
-                which the images are to be averaged or in the case of
-                loading a scan, the delay indices for the resulting array
-                to have. The array can be a list, numpy array or a Tuple
-                consisting of slice objects and integers. For ex.,
+                which the images are to be averaged. The array can
+                be a list, numpy array or a Tuple consisting of
+                slice objects and integers. For ex.,
                 np.s_[1:10, 15, -1] would be a valid input.
     Returns:
         data: A 2-D or 3-D (concatenated) numpy array consisting
@@ -84,21 +81,23 @@ def load_images(  # pylint:disable=too-many-locals
             raw_array,
         )
 
-        # Slicing along the given iterations
+        # Slicing along the given iterations or delays
         try:
             if avg_dim == "delays":
                 raw_2d_sliced = raw_2d[:, np.r_[delays]]
             else:  # iterations is not None
                 if delays is not None:
-                    raw_2d_sliced = raw_2d[np.r_[iterations]][:, np.r_[delays]].T
-                else:
-                    raw_2d_sliced = raw_2d[np.r_[iterations]].T
+                    raise ValueError(
+                        "Invalid input. One of either iterations or"
+                        "delays is expected, both were provided.",
+                    )
+                raw_2d_sliced = raw_2d[np.r_[iterations]].T
 
         except IndexError as exc:
             raise IndexError(
                 f"Invalid {avg_dim} for "
                 "the chosen data. In case of a single scan, "
-                f"try without passing iterations or delays inside the "
+                f"try without passing iterations inside the "
                 "load_scan method.",
             ) from exc
 
@@ -145,8 +144,6 @@ def get_raw2d(
     Args:
         scan_list: A list of AVG scan names.
         raw_list: 1-D array of RAW scan names.
-        check_scan: A boolean that is True for a check_scan and
-                    false otherwise.
     Returns:
         raw_2d: 2-D numpy array of size for ex.,
             (total_iterations, delays) for a delay scan.
