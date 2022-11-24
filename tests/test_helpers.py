@@ -21,13 +21,12 @@ df_lut = parse_lut_to_df(scan_path_mirror)
 
 
 @pytest.mark.parametrize("delay", [0, 1, 2])
-def test_averaging_with_iterations_and_delays(delay):
+def test_averaging_with_iterations(delay):
     """Tests the averaging by comparing an AVG scan with
         a corresponding average over all iterations.
     """
     iterations = np.arange(2)
-    delays = np.arange(3)
-    data_loaded = load_images(scan_path_mirror, df_lut, iterations, delays)
+    data_loaded = load_images(scan_path_mirror, df_lut, iterations)
     with open(
         scan_path_mirror.joinpath(f"AVG/00{delay}.tsv"),
         encoding="utf-8",
@@ -42,7 +41,7 @@ def test_averaging_with_delays():
     and the average over all iterations."""
 
     delay = 0
-    data = load_images(scan_path_mirror, df_lut, None, delay)
+    data = load_images(scan_path_mirror, df_lut, delays=delay)
     with open(
         scan_path_mirror.joinpath("AVG/000.tsv"),
         encoding="utf-8",
@@ -76,6 +75,13 @@ def test_single():
     assert np.array_equal(data[0], data_0)
 
     with pytest.raises(IndexError):
+        load_images(scan_path_single, iterations=[0])
+
+
+def test_invalid_input_error():
+    """Tests error for the invalid input when both iterations
+        and delays are provided."""
+    with pytest.raises(ValueError):
         load_images(scan_path_single, iterations=[0], delays=[0])
 
 
