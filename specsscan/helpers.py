@@ -15,29 +15,45 @@ from tqdm.auto import tqdm
 def load_images(  # pylint:disable=too-many-locals
     scan_path: Path,
     df_lut: Union[pd.DataFrame, None] = None,
-    avg_dim: Union[
+    iterations: Union[
         np.ndarray,
         slice,
         Sequence[int],
         Sequence[slice],
     ] = None,
-    check_scan: bool = False,
+    delays: Union[
+        np.ndarray,
+        slice,
+        int,
+        Sequence[int],
+        Sequence[slice],
+    ] = None,
 ) -> np.ndarray:
     """Loads a 2D/3D numpy array of images for the given
         scan path with an optional averaging
-        over the given iterations
+        over the given iterations/delays. The function provides
+        functionality to both load_scan and check_scan methods of
+        the SpecsScan class. When iterations is given, average is
+        performed over the iterations with an option to select the
+        delays via the delays argument. When only delays is provided
+        from the two, average is performed over the delays for all
+        iterations.
     Args:
         scan_path: object of class Path pointing
                 to the scan folder
         df_lut: Pandas dataframe containing the contents of LUT.txt
                 as obtained from parse_lut_to_df()
-        avg_dims: A 1-D array of the indices of iterations/delays over
+        iterations: A 1-D array of the indices of iterations over
                 which the images are to be averaged. The array
                 can be a list, numpy array or a Tuple consisting of
                 slice objects and integers. For ex.,
                 np.s_[1:10, 15, -1] would be a valid input.
-        check_scan: A boolean that is True for a check_scan and
-                false otherwise.
+        delays: A 1-D array of the indices of delays over
+                which the images are to be averaged or in the case of
+                loading a scan, the delay indices for the resulting array
+                to have. The array can be a list, numpy array or a Tuple
+                consisting of slice objects and integers. For ex.,
+                np.s_[1:10, 15, -1] would be a valid input.
     Returns:
         data: A 2-D or 3-D (concatenated) numpy array consisting
             of raw data
@@ -50,9 +66,10 @@ def load_images(  # pylint:disable=too-many-locals
     )
 
     data = []
-    input_dim = ['iteration', 'delay'][check_scan]
 
-    if avg_dim is not None:
+    if iterations is not None or delays is not None:
+
+        avg_dim = 'iterations' if iterations is not None else 'delays'
 
         if df_lut is not None:
             raw_array = df_lut["filename"].to_numpy()
@@ -65,20 +82,27 @@ def load_images(  # pylint:disable=too-many-locals
         raw_2d = get_raw2d(
             scan_list,
             raw_array,
-            check_scan=check_scan,
         )
+
         # Slicing along the given iterations
         try:
-            raw_2d_sliced = raw_2d[np.r_[avg_dim]].T
+            if avg_dim == "delays":
+                raw_2d_sliced = raw_2d[:, np.r_[delays]]
+            else:  # iterations is not None
+                if delays is not None:
+                    raw_2d_sliced = raw_2d[np.r_[iterations]][:, np.r_[delays]].T
+                else:
+                    raw_2d_sliced = raw_2d[np.r_[iterations]].T
+
         except IndexError as exc:
             raise IndexError(
-                f"Invalid {input_dim} for "
+                f"Invalid {avg_dim} for "
                 "the chosen data. In case of a single scan, "
-                f"try without passing {input_dim} inside the "
-                "load_scan() method.",
+                f"try without passing iterations or delays inside the "
+                "load_scan method.",
             ) from exc
 
-        print(f"Averaging over {input_dim}...")
+        print(f"Averaging over {avg_dim}...")
         for dim in tqdm(raw_2d_sliced):
             avg_list = []
             for image in tqdm(dim, leave=False):
@@ -115,7 +139,6 @@ def load_images(  # pylint:disable=too-many-locals
 def get_raw2d(
     scan_list: List[str],
     raw_array: np.ndarray,
-    check_scan: bool,
 ) -> np.ndarray:
     """Converts a 1-D array of raw scan names
         into 2-D based on the number of iterations
@@ -155,9 +178,6 @@ def get_raw2d(
         )
     else:  # Complete scan
         raw_2d = raw_array.reshape(total_iterations, delays)
-
-    if check_scan:
-        raw_2d = raw_2d.T
 
     return raw_2d
 
