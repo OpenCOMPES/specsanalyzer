@@ -20,18 +20,20 @@ scan_path_single = Path(f"{package_dir}/../tests/data/3610")
 df_lut = parse_lut_to_df(scan_path_mirror)
 
 
-def test_averaging_with_iterations():
+@pytest.mark.parametrize("delay", [0, 1, 2])
+def test_averaging_with_iterations_and_delays(delay):
     """Tests the averaging by comparing an AVG scan with
         a corresponding average over all iterations.
     """
     iterations = np.arange(2)
-    data = load_images(scan_path_mirror, df_lut, iterations)
+    delays = np.arange(3)
+    data_loaded = load_images(scan_path_mirror, df_lut, iterations, delays)
     with open(
-        scan_path_mirror.joinpath("AVG/000.tsv"),
+        scan_path_mirror.joinpath(f"AVG/00{delay}.tsv"),
         encoding="utf-8",
     ) as file:
-        data_0 = np.loadtxt(file, delimiter='\t')
-    np.testing.assert_allclose(data[0], data_0)
+        data = np.loadtxt(file, delimiter='\t')
+    np.testing.assert_allclose(data_loaded[delay], data)
 
 
 def test_averaging_with_delays():
@@ -39,8 +41,8 @@ def test_averaging_with_delays():
     load_images function by comparing an AVG file
     and the average over all iterations."""
 
-    delay = [0]
-    data = load_images(scan_path_mirror, df_lut, delay, check_scan=True)
+    delay = 0
+    data = load_images(scan_path_mirror, df_lut, None, delay)
     with open(
         scan_path_mirror.joinpath("AVG/000.tsv"),
         encoding="utf-8",
@@ -74,7 +76,7 @@ def test_single():
     assert np.array_equal(data[0], data_0)
 
     with pytest.raises(IndexError):
-        load_images(scan_path_single, avg_dim=[0])
+        load_images(scan_path_single, iterations=[0], delays=[0])
 
 
 def test_iterations_type():
