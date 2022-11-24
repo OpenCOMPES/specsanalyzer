@@ -12,7 +12,7 @@ import pandas as pd
 from tqdm.auto import tqdm
 
 
-def load_images(
+def load_images(  # pylint:disable=too-many-locals
     scan_path: Path,
     df_lut: Union[pd.DataFrame, None] = None,
     iterations: Union[
@@ -21,21 +21,36 @@ def load_images(
         Sequence[int],
         Sequence[slice],
     ] = None,
+    delays: Union[
+        np.ndarray,
+        slice,
+        int,
+        Sequence[int],
+        Sequence[slice],
+    ] = None,
 ) -> np.ndarray:
     """Loads a 2D/3D numpy array of images for the given
         scan path with an optional averaging
-        over the given iterations
+        over the given iterations/delays. The function provides
+        functionality to both load_scan and check_scan methods of
+        the SpecsScan class. When iterations/delays is provided,
+        average is performed over the iterations/delays for all
+        delays/iterations.
     Args:
         scan_path: object of class Path pointing
                 to the scan folder
         df_lut: Pandas dataframe containing the contents of LUT.txt
                 as obtained from parse_lut_to_df()
-        iterations: A 1-D array of the number of iterations over
+        iterations: A 1-D array of the indices of iterations over
                 which the images are to be averaged. The array
                 can be a list, numpy array or a Tuple consisting of
                 slice objects and integers. For ex.,
-                np.s_[1:10, 15, -1] would be a valid input for
-                iterations.
+                np.s_[1:10, 15, -1] would be a valid input.
+        delays: A 1-D array of the indices of delays over
+                which the images are to be averaged. The array can
+                be a list, numpy array or a Tuple consisting of
+                slice objects and integers. For ex.,
+                np.s_[1:10, 15, -1] would be a valid input.
     Returns:
         data: A 2-D or 3-D (concatenated) numpy array consisting
             of raw data
@@ -48,7 +63,10 @@ def load_images(
     )
 
     data = []
-    if iterations is not None:
+
+    if iterations is not None or delays is not None:
+
+        avg_dim = 'iterations' if iterations is not None else 'delays'
 
         if df_lut is not None:
             raw_array = df_lut["filename"].to_numpy()
@@ -58,20 +76,35 @@ def load_images(
                 [file.stem + ".tsv" for file in raw_gen],
             )
 
-        raw_2d = get_raw2d(scan_list, raw_array)
-        # Slicing along the given iterations
+        raw_2d = get_raw2d(
+            scan_list,
+            raw_array,
+        )
+
+        # Slicing along the given iterations or delays
         try:
-            raw_2d_iter = raw_2d[np.r_[iterations]].T
+            if avg_dim == "delays":
+                raw_2d_sliced = raw_2d[:, np.r_[delays]]
+            else:  # iterations is not None
+                if delays is not None:
+                    raise ValueError(
+                        "Invalid input. One of either iterations or"
+                        "delays is expected, both were provided.",
+                    )
+                raw_2d_sliced = raw_2d[np.r_[iterations]].T
+
         except IndexError as exc:
             raise IndexError(
-                "Invalid iteration for the chosen data. "
-                "In case of a single scan, try without passing iterations.",
+                f"Invalid {avg_dim} for "
+                "the chosen data. In case of a single scan, "
+                f"try without passing iterations inside the "
+                "load_scan method.",
             ) from exc
 
-        print("Averaging over iterations...")
-        for delay in tqdm(raw_2d_iter):
+        print(f"Averaging over {avg_dim}...")
+        for dim in tqdm(raw_2d_sliced):
             avg_list = []
-            for image in tqdm(delay, leave=False):
+            for image in tqdm(dim, leave=False):
                 if image != "nan":
 
                     with open(
