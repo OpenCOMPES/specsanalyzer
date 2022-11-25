@@ -28,6 +28,7 @@ def load_images(  # pylint:disable=too-many-locals
         Sequence[int],
         Sequence[slice],
     ] = None,
+    tqdm_disable_nested: bool = False,
 ) -> np.ndarray:
     """Loads a 2D/3D numpy array of images for the given
         scan path with an optional averaging
@@ -104,7 +105,7 @@ def load_images(  # pylint:disable=too-many-locals
         print(f"Averaging over {avg_dim}...")
         for dim in tqdm(raw_2d_sliced):
             avg_list = []
-            for image in tqdm(dim, leave=False):
+            for image in tqdm(dim, leave=False, disable=tqdm_disable_nested):
                 if image != "nan":
 
                     with open(
