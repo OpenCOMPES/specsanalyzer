@@ -132,6 +132,7 @@ class SpecsScan:
             scan_path=path,
             df_lut=df_lut,
             iterations=iterations,
+            tqdm_disable_nested=self._config["disable_nested_progress"],
         )
 
         self._scan_info = parse_info_to_dict(path)
@@ -233,6 +234,7 @@ class SpecsScan:
             scan_path=path,
             df_lut=df_lut,
             delays=delays,
+            tqdm_disable_nested=self._config["disable_nested_progress"],
         )
         self._scan_info = parse_info_to_dict(path)
 
