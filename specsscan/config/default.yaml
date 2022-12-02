@@ -1,4 +1,4 @@
 data_path: "//nap32/topfloor/trARPES/PESData/"
-disable_nested_progress: true
+enable_nested_progress_bar: false
 spa_params:
   apply_fft_filter: false
