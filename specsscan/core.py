@@ -17,6 +17,7 @@ from specsanalyzer.settings import parse_config
 
 from specsscan.helpers import find_scan
 from specsscan.helpers import get_coords
+from specsscan.helpers import handle_meta
 from specsscan.helpers import load_images
 from specsscan.helpers import parse_info_to_dict
 from specsscan.helpers import parse_lut_to_df
@@ -136,8 +137,16 @@ class SpecsScan:
         )
 
         self._scan_info = parse_info_to_dict(path)
-        # self._scan_info['name'] = "scan_info_meta"
-        # self._attributes.add(self._scan_info)
+        self._scan_info.update(
+            {
+                "iterations": iterations,
+                "scan_path": path,
+            },
+        )
+        self._attributes.add(
+            handle_meta(df_lut, self._scan_info),
+            duplicate='overwrite',
+        )
 
         (scan_type, lens_mode, kin_energy, pass_energy, work_function) = (
             self._scan_info["ScanType"],
@@ -184,7 +193,7 @@ class SpecsScan:
             else:
                 res_xarray = res_xarray.transpose("Angle", "Ekin", dim)
 
-        # res_xarray.attrs["metadata"] = self._attributes
+        res_xarray.attrs["metadata"] = self._attributes
 
         return res_xarray
 
@@ -237,6 +246,17 @@ class SpecsScan:
             tqdm_enable_nested=self._config["enable_nested_progress_bar"],
         )
         self._scan_info = parse_info_to_dict(path)
+        self._scan_info.update(
+            {
+                "delays": delays,
+                "scan_path": path,
+                "check_scan": True,
+            },
+        )
+        self._attributes.add(
+            handle_meta(df_lut, self._scan_info),
+            duplicate='overwrite',
+        )
 
         (scan_type, lens_mode, kin_energy, pass_energy, work_function) = (
             self._scan_info["ScanType"],
@@ -270,5 +290,6 @@ class SpecsScan:
             ),
         )
         res_xarray = res_xarray.transpose("Angle", "Ekin", "Iteration")
+        res_xarray.attrs["metadata"] = self._attributes
 
         return res_xarray
