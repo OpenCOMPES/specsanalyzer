@@ -9,6 +9,7 @@ from typing import Union
 
 import numpy as np
 import pandas as pd
+from specsanalyzer.settings import insert_default_config  # name can be generalized
 from tqdm.auto import tqdm
 
 
@@ -219,6 +220,9 @@ def get_coords(
         scan_path: Path object for the scan path
         scan_type: Type of scan (delay, mirror etc.)
         scan_info: scan_info class dict
+        df_lut: df_lut: Pandas dataframe containing
+                the contents of LUT.txt as obtained
+                from parse_lut_to_df()
     Raises:
         FileNotFoundError
     Returns:
@@ -332,6 +336,32 @@ def parse_info_to_dict(path: Path) -> Dict:
         raise FileNotFoundError("info.txt file not found.") from exc
 
     return info_dict
+
+
+def handle_meta(df_lut: pd.DataFrame, scan_info: dict) -> dict:
+    """Helper function for the handling metadata from different files
+    Args:
+        df_lut: Pandas dataframe containing
+                the contents of LUT.txt as obtained
+                from parse_lut_to_df()
+        scan_info: scan_info class dict containing
+                containing the contents of info.txt file
+    Returns:
+        meta: merged metadata dictionary
+    """
+    lut_meta = {}
+    if df_lut is not None:
+        for col in df_lut.columns:
+            col_array = df_lut[f'{col}'].to_numpy()
+            if len(set(col_array)) == 1:
+                lut_meta[col] = col_array[0]
+            else:
+                lut_meta[col] = col_array
+
+    meta = insert_default_config(lut_meta, scan_info)  # merging two dictionaries
+    meta['name'] = "scan_info_lut_metadata"
+
+    return meta
 
 
 def find_scan(path: Path, scan: int) -> List[Path]:
