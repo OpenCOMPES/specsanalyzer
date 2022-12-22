@@ -1,6 +1,7 @@
 """This is the SpecsScan core class
 
 """
+import copy
 import os
 from importlib.util import find_spec
 from pathlib import Path
@@ -137,17 +138,21 @@ class SpecsScan:
         )
 
         self._scan_info = parse_info_to_dict(path)
-        self._scan_info.update(
-            {
-                "iterations": iterations,
-                "scan_path": path,
-            },
-        )
+        config_meta = copy.deepcopy(self.config)
+        config_meta['spa_params'].pop('calib2d_dict')
+
         self._attributes.add(
             handle_meta(df_lut, self._scan_info),
             duplicate='overwrite',
         )
-
+        self._attributes.update(
+            {
+                "iterations": iterations,
+                "scan_path": path,
+                "raw_data": data,
+                "convert_config": config_meta,
+            },
+        )
         (scan_type, lens_mode, kin_energy, pass_energy, work_function) = (
             self._scan_info["ScanType"],
             self._scan_info["LensMode"],
@@ -197,7 +202,7 @@ class SpecsScan:
 
         return res_xarray
 
-    def check_scan(
+    def check_scan(  # pylint:disable=too-many-locals
         self,
         scan: int,
         delays: Union[
@@ -246,16 +251,24 @@ class SpecsScan:
             tqdm_enable_nested=self._config["enable_nested_progress_bar"],
         )
         self._scan_info = parse_info_to_dict(path)
-        self._scan_info.update(
+        config_meta = copy.deepcopy(self.config)
+        config_meta['spa_params'].pop('calib2d_dict')
+
+        self._attributes.add(
+            handle_meta(df_lut, self._scan_info),
+            duplicate='overwrite',
+        )
+        self._attributes.update(
             {
                 "delays": delays,
                 "scan_path": path,
                 "check_scan": True,
+                "raw_data": load_images(  # AVG data
+                    path,
+                    df_lut,
+                ),
+                "convert_config": config_meta,
             },
-        )
-        self._attributes.add(
-            handle_meta(df_lut, self._scan_info),
-            duplicate='overwrite',
         )
 
         (scan_type, lens_mode, kin_energy, pass_energy, work_function) = (
