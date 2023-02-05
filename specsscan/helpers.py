@@ -1,7 +1,6 @@
 """This script contains helper functions used by the specscan class"""
 import datetime as dt
 import json
-import urllib
 from pathlib import Path
 from typing import Any
 from typing import Dict
@@ -9,6 +8,9 @@ from typing import List
 from typing import Sequence
 from typing import Tuple
 from typing import Union
+from urllib.error import HTTPError
+from urllib.error import URLError
+from urllib.request import urlopen
 
 import numpy as np
 import pandas as pd
@@ -424,21 +426,21 @@ def handle_meta(  # pylint:disable=too-many-branches, too-many-locals
             req_str = "http://aa0.fhi-berlin.mpg.de:17668/retrieval/" + \
                 "data/getData.json?pv=" + \
                 channel + "&from=" + filestart + "Z&to=" + fileend + "Z"
-            req = urllib.request.urlopen(req_str)  # pylint:disable=consider-using-with
-            data = json.load(req)
-            vals = [x['val'] for x in data[0]['data']]
-            metadata_dict["scan_info"][f'{channel}'] = sum(vals) / len(vals)
+            with urlopen(req_str) as req:
+                data = json.load(req)
+                vals = [x['val'] for x in data[0]['data']]
+                metadata_dict["scan_info"][f'{channel}'] = sum(vals) / len(vals)
         except (IndexError, ZeroDivisionError):
             metadata_dict["scan_info"][f'{channel}'] = np.nan
             print(f"Data for channel {channel} doesn't exist for time {filestart}")
-        except urllib.error.HTTPError as error:
+        except HTTPError as error:
             print(
                 f"Incorrect URL for the archive channel {channel}. "
                 "Make sure that the channel name, file start "
                 "and end times are correct.",
             )
             print("Error code: ", error)
-        except urllib.error.URLError as error:
+        except URLError as error:
             print(
                 f"Cannot access the archive URL for channel {channel}. "
                 f"Make sure that you are within the FHI network."
