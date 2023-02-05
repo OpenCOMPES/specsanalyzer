@@ -1,4 +1,7 @@
 """This script contains helper functions used by the specscan class"""
+import datetime as dt
+import json
+import urllib
 from pathlib import Path
 from typing import Any
 from typing import Dict
@@ -338,7 +341,10 @@ def parse_info_to_dict(path: Path) -> Dict:
     return info_dict
 
 
-def handle_meta(df_lut: pd.DataFrame, scan_info: dict) -> dict:
+def handle_meta(  # pylint:disable=too-many-branches, too-many-locals
+    df_lut: pd.DataFrame,
+    scan_info: dict,
+) -> dict:
     """Helper function for the handling metadata from different files
     Args:
         df_lut: Pandas dataframe containing
@@ -347,8 +353,11 @@ def handle_meta(df_lut: pd.DataFrame, scan_info: dict) -> dict:
         scan_info: scan_info class dict containing
                 containing the contents of info.txt file
     Returns:
-        meta: merged metadata dictionary
+        metadata_dict: metadata dictionary containing additional metadata
+                from the EPICS archive.
     """
+    metadata_dict = {}
+    # get metadata from LUT dataframe
     lut_meta = {}
     if df_lut is not None:
         for col in df_lut.columns:
@@ -358,10 +367,88 @@ def handle_meta(df_lut: pd.DataFrame, scan_info: dict) -> dict:
             else:
                 lut_meta[col] = col_array
 
-    meta = insert_default_config(lut_meta, scan_info)  # merging two dictionaries
-    meta['name'] = "scan_info_lut_metadata"
+    scan_meta = insert_default_config(lut_meta, scan_info)  # merging two dictionaries
+    replace_dict = {
+        "TempA": "trARPES:Carving:TEMP_RBV",
+        "X": "trARPES:Carving:TRX.RBV",
+        "Y": "trARPES:Carving:TRY.RBV",
+        "Z": "trARPES:Carving:TRZ.RBV",
+        "polar": "trARPES:Carving:THT.RBV",
+        "tilt": "trARPES:Carving:PHI.RBV",
+        "azimuth": "trARPES:Carving:OMG.RBV",
+    }
+    for key in list(scan_meta):
+        if key in replace_dict:
+            scan_meta[replace_dict[key]] = scan_meta[key]
+            scan_meta.pop(key)
 
-    return meta
+    metadata_dict["scan_info"] = scan_meta
+    # Get metadata from Epics archive, if not present already
+    print("Collecting data from the EPICS archive...")
+    if "time" in scan_meta:
+        time_list = [scan_meta["time"][0], scan_meta["time"][-1]]
+    elif "start_time" in scan_meta:
+        time_list = [scan_meta["start_time"]]
+    else:
+        raise ValueError("Could not find timestamps in scan info.")
+
+    dt_list_iso = [time.replace('.', '-').replace(' ', 'T') for time in time_list]
+    datetime_list = [dt.datetime.fromisoformat(dt_iso) for dt_iso in dt_list_iso]
+    ts_from = dt.datetime.timestamp(datetime_list[0])  # POSIX timestamp
+    ts_to = dt.datetime.timestamp(datetime_list[-1])  # POSIX timestamp
+    metadata_dict['timing'] = {
+        'acquisition_start': dt.datetime.utcfromtimestamp(ts_from).replace(
+            tzinfo=dt.timezone.utc,
+        ).isoformat(),
+        'acquisition_stop': dt.datetime.utcfromtimestamp(ts_to).replace(
+            tzinfo=dt.timezone.utc,
+        ).isoformat(),
+        'acquisition_duration': int(ts_to - ts_from),
+        'collection_time': float(ts_to - ts_from),
+    }
+    filestart = dt.datetime.utcfromtimestamp(ts_from).isoformat()  # Epics time in UTC?
+    fileend = dt.datetime.utcfromtimestamp(ts_to).isoformat()
+    epics_channels = [
+        "trARPES:Carving:TEMP_RBV",
+        "trARPES:XGS600:PressureAC:P_RD",
+        "KTOF:Lens:Sample:V",
+    ] + [
+        f"trARPES:Carving:{x}.RBV" for x in [
+            'TRX', 'TRY', 'TRZ', 'THT', 'PHI', 'OMG',
+        ]
+    ]
+
+    channels_missing = set(epics_channels) - set(metadata_dict['scan_info'].keys())
+    for channel in channels_missing:
+        try:
+            req_str = "http://aa0.fhi-berlin.mpg.de:17668/retrieval/" + \
+                "data/getData.json?pv=" + \
+                channel + "&from=" + filestart + "Z&to=" + fileend + "Z"
+            req = urllib.request.urlopen(req_str)  # pylint:disable=consider-using-with
+            data = json.load(req)
+            vals = [x['val'] for x in data[0]['data']]
+            metadata_dict["scan_info"][f'{channel}'] = sum(vals) / len(vals)
+        except (IndexError, ZeroDivisionError):
+            metadata_dict["scan_info"][f'{channel}'] = np.nan
+            print(f"Data for channel {channel} doesn't exist for time {filestart}")
+        except urllib.error.HTTPError as error:
+            print(
+                f"Incorrect URL for the archive channel {channel}. "
+                "Make sure that the channel name, file start "
+                "and end times are correct.",
+            )
+            print("Error code: ", error)
+        except urllib.error.URLError as error:
+            print(
+                f"Cannot access the archive URL for channel {channel}. "
+                f"Make sure that you are within the FHI network."
+                f"Skipping over channels {channels_missing}.",
+            )
+            print("Error code: ", error)
+            break
+    print("Done!")
+
+    return metadata_dict
 
 
 def find_scan(path: Path, scan: int) -> List[Path]:
