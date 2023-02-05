@@ -13,7 +13,6 @@ from typing import Union
 import numpy as np
 import xarray as xr
 from specsanalyzer import SpecsAnalyzer
-from specsanalyzer.metadata import MetaHandler
 from specsanalyzer.settings import parse_config
 
 from specsscan.helpers import find_scan
@@ -26,6 +25,21 @@ from specsscan.helpers import parse_lut_to_df
 # from specsanalyzer.io import to_h5, load_h5, to_tiff, load_tiff
 
 package_dir = os.path.dirname(find_spec("specsscan").origin)
+
+default_units = {
+    "Angle": "degrees",
+    "Ekin": "eV",
+    "delay": "fs",
+    "mirrorX": "mm",
+    "mirrorY": "mm",
+    "X": "mm",
+    "Y": "mm",
+    "Z": "mm",
+    "polar": "degrees",
+    "tilt": "degrees",
+    "azimuth": "degrees",
+    "Iteration": "number",
+}
 
 
 class SpecsScan:
@@ -42,7 +56,8 @@ class SpecsScan:
             default_config=f"{package_dir}/config/default.yaml",
         )
 
-        self._attributes = MetaHandler(meta=metadata)
+        # self._attributes = MetaHandler(meta=metadata)
+        self._attributes = metadata
 
         self._scan_info: Dict[Any, Any] = {}
 
@@ -141,17 +156,15 @@ class SpecsScan:
         config_meta = copy.deepcopy(self.config)
         config_meta['spa_params'].pop('calib2d_dict')
 
-        self._attributes.add(
-            handle_meta(df_lut, self._scan_info),
-            duplicate='overwrite',
-        )
+        loader_dict = {
+            "iterations": iterations,
+            "scan_path": path,
+            "raw_data": data,
+            "convert_config": config_meta,
+        }
         self._attributes.update(
-            {
-                "iterations": iterations,
-                "scan_path": path,
-                "raw_data": data,
-                "convert_config": config_meta,
-            },
+            **handle_meta(df_lut, self._scan_info),
+            **{"loader": loader_dict},
         )
         (scan_type, lens_mode, kin_energy, pass_energy, work_function) = (
             self._scan_info["ScanType"],
@@ -197,6 +210,9 @@ class SpecsScan:
                 res_xarray = res_xarray.transpose("Angle", dim, "Ekin")
             else:
                 res_xarray = res_xarray.transpose("Angle", "Ekin", dim)
+
+        for name in res_xarray.dims:
+            res_xarray[name].attrs['unit'] = default_units[name]
 
         res_xarray.attrs["metadata"] = self._attributes
 
@@ -254,21 +270,19 @@ class SpecsScan:
         config_meta = copy.deepcopy(self.config)
         config_meta['spa_params'].pop('calib2d_dict')
 
-        self._attributes.add(
-            handle_meta(df_lut, self._scan_info),
-            duplicate='overwrite',
-        )
+        loader_dict = {
+            "delays": delays,
+            "scan_path": path,
+            "raw_data": load_images(  # AVG data
+                path,
+                df_lut,
+            ),
+            "convert_config": config_meta,
+            "check_scan": True,
+        }
         self._attributes.update(
-            {
-                "delays": delays,
-                "scan_path": path,
-                "check_scan": True,
-                "raw_data": load_images(  # AVG data
-                    path,
-                    df_lut,
-                ),
-                "convert_config": config_meta,
-            },
+            **handle_meta(df_lut, self._scan_info),
+            **{"loader": loader_dict},
         )
 
         (scan_type, lens_mode, kin_energy, pass_energy, work_function) = (
@@ -303,6 +317,9 @@ class SpecsScan:
             ),
         )
         res_xarray = res_xarray.transpose("Angle", "Ekin", "Iteration")
+        for name in res_xarray.dims:
+            res_xarray[name].attrs['unit'] = default_units[name]
+
         res_xarray.attrs["metadata"] = self._attributes
 
         return res_xarray
