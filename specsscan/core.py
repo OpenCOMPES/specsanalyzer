@@ -163,7 +163,11 @@ class SpecsScan:
             "convert_config": config_meta,
         }
         self._attributes.update(
-            **handle_meta(df_lut, self._scan_info),
+            **handle_meta(
+                df_lut,
+                self._scan_info,
+                config_meta,
+            ),
             **{"loader": loader_dict},
         )
         (scan_type, lens_mode, kin_energy, pass_energy, work_function) = (
@@ -281,7 +285,11 @@ class SpecsScan:
             "check_scan": True,
         }
         self._attributes.update(
-            **handle_meta(df_lut, self._scan_info),
+            **handle_meta(
+                df_lut,
+                self._scan_info,
+                config_meta,
+            ),
             **{"loader": loader_dict},
         )
 
