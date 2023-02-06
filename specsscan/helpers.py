@@ -346,6 +346,7 @@ def parse_info_to_dict(path: Path) -> Dict:
 def handle_meta(  # pylint:disable=too-many-branches, too-many-locals
     df_lut: pd.DataFrame,
     scan_info: dict,
+    config: dict,
 ) -> dict:
     """Helper function for the handling metadata from different files
     Args:
@@ -354,6 +355,8 @@ def handle_meta(  # pylint:disable=too-many-branches, too-many-locals
                 from parse_lut_to_df()
         scan_info: scan_info class dict containing
                 containing the contents of info.txt file
+        config: config dictionary containing the contents
+                of config.yaml file
     Returns:
         metadata_dict: metadata dictionary containing additional metadata
                 from the EPICS archive.
@@ -370,18 +373,11 @@ def handle_meta(  # pylint:disable=too-many-branches, too-many-locals
                 lut_meta[col] = col_array
 
     scan_meta = insert_default_config(lut_meta, scan_info)  # merging two dictionaries
-    replace_dict = {
-        "TempA": "trARPES:Carving:TEMP_RBV",
-        "X": "trARPES:Carving:TRX.RBV",
-        "Y": "trARPES:Carving:TRY.RBV",
-        "Z": "trARPES:Carving:TRZ.RBV",
-        "polar": "trARPES:Carving:THT.RBV",
-        "tilt": "trARPES:Carving:PHI.RBV",
-        "azimuth": "trARPES:Carving:OMG.RBV",
-    }
+
+    replace_dict = config["epics_channels"]
     for key in list(scan_meta):
-        if key in replace_dict:
-            scan_meta[replace_dict[key]] = scan_meta[key]
+        if key.lower() in replace_dict:
+            scan_meta[replace_dict[key.lower()]] = scan_meta[key]
             scan_meta.pop(key)
 
     metadata_dict["scan_info"] = scan_meta
@@ -410,15 +406,7 @@ def handle_meta(  # pylint:disable=too-many-branches, too-many-locals
     }
     filestart = dt.datetime.utcfromtimestamp(ts_from).isoformat()  # Epics time in UTC?
     fileend = dt.datetime.utcfromtimestamp(ts_to).isoformat()
-    epics_channels = [
-        "trARPES:Carving:TEMP_RBV",
-        "trARPES:XGS600:PressureAC:P_RD",
-        "KTOF:Lens:Sample:V",
-    ] + [
-        f"trARPES:Carving:{x}.RBV" for x in [
-            'TRX', 'TRY', 'TRZ', 'THT', 'PHI', 'OMG',
-        ]
-    ]
+    epics_channels = replace_dict.values()
 
     channels_missing = set(epics_channels) - set(metadata_dict['scan_info'].keys())
     for channel in channels_missing:
