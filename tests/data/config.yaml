@@ -1,5 +1,15 @@
-data_path: "//nap32/topfloor/trARPES/PESData/"
+data_path: "//mnt/topfloor/PESData/"
 enable_nested_progress_bar: false
+epics_channels:
+  tempa: "trARPES:Carving:TEMP_RBV"
+  x: "trARPES:Carving:TRX.RBV"
+  y: "trARPES:Carving:TRY.RBV"
+  z: "trARPES:Carving:TRZ.RBV"
+  polar: "trARPES:Carving:THT.RBV"
+  tilt: "trARPES:Carving:PHI.RBV"
+  azimuth: "trARPES:Carving:OMG.RBV"
+  sample_bias: "KTOF:Lens:Sample:V"
+  pressure: "trARPES:XGS600:PressureAC:P_RD"
 spa_params:
   calib2d_file: "../tests/data/phoibos150.calib2d"
   nx_pixel: 1376
