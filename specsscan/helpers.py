@@ -389,8 +389,8 @@ def handle_meta(  # pylint:disable=too-many-branches, too-many-locals
     print("Collecting data from the EPICS archive...")
     if "time" in scan_meta:
         time_list = [scan_meta["time"][0], scan_meta["time"][-1]]
-    elif "start_time" in scan_meta:
-        time_list = [scan_meta["start_time"]]
+    elif "StartTime" in scan_meta:
+        time_list = [scan_meta["StartTime"]]
     else:
         raise ValueError("Could not find timestamps in scan info.")
 
