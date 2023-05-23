@@ -158,14 +158,37 @@ class SpecsScan:
         self._scan_info = parse_info_to_dict(scan_path)
         config_meta = copy.deepcopy(self.config)
         config_meta["spa_params"].pop("calib2d_dict")
+        spa_params = config_meta.pop('spa_params')
+        config_meta = {**config_meta, **spa_params}
+        # some renaming for saving DataSet to h5
+        if config_meta['apply_fft_filter'] == False:
+            config_meta['apply_fft_filter'] = 'False'
+        else:
+            config_meta['apply_fft_filter'] = 'True'
+        if config_meta['crop'] == False:
+            config_meta['crop'] = 'False'
+        else:
+            config_meta['crop'] = 'True'
+        config_meta.pop('enable_nested_progress_bar')
+        config_meta['fft_filter_peaks'] = str(config_meta['fft_filter_peaks'])
+
+        if iterations is None:
+            iterations = 0
 
         loader_dict = {
             "iterations": iterations,
-            "scan_path": scan_path,
+            "scan_path": str(scan_path),
             "raw_data": data,
-            "convert_config": config_meta["spa_params"],
+            **config_meta["spa_params"]
         }
-
+        self._attributes.update(
+            **handle_meta(
+                df_lut,
+                self._scan_info,
+                config_meta,
+            ),
+            **loader_dict,
+        )
         (scan_type, lens_mode, kin_energy, pass_energy, work_function) = (
             self._scan_info["ScanType"],
             self._scan_info["LensMode"],
@@ -271,7 +294,7 @@ class SpecsScan:
         if metadata is not None:
             self.metadata.update(**metadata)
 
-        res_xarray.attrs["metadata"] = self.metadata
+        res_xarray.attrs = self.metadata
         self._result = res_xarray
 
         return res_xarray
