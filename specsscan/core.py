@@ -30,15 +30,14 @@ default_units = {
     "Angle": "degrees",
     "Ekin": "eV",
     "delay": "fs",
-    "mirrorX": "mm",
-    "mirrorY": "mm",
+    "mirrorX": "steps",
+    "mirrorY": "steps",
     "X": "mm",
     "Y": "mm",
     "Z": "mm",
     "polar": "degrees",
     "tilt": "degrees",
     "azimuth": "degrees",
-    "Iteration": "number",
 }
 
 
@@ -56,8 +55,8 @@ class SpecsScan:
             default_config=f"{package_dir}/config/default.yaml",
         )
 
-        # self._attributes = MetaHandler(meta=metadata)
-        self._attributes = metadata
+        # self.metadata = MetaHandler(meta=metadata)
+        self.metadata = metadata
 
         self._scan_info: Dict[Any, Any] = {}
 
@@ -93,7 +92,7 @@ class SpecsScan:
         except KeyError:
             self.spa = SpecsAnalyzer()
 
-    def load_scan(  # pylint:disable=too-many-locals
+    def load_scan(
         self,
         scan: int,
         path: Union[str, Path] = "",
@@ -162,7 +161,7 @@ class SpecsScan:
             "raw_data": data,
             "convert_config": config_meta,
         }
-        self._attributes.update(
+        self.metadata.update(
             **handle_meta(
                 df_lut,
                 self._scan_info,
@@ -218,11 +217,11 @@ class SpecsScan:
         for name in res_xarray.dims:
             res_xarray[name].attrs['unit'] = default_units[name]
 
-        res_xarray.attrs["metadata"] = self._attributes
+        res_xarray.attrs["metadata"] = self.metadata
 
         return res_xarray
 
-    def check_scan(  # pylint:disable=too-many-locals
+    def check_scan(
         self,
         scan: int,
         delays: Union[
@@ -284,7 +283,7 @@ class SpecsScan:
             "convert_config": config_meta,
             "check_scan": True,
         }
-        self._attributes.update(
+        self.metadata.update(
             **handle_meta(
                 df_lut,
                 self._scan_info,
@@ -326,8 +325,11 @@ class SpecsScan:
         )
         res_xarray = res_xarray.transpose("Angle", "Ekin", "Iteration")
         for name in res_xarray.dims:
-            res_xarray[name].attrs['unit'] = default_units[name]
+            try:
+                res_xarray[name].attrs['unit'] = default_units[name]
+            except KeyError:
+                pass
 
-        res_xarray.attrs["metadata"] = self._attributes
+        res_xarray.attrs["metadata"] = self.metadata
 
         return res_xarray
