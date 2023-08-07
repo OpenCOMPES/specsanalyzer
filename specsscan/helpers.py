@@ -18,7 +18,7 @@ from specsanalyzer.settings import insert_default_config  # name can be generali
 from tqdm.auto import tqdm
 
 
-def load_images(  # pylint:disable=too-many-locals
+def load_images(
     scan_path: Path,
     df_lut: Union[pd.DataFrame, None] = None,
     iterations: Union[
@@ -343,7 +343,7 @@ def parse_info_to_dict(path: Path) -> Dict:
     return info_dict
 
 
-def handle_meta(  # pylint:disable=too-many-branches, too-many-locals
+def handle_meta(  # pylint:disable=too-many-branches
     df_lut: pd.DataFrame,
     scan_info: dict,
     config: dict,
