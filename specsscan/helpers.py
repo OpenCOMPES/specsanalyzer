@@ -14,7 +14,7 @@ from urllib.request import urlopen
 
 import numpy as np
 import pandas as pd
-from specsanalyzer.config import insert_default_config  # name can be generalized
+from specsanalyzer.config import complete_dictionary  # name can be generalized
 from tqdm.auto import tqdm
 
 
@@ -372,7 +372,7 @@ def handle_meta(  # pylint:disable=too-many-branches
             else:
                 lut_meta[col] = col_array
 
-    scan_meta = insert_default_config(lut_meta, scan_info)  # merging two dictionaries
+    scan_meta = complete_dictionary(lut_meta, scan_info)  # merging two dictionaries
 
     replace_dict = config["epics_channels"]
     for key in list(scan_meta):
