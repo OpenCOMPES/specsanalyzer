@@ -1,4 +1,6 @@
 """This script contains helper functions used by the specscan class"""
+import datetime as dt
+import json
 from pathlib import Path
 from typing import Any
 from typing import Dict
@@ -6,13 +8,17 @@ from typing import List
 from typing import Sequence
 from typing import Tuple
 from typing import Union
+from urllib.error import HTTPError
+from urllib.error import URLError
+from urllib.request import urlopen
 
 import numpy as np
 import pandas as pd
+from specsanalyzer.settings import insert_default_config  # name can be generalized
 from tqdm.auto import tqdm
 
 
-def load_images(  # pylint:disable=too-many-locals
+def load_images(
     scan_path: Path,
     df_lut: Union[pd.DataFrame, None] = None,
     iterations: Union[
@@ -219,6 +225,9 @@ def get_coords(
         scan_path: Path object for the scan path
         scan_type: Type of scan (delay, mirror etc.)
         scan_info: scan_info class dict
+        df_lut: df_lut: Pandas dataframe containing
+                the contents of LUT.txt as obtained
+                from parse_lut_to_df()
     Raises:
         FileNotFoundError
     Returns:
@@ -334,6 +343,149 @@ def parse_info_to_dict(path: Path) -> Dict:
     return info_dict
 
 
+def handle_meta(  # pylint:disable=too-many-branches
+    df_lut: pd.DataFrame,
+    scan_info: dict,
+    config: dict,
+    dim: str,
+) -> dict:
+    """Helper function for the handling metadata from different files
+    Args:
+        df_lut: Pandas dataframe containing
+                the contents of LUT.txt as obtained
+                from parse_lut_to_df()
+        scan_info: scan_info class dict containing
+                containing the contents of info.txt file
+        config: config dictionary containing the contents
+                of config.yaml file
+    Returns:
+        metadata_dict: metadata dictionary containing additional metadata
+                from the EPICS archive.
+    """
+
+    # get metadata from LUT dataframe
+    lut_meta = {}
+    if df_lut is not None:
+        for col in df_lut.columns:
+            col_array = df_lut[f'{col}'].to_numpy()
+            if len(set(col_array)) == 1:
+                lut_meta[col] = col_array[0]
+            else:
+                lut_meta[col] = col_array
+
+    scan_meta = insert_default_config(lut_meta, scan_info)  # merging two dictionaries
+
+    # Get metadata from Epics archive, if not present already
+    print("Collecting data from the EPICS archive...")
+    metadata_dict = get_archive_meta(
+        scan_meta,
+        config,
+    )
+
+    lens_modes_all = {
+        "real": config["spa_params"]["calib2d_dict"]["supported_space_modes"],
+        "reciprocal": config["spa_params"]["calib2d_dict"]["supported_angle_modes"],
+    }
+    lens_mode = scan_meta["LensMode"]
+    for projection, mode_list in lens_modes_all.items():
+        if lens_mode in mode_list:
+            metadata_dict["scan_info"]["projection"] = projection
+            fast = "Angle" if projection == "reciprocal" else "Position"
+
+    metadata_dict["scan_info"]["slow_axes"] = dim
+    metadata_dict["scan_info"]["fast_axes"] = [
+        "Ekin",
+        fast,
+    ]
+
+    kinetic_energy = df_lut["KineticEnergy"].to_numpy()
+    if len(set(kinetic_energy)) > 1 and scan_meta["ScanType"] == "voltage":
+        metadata_dict["scan_info"]["energy_scan_mode"] = "sweep"
+    else:
+        metadata_dict["scan_info"]["energy_scan_mode"] = "fixed"
+
+    print("Done!")
+
+    return metadata_dict
+
+
+def get_archive_meta(
+    scan_meta: dict,
+    config: dict,
+):
+    """
+    Function to collect the EPICS archive metadata
+    for the handle_meta function.
+    """
+
+    metadata_dict = {}
+    if "time" in scan_meta:
+        time_list = [scan_meta["time"][0], scan_meta["time"][-1]]
+    elif "StartTime" in scan_meta:
+        time_list = [scan_meta["StartTime"]]
+    else:
+        raise ValueError("Could not find timestamps in scan info.")
+
+    dt_list_iso = [time.replace('.', '-').replace(' ', 'T') for time in time_list]
+    datetime_list = [dt.datetime.fromisoformat(dt_iso) for dt_iso in dt_list_iso]
+    ts_from = dt.datetime.timestamp(datetime_list[0])  # POSIX timestamp
+    ts_to = dt.datetime.timestamp(datetime_list[-1])  # POSIX timestamp
+    metadata_dict['timing'] = {
+        'acquisition_start': dt.datetime.utcfromtimestamp(ts_from).replace(
+            tzinfo=dt.timezone.utc,
+        ).isoformat(),
+        'acquisition_stop': dt.datetime.utcfromtimestamp(ts_to).replace(
+            tzinfo=dt.timezone.utc,
+        ).isoformat(),
+        'acquisition_duration': int(ts_to - ts_from),
+        'collection_time': float(ts_to - ts_from),
+    }
+    filestart = dt.datetime.utcfromtimestamp(ts_from).isoformat()  # Epics time in UTC?
+    fileend = dt.datetime.utcfromtimestamp(ts_to).isoformat()
+
+    try:
+        replace_dict = config["epics_channels"]
+        for key in list(scan_meta):
+            if key.lower() in replace_dict:
+                scan_meta[replace_dict[key.lower()]] = scan_meta[key]
+                scan_meta.pop(key)
+        epics_channels = replace_dict.values()
+    except KeyError:
+        epics_channels = []
+        print("No EPICS archive channels provided in the config")
+    metadata_dict["scan_info"] = scan_meta
+
+    channels_missing = set(epics_channels) - set(scan_meta.keys())
+    for channel in channels_missing:
+        try:
+            req_str = "http://aa0.fhi-berlin.mpg.de:17668/retrieval/" + \
+                "data/getData.json?pv=" + \
+                channel + "&from=" + filestart + "Z&to=" + fileend + "Z"
+            with urlopen(req_str) as req:
+                data = json.load(req)
+                vals = [x['val'] for x in data[0]['data']]
+                metadata_dict["scan_info"][f'{channel}'] = sum(vals) / len(vals)
+        except (IndexError, ZeroDivisionError):
+            metadata_dict["scan_info"][f'{channel}'] = np.nan
+            print(f"Data for channel {channel} doesn't exist for time {filestart}")
+        except HTTPError as error:
+            print(
+                f"Incorrect URL for the archive channel {channel}. "
+                "Make sure that the channel name, file start "
+                "and end times are correct.",
+            )
+            print("Error code: ", error)
+        except URLError as error:
+            print(
+                f"Cannot access the archive URL for channel {channel}. "
+                f"Make sure that you are within the FHI network."
+                f"Skipping over channels {channels_missing}.",
+            )
+            print("Error code: ", error)
+            break
+    return metadata_dict
+
+
 def find_scan(path: Path, scan: int) -> List[Path]:
     """Search function to locate the scan folder
     Args:
@@ -380,16 +532,6 @@ def find_scan_type(  # pylint:disable=too-many-nested-blocks
         None
     """
 
-    if scan_type not in [
-        "delay",
-        "temperature",
-        "manipulator",
-        "mirror",
-        "single",
-    ]:
-        print("Invalid scan type!")
-        return None
-
     for month in path.iterdir():
         if month.is_dir():
             for day in month.iterdir():
@@ -402,4 +544,3 @@ def find_scan_type(  # pylint:disable=too-many-nested-blocks
                                 print(scan_path)
                     except (FileNotFoundError, NotADirectoryError):
                         pass
-    return None
