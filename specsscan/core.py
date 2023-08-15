@@ -117,6 +117,7 @@ class SpecsScan:
             Sequence[int],
             Sequence[slice],
         ] = None,
+        metadata: dict = None,
     ) -> xr.DataArray:
         """Load scan with given scan number. When iterations is
             given, average is performed over the iterations over
@@ -132,6 +133,7 @@ class SpecsScan:
                 slice objects and integers. For ex.,
                 np.s_[1:10, 15, -1] would be a valid input for
                 iterations.
+            metadata (dict, optional): Metadata dictionary with additional metadata for the scan
         Raises:
             FileNotFoundError, IndexError
 
@@ -232,6 +234,9 @@ class SpecsScan:
             ),
             **{"loader": loader_dict},
         )
+        if metadata is not None:
+            self.metadata.update(**metadata)
+
         res_xarray.attrs["metadata"] = self.metadata
 
         self._result = res_xarray
@@ -246,6 +251,7 @@ class SpecsScan:
             int,
         ],
         path: Union[str, Path] = "",
+        metadata: dict = None,
     ) -> xr.DataArray:
         """Function to explore a given 3-D scan as a function
             of iterations for a given range of delays
@@ -255,6 +261,7 @@ class SpecsScan:
                 to be averaged over.
             path: Either a string of the path to the folder
                 containing the scan or a Path object
+            metadata (dict, optional): Metadata dictionary with additional metadata for the scan
         Raises:
             FileNotFoundError
         Returns:
@@ -297,7 +304,7 @@ class SpecsScan:
                 path,
                 df_lut,
             ),
-            "convert_config": config_meta,
+            "convert_config": config_meta["spa_params"],
             "check_scan": True,
         }
 
@@ -355,6 +362,9 @@ class SpecsScan:
             ),
             **{"loader": loader_dict},
         )
+        if metadata is not None:
+            self.metadata.update(**metadata)
+
         res_xarray.attrs["metadata"] = self.metadata
 
         self._result = res_xarray
