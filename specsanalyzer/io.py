@@ -12,6 +12,7 @@ import h5py
 import numpy as np
 import tifffile
 import xarray as xr
+from pynxtools.dataconverter.convert import convert
 
 _IMAGEJ_DIMS_ORDER = "TZCYXS"
 _IMAGEJ_DIMS_ALIAS = {
@@ -77,7 +78,7 @@ def recursive_write_metadata(h5group: h5py.Group, node: dict):
                 h5group.create_dataset(key, data=str(item))
                 print(f"Saved {key} as string.")
             except BaseException as exc:
-                raise Exception(
+                raise ValueError(
                     f"Unknown error occured, cannot save {item} of type {type(item)}.",
                 ) from exc
 
@@ -177,7 +178,7 @@ def load_h5(faddr: str, mode: str = "r") -> xr.DataArray:
         try:
             data = np.asarray(h5_file["binned"]["BinnedData"])
         except KeyError as exc:
-            raise Exception(
+            raise ValueError(
                 "Wrong Data Format, the BinnedData were not found. "
                 f"The error was{exc}.",
             ) from exc
@@ -191,7 +192,7 @@ def load_h5(faddr: str, mode: str = "r") -> xr.DataArray:
                 bin_axes.append(h5_file["axes"][axis])
                 bin_names.append(h5_file["axes"][axis].attrs["name"])
         except KeyError as exc:
-            raise Exception(
+            raise ValueError(
                 f"Wrong Data Format, the axes were not found. The error was {exc}",
             ) from exc
 
@@ -399,6 +400,42 @@ def load_tiff(
         f"{len(coords)} and dimensions {len(dims)} provided,"
     )
     return xr.DataArray(data=data, coords=coords, dims=dims, attrs=attrs)
+
+
+def to_nexus(
+    data: xr.DataArray,
+    faddr: str,
+    reader: str,
+    definition: str,
+    input_files: Union[str, Sequence[str]],
+    **kwds,
+):
+    """Saves the x-array provided to a NeXus file at faddr, using the provided reader,
+    NeXus definition and configuration file.
+
+    Args:
+        data (xr.DataArray): The data to save, containing metadata definitions in
+            data._attrs["metadata"].
+        faddr (str): The file path to save to.
+        reader (str): The name of the NeXus reader to use.
+        definition (str): The NeXus definiton to use.
+        config_file (str): The file path to the configuration file to use.
+        **kwds: Keyword arguments for ``nexusutils.dataconverter.convert``.
+    """
+
+    if isinstance(input_files, str):
+        input_files = tuple([input_files])
+    else:
+        input_files = tuple(input_files)
+
+    convert(
+        input_file=input_files,
+        objects=(data),
+        reader=reader,
+        nxdl=definition,
+        output=faddr,
+        **kwds,
+    )
 
 
 def get_pair_from_list(list_line: List[Any]) -> List[Any]:
