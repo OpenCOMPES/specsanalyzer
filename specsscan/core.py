@@ -13,7 +13,7 @@ from typing import Union
 import numpy as np
 import xarray as xr
 from specsanalyzer import SpecsAnalyzer
-from specsanalyzer.settings import parse_config
+from specsanalyzer.config import parse_config
 
 from specsscan.helpers import find_scan
 from specsscan.helpers import get_coords

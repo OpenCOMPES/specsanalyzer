@@ -14,7 +14,7 @@ from urllib.request import urlopen
 
 import numpy as np
 import pandas as pd
-from specsanalyzer.settings import insert_default_config  # name can be generalized
+from specsanalyzer.config import insert_default_config  # name can be generalized
 from tqdm.auto import tqdm
 
 
