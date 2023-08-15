@@ -1,4 +1,4 @@
-data_path: "//mnt/topfloor/PESData/"
+data_path: "//mnt/topfloor/trARPES/PESData/"
 enable_nested_progress_bar: false
 epics_channels:
   tempa: "trARPES:Carving:TEMP_RBV"
@@ -10,6 +10,10 @@ epics_channels:
   azimuth: "trARPES:Carving:OMG.RBV"
   sample_bias: "KTOF:Lens:Sample:V"
   pressure: "trARPES:XGS600:PressureAC:P_RD"
+nexus:
+  reader: "mpes"
+  definition: "NXmpes"
+  input_files: ["../tests/data/phoibos_config.json"]
 spa_params:
   calib2d_file: "../tests/data/phoibos150.calib2d"
   nx_pixel: 1376

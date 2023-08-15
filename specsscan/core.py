@@ -3,6 +3,7 @@
 """
 import copy
 import os
+import pathlib
 from importlib.util import find_spec
 from pathlib import Path
 from typing import Any
@@ -13,6 +14,9 @@ from typing import Union
 import numpy as np
 import xarray as xr
 from specsanalyzer import SpecsAnalyzer
+from specsanalyzer.io import to_h5
+from specsanalyzer.io import to_nexus
+from specsanalyzer.io import to_tiff
 from specsanalyzer.config import parse_config
 
 from specsscan.helpers import find_scan
@@ -38,6 +42,7 @@ default_units = {
     "polar": "degrees",
     "tilt": "degrees",
     "azimuth": "degrees",
+    "voltage": "V",
 }
 
 
@@ -64,6 +69,8 @@ class SpecsScan:
             self.spa = SpecsAnalyzer(config=self._config["spa_params"])
         except KeyError:
             self.spa = SpecsAnalyzer()
+
+        self._result = None
 
     def __repr__(self):
         if self._config is None:
@@ -159,16 +166,9 @@ class SpecsScan:
             "iterations": iterations,
             "scan_path": path,
             "raw_data": data,
-            "convert_config": config_meta,
+            "convert_config": config_meta["spa_params"],
         }
-        self.metadata.update(
-            **handle_meta(
-                df_lut,
-                self._scan_info,
-                config_meta,
-            ),
-            **{"loader": loader_dict},
-        )
+
         (scan_type, lens_mode, kin_energy, pass_energy, work_function) = (
             self._scan_info["ScanType"],
             self._scan_info["LensMode"],
@@ -215,7 +215,18 @@ class SpecsScan:
         for name in res_xarray.dims:
             res_xarray[name].attrs["unit"] = default_units[name]
 
+        self.metadata.update(
+            **handle_meta(
+                df_lut,
+                self._scan_info,
+                self.config,
+                dim,
+            ),
+            **{"loader": loader_dict},
+        )
         res_xarray.attrs["metadata"] = self.metadata
+
+        self._result = res_xarray
 
         return res_xarray
 
@@ -281,14 +292,6 @@ class SpecsScan:
             "convert_config": config_meta,
             "check_scan": True,
         }
-        self.metadata.update(
-            **handle_meta(
-                df_lut,
-                self._scan_info,
-                config_meta,
-            ),
-            **{"loader": loader_dict},
-        )
 
         (scan_type, lens_mode, kin_energy, pass_energy, work_function) = (
             self._scan_info["ScanType"],
@@ -312,6 +315,14 @@ class SpecsScan:
                     work_function,
                 ),
             )
+
+        dims = get_coords(
+            scan_path=path,
+            scan_type=scan_type,
+            scan_info=self._scan_info,
+            df_lut=df_lut,
+        )
+
         res_xarray = xr.concat(
             xr_list,
             dim=xr.DataArray(
@@ -327,6 +338,98 @@ class SpecsScan:
             except KeyError:
                 pass
 
+        self.metadata.update(
+            **handle_meta(
+                df_lut,
+                self._scan_info,
+                self.config,
+                dims[1],
+            ),
+            **{"loader": loader_dict},
+        )
         res_xarray.attrs["metadata"] = self.metadata
 
+        self._result = res_xarray
+
         return res_xarray
+
+    def save(
+        self,
+        faddr: str,
+        **kwds,
+    ):
+        """Saves the loaded data to the provided path and filename.
+
+        Args:
+            faddr (str): Path and name of the file to write. Its extension determines
+                the file type to write. Valid file types are:
+
+                - "*.tiff", "*.tif": Saves a TIFF stack.
+                - "*.h5", "*.hdf5": Saves an HDF5 file.
+                - "*.nxs", "*.nexus": Saves a NeXus file.
+
+            **kwds: Keyword argumens, which are passed to the writer functions:
+                For TIFF writing:
+
+                - **alias_dict**: Dictionary of dimension aliases to use.
+
+                For HDF5 writing:
+
+                - **mode**: hdf5 read/write mode. Defaults to "w".
+
+                For NeXus:
+
+                - **reader**: Name of the nexustools reader to use.
+                  Defaults to config["nexus"]["reader"]
+                - **definiton**: NeXus application definition to use for saving.
+                  Must be supported by the used ``reader``. Defaults to
+                  config["nexus"]["definition"]
+                - **input_files**: A list of input files to pass to the reader.
+                  Defaults to config["nexus"]["input_files"]
+        """
+        if self._result is None:
+            raise NameError("Need to load data first!")
+
+        extension = pathlib.Path(faddr).suffix
+
+        if extension in (".tif", ".tiff"):
+            to_tiff(
+                data=self._result,
+                faddr=faddr,
+                **kwds,
+            )
+        elif extension in (".h5", ".hdf5"):
+            to_h5(
+                data=self._result,
+                faddr=faddr,
+                **kwds,
+            )
+        elif extension in (".nxs", ".nexus"):
+            reader = kwds.pop("reader", self._config["nexus"]["reader"])
+            definition = kwds.pop(
+                "definition",
+                self._config["nexus"]["definition"],
+            )
+            input_files = kwds.pop(
+                "input_files",
+                self._config["nexus"]["input_files"],
+            )
+            if isinstance(input_files, str):
+                input_files = [input_files]
+
+            if "eln_data" in kwds:
+                input_files.append(kwds.pop("eln_data"))
+
+            to_nexus(
+                data=self._result,
+                faddr=faddr,
+                reader=reader,
+                definition=definition,
+                input_files=input_files,
+                **kwds,
+            )
+
+        else:
+            raise NotImplementedError(
+                f"Unrecognized file format: {extension}.",
+            )
