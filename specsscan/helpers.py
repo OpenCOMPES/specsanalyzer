@@ -64,9 +64,7 @@ def load_images(
     """
 
     scan_list = sorted(
-        file.stem
-        for file in scan_path.joinpath("AVG").iterdir()
-        if file.suffix == ".tsv"
+        file.stem for file in scan_path.joinpath("AVG").iterdir() if file.suffix == ".tsv"
     )
 
     data = []
@@ -366,7 +364,7 @@ def handle_meta(  # pylint:disable=too-many-branches
     lut_meta = {}
     if df_lut is not None:
         for col in df_lut.columns:
-            col_array = df_lut[f'{col}'].to_numpy()
+            col_array = df_lut[f"{col}"].to_numpy()
             if len(set(col_array)) == 1:
                 lut_meta[col] = col_array[0]
             else:
@@ -390,36 +388,47 @@ def handle_meta(  # pylint:disable=too-many-branches
     else:
         raise ValueError("Could not find timestamps in scan info.")
 
-    dt_list_iso = [time.replace('.', '-').replace(' ', 'T') for time in time_list]
+    dt_list_iso = [time.replace(".", "-").replace(" ", "T") for time in time_list]
     datetime_list = [dt.datetime.fromisoformat(dt_iso) for dt_iso in dt_list_iso]
     ts_from = dt.datetime.timestamp(datetime_list[0])  # POSIX timestamp
     ts_to = dt.datetime.timestamp(datetime_list[-1])  # POSIX timestamp
-    metadata_dict['timing'] = {
-        'acquisition_start': dt.datetime.utcfromtimestamp(ts_from).replace(
+    metadata_dict["timing"] = {
+        "acquisition_start": dt.datetime.utcfromtimestamp(ts_from)
+        .replace(
             tzinfo=dt.timezone.utc,
-        ).isoformat(),
-        'acquisition_stop': dt.datetime.utcfromtimestamp(ts_to).replace(
+        )
+        .isoformat(),
+        "acquisition_stop": dt.datetime.utcfromtimestamp(ts_to)
+        .replace(
             tzinfo=dt.timezone.utc,
-        ).isoformat(),
-        'acquisition_duration': int(ts_to - ts_from),
-        'collection_time': float(ts_to - ts_from),
+        )
+        .isoformat(),
+        "acquisition_duration": int(ts_to - ts_from),
+        "collection_time": float(ts_to - ts_from),
     }
     filestart = dt.datetime.utcfromtimestamp(ts_from).isoformat()  # Epics time in UTC?
     fileend = dt.datetime.utcfromtimestamp(ts_to).isoformat()
     epics_channels = replace_dict.values()
 
-    channels_missing = set(epics_channels) - set(metadata_dict['scan_info'].keys())
+    channels_missing = set(epics_channels) - set(metadata_dict["scan_info"].keys())
     for channel in channels_missing:
         try:
-            req_str = "http://aa0.fhi-berlin.mpg.de:17668/retrieval/" + \
-                "data/getData.json?pv=" + \
-                channel + "&from=" + filestart + "Z&to=" + fileend + "Z"
+            req_str = (
+                "http://aa0.fhi-berlin.mpg.de:17668/retrieval/"
+                + "data/getData.json?pv="
+                + channel
+                + "&from="
+                + filestart
+                + "Z&to="
+                + fileend
+                + "Z"
+            )
             with urlopen(req_str) as req:
                 data = json.load(req)
-                vals = [x['val'] for x in data[0]['data']]
-                metadata_dict["scan_info"][f'{channel}'] = sum(vals) / len(vals)
+                vals = [x["val"] for x in data[0]["data"]]
+                metadata_dict["scan_info"][f"{channel}"] = sum(vals) / len(vals)
         except (IndexError, ZeroDivisionError):
-            metadata_dict["scan_info"][f'{channel}'] = np.nan
+            metadata_dict["scan_info"][f"{channel}"] = np.nan
             print(f"Data for channel {channel} doesn't exist for time {filestart}")
         except HTTPError as error:
             print(
