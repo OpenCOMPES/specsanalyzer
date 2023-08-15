@@ -154,14 +154,13 @@ class SpecsScan:
 
         self._scan_info = parse_info_to_dict(path)
         config_meta = copy.deepcopy(self.config)
+        config_meta['spa_params'].pop('calib2d_dict')
 
         loader_dict = {
             "iterations": iterations,
             "scan_path": path,
             "raw_data": data,
-            "convert_config": config_meta[
-                'spa_params'
-            ].pop('calib2d_dict'),
+            "convert_config": config_meta['spa_params'],
         }
 
         (scan_type, lens_mode, kin_energy, pass_energy, work_function) = (
