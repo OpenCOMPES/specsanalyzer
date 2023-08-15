@@ -37,12 +37,8 @@ def get_damatrix_fromcalib2d(  # pylint: disable=too-many-locals
 
     # check the angular mode type
     try:
-        supported_angle_modes = config_dict["calib2d_dict"][
-            "supported_angle_modes"
-        ]
-        supported_space_modes = config_dict["calib2d_dict"][
-            "supported_space_modes"
-        ]
+        supported_angle_modes = config_dict["calib2d_dict"]["supported_angle_modes"]
+        supported_space_modes = config_dict["calib2d_dict"]["supported_space_modes"]
     except KeyError as exc:
         raise KeyError(
             "The supported modes were not found in the calib2d dictionary",
@@ -69,19 +65,14 @@ def get_damatrix_fromcalib2d(  # pylint: disable=too-many-locals
         # array of array indexes
         rr_index = np.arange(0, rr_vec.shape[0], 1)
         # the factor is obtained by linear interpolation
-        rr_factor = (
-            np.interp(retardation_ratio, rr_vec, rr_index) - closest_rr_index
-        )
+        rr_factor = np.interp(retardation_ratio, rr_vec, rr_index) - closest_rr_index
 
         damatrix_close = damatrix_full[closest_rr_index][:][:]
         damatrix_second = damatrix_full[second_closest_rr_index][:][:]
         one_mat = np.ones(damatrix_close.shape)
         rr_factor_mat = np.ones(damatrix_close.shape) * rr_factor
         # weighted average between two neighboring da matrices
-        damatrix = (
-            damatrix_close * (one_mat - rr_factor_mat)
-            + damatrix_second * rr_factor_mat
-        )
+        damatrix = damatrix_close * (one_mat - rr_factor_mat) + damatrix_second * rr_factor_mat
         # separate the first line (aInner) from the da coefficients
         a_inner = damatrix[0][0]
         damatrix = damatrix[1:][:]
@@ -185,12 +176,8 @@ def get_rr_da(  # pylint: disable=too-many-locals
     # check if this is spatial or an angular mode
     # check the angular mode type
     try:
-        supported_angle_modes = config_dict["calib2d_dict"][
-            "supported_angle_modes"
-        ]
-        supported_space_modes = config_dict["calib2d_dict"][
-            "supported_space_modes"
-        ]
+        supported_angle_modes = config_dict["calib2d_dict"]["supported_angle_modes"]
+        supported_space_modes = config_dict["calib2d_dict"]["supported_space_modes"]
     except KeyError as exc:
         raise KeyError(
             "The supported modes were not found in the calib2d dictionary",
@@ -214,9 +201,7 @@ def get_rr_da(  # pylint: disable=too-many-locals
         for count, item in enumerate(rr_array):
             a_inner = base_dict[item]["aInner"]
             da_block = np.concatenate(
-                tuple(
-                    [v] for k, v in base_dict[item].items() if k != "aInner"
-                ),
+                tuple([v] for k, v in base_dict[item].items() if k != "aInner"),
             )
             da_matrix[count] = np.concatenate(
                 (np.array([[a_inner] * dim3]), da_block),
@@ -585,9 +570,7 @@ def physical_unit_data(
 
     # create a 2d matrix with the
     # y pixel coordinates for a certain kinetic energy
-    e_correction_matrix = (
-        np.ones(angular_correction_matrix.shape) * e_correction
-    )
+    e_correction_matrix = np.ones(angular_correction_matrix.shape) * e_correction
 
     # flatten the x and y to a 2 x N coordinates array
     # N = Nxpix x Nypixels
