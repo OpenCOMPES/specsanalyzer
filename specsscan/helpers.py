@@ -347,6 +347,7 @@ def handle_meta(  # pylint:disable=too-many-branches
     df_lut: pd.DataFrame,
     scan_info: dict,
     config: dict,
+    dim: str,
 ) -> dict:
     """Helper function for the handling metadata from different files
     Args:
@@ -361,7 +362,7 @@ def handle_meta(  # pylint:disable=too-many-branches
         metadata_dict: metadata dictionary containing additional metadata
                 from the EPICS archive.
     """
-    metadata_dict = {}
+
     # get metadata from LUT dataframe
     lut_meta = {}
     if df_lut is not None:
@@ -374,15 +375,50 @@ def handle_meta(  # pylint:disable=too-many-branches
 
     scan_meta = insert_default_config(lut_meta, scan_info)  # merging two dictionaries
 
-    replace_dict = config["epics_channels"]
-    for key in list(scan_meta):
-        if key.lower() in replace_dict:
-            scan_meta[replace_dict[key.lower()]] = scan_meta[key]
-            scan_meta.pop(key)
-
-    metadata_dict["scan_info"] = scan_meta
     # Get metadata from Epics archive, if not present already
     print("Collecting data from the EPICS archive...")
+    metadata_dict = get_archive_meta(
+        scan_meta,
+        config,
+    )
+
+    lens_modes_all = {
+        "real": config["spa_params"]["calib2d_dict"]["supported_space_modes"],
+        "reciprocal": config["spa_params"]["calib2d_dict"]["supported_angle_modes"],
+    }
+    lens_mode = scan_meta["LensMode"]
+    for projection, mode_list in lens_modes_all.items():
+        if lens_mode in mode_list:
+            metadata_dict["scan_info"]["projection"] = projection
+            fast = "Angle" if projection == "reciprocal" else "Position"
+
+    metadata_dict["scan_info"]["slow_axes"] = dim
+    metadata_dict["scan_info"]["fast_axes"] = [
+        "Ekin",
+        fast,
+    ]
+
+    kinetic_energy = df_lut["KineticEnergy"].to_numpy()
+    if len(set(kinetic_energy)) > 1 and scan_meta["ScanType"] == "voltage":
+        metadata_dict["scan_info"]["energy_scan_mode"] = "sweep"
+    else:
+        metadata_dict["scan_info"]["energy_scan_mode"] = "fixed"
+
+    print("Done!")
+
+    return metadata_dict
+
+
+def get_archive_meta(
+    scan_meta: dict,
+    config: dict,
+):
+    """
+    Function to collect the EPICS archive metadata
+    for the handle_meta function.
+    """
+
+    metadata_dict = {}
     if "time" in scan_meta:
         time_list = [scan_meta["time"][0], scan_meta["time"][-1]]
     elif "StartTime" in scan_meta:
@@ -406,9 +442,20 @@ def handle_meta(  # pylint:disable=too-many-branches
     }
     filestart = dt.datetime.utcfromtimestamp(ts_from).isoformat()  # Epics time in UTC?
     fileend = dt.datetime.utcfromtimestamp(ts_to).isoformat()
-    epics_channels = replace_dict.values()
 
-    channels_missing = set(epics_channels) - set(metadata_dict['scan_info'].keys())
+    try:
+        replace_dict = config["epics_channels"]
+        for key in list(scan_meta):
+            if key.lower() in replace_dict:
+                scan_meta[replace_dict[key.lower()]] = scan_meta[key]
+                scan_meta.pop(key)
+        epics_channels = replace_dict.values()
+    except KeyError:
+        epics_channels = []
+        print("No EPICS archive channels provided in the config")
+    metadata_dict["scan_info"] = scan_meta
+
+    channels_missing = set(epics_channels) - set(scan_meta.keys())
     for channel in channels_missing:
         try:
             req_str = "http://aa0.fhi-berlin.mpg.de:17668/retrieval/" + \
@@ -436,8 +483,6 @@ def handle_meta(  # pylint:disable=too-many-branches
             )
             print("Error code: ", error)
             break
-    print("Done!")
-
     return metadata_dict
 
 
@@ -487,16 +532,6 @@ def find_scan_type(  # pylint:disable=too-many-nested-blocks
         None
     """
 
-    if scan_type not in [
-        "delay",
-        "temperature",
-        "manipulator",
-        "mirror",
-        "single",
-    ]:
-        print("Invalid scan type!")
-        return None
-
     for month in path.iterdir():
         if month.is_dir():
             for day in month.iterdir():
@@ -509,4 +544,3 @@ def find_scan_type(  # pylint:disable=too-many-nested-blocks
                                 print(scan_path)
                     except (FileNotFoundError, NotADirectoryError):
                         pass
-    return None
