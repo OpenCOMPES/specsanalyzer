@@ -6,9 +6,9 @@ from importlib.util import find_spec
 
 import pytest
 
-from specsanalyzer.settings import insert_default_config
-from specsanalyzer.settings import load_config
-from specsanalyzer.settings import parse_config
+from specsanalyzer.config import insert_default_config
+from specsanalyzer.config import load_config
+from specsanalyzer.config import parse_config
 
 package_dir = os.path.dirname(find_spec("specsanalyzer").origin)
 default_config_keys = [
