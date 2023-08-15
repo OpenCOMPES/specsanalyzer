@@ -29,9 +29,10 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
         self,
         metadata: Dict[Any, Any] = {},
         config: Union[Dict[Any, Any], str] = {},
+        **kwds,
     ):
 
-        self._config = parse_config(config)
+        self._config = parse_config(config, **kwds,)
 
         self._attributes = MetaHandler(meta=metadata)
 
@@ -72,7 +73,7 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
         """Get correction_matrix_dict"""
         return self._correction_matrix_dict
 
-    def convert_image(  # pylint: disable=too-many-arguments,too-many-locals
+    def convert_image(
         self,
         raw_img: np.ndarray,
         lens_mode: str,

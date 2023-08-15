@@ -21,7 +21,6 @@ def parse_config(
         dict,
         str,
     ] = f"{package_dir}/config/default.yaml",
-    load_others: bool = True,
     verbose: bool = True,
 ) -> dict:
     """Load the config dictionary from a file, or pass the provided config dictionary.
