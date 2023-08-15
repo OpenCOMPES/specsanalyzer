@@ -14,10 +14,10 @@ from typing import Union
 import numpy as np
 import xarray as xr
 from specsanalyzer import SpecsAnalyzer
+from specsanalyzer.config import parse_config
 from specsanalyzer.io import to_h5
 from specsanalyzer.io import to_nexus
 from specsanalyzer.io import to_tiff
-from specsanalyzer.config import parse_config
 
 from specsscan.helpers import find_scan
 from specsscan.helpers import get_coords
@@ -53,11 +53,13 @@ class SpecsScan:
         self,
         metadata: dict = {},
         config: Union[dict, str] = {},
+        **kwds,
     ):
 
         self._config = parse_config(
             config,
             default_config=f"{package_dir}/config/default.yaml",
+            **kwds,
         )
 
         # self.metadata = MetaHandler(meta=metadata)
@@ -66,7 +68,13 @@ class SpecsScan:
         self._scan_info: Dict[Any, Any] = {}
 
         try:
-            self.spa = SpecsAnalyzer(config=self._config["spa_params"])
+            self.spa = SpecsAnalyzer(
+                config=self._config["spa_params"],
+                folder_config={},
+                user_config={},
+                system_config={},
+                default_config={},
+            )
         except KeyError:
             self.spa = SpecsAnalyzer()
 
