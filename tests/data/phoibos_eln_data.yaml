@@ -1,15 +1,20 @@
 Instrument:
+  energy_resolution:
+    unit: meV
+    value: 140.0
+  temporal_resolution:
+    unit: fs
+    value: 35.0
   Analyzer:
     energy_resolution:
-      unit: eV
+      unit: meV
       value: 110.00000000000001
-    momentum_resolution:
-      unit: 1 / Å
+    angular_resolution:
+      unit: degrees
       value: 0.08
-    slow_axes: delay
     spatial_resolution:
       unit: µm
-      value: 10.0
+      value: 100
   Beam:
     Probe:
       extent:
@@ -82,15 +87,6 @@ Instrument:
       photon_energy:
         unit: eV
         value: 1.5500000000000003
-  energy_resolution:
-    unit: meV
-    value: 140.0
-  momentum_resolution:
-    unit: 1 / Å
-    value: 0.08
-  temporal_resolution:
-    unit: fs
-    value: 35.0
 Sample:
   chemical_formula: WSe2
   description: Sample
@@ -106,7 +102,7 @@ Sample:
 User:
   address: Faradayweg 4-6, 14915 Berlin
   affiliation: Fritz Haber Institute of the Max Planck Society
-  email: maklar@fhi-berlin.mpg.de
-  name: Julian Maklar
+  email: user@fhi-berlin.mpg.de
+  name: user
   role: Principal Investigator
 title: Valence Band Dynamics - 800 nm linear s-polarized pump, 0.6 mJ/cm2 absorbed fluence
