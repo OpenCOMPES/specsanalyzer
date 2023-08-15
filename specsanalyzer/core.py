@@ -12,12 +12,12 @@ import numpy as np
 import xarray as xr
 
 from specsanalyzer import io
+from specsanalyzer.config import parse_config
 from specsanalyzer.convert import calculate_matrix_correction
 from specsanalyzer.convert import physical_unit_data
 from specsanalyzer.img_tools import crop_xarray
 from specsanalyzer.img_tools import fourier_filter_2d
 from specsanalyzer.metadata import MetaHandler
-from specsanalyzer.settings import parse_config
 
 package_dir = os.path.dirname(__file__)
 
@@ -29,9 +29,10 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
         self,
         metadata: Dict[Any, Any] = {},
         config: Union[Dict[Any, Any], str] = {},
+        **kwds,
     ):
 
-        self._config = parse_config(config)
+        self._config = parse_config(config, **kwds,)
 
         self._attributes = MetaHandler(meta=metadata)
 
@@ -72,7 +73,7 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
         """Get correction_matrix_dict"""
         return self._correction_matrix_dict
 
-    def convert_image(  # pylint: disable=too-many-arguments,too-many-locals
+    def convert_image(
         self,
         raw_img: np.ndarray,
         lens_mode: str,
@@ -121,12 +122,8 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
 
         # look for the lens mode in the dictionary
         try:
-            supported_angle_modes = self._config["calib2d_dict"][
-                "supported_angle_modes"
-            ]
-            supported_space_modes = self._config["calib2d_dict"][
-                "supported_space_modes"
-            ]
+            supported_angle_modes = self._config["calib2d_dict"]["supported_angle_modes"]
+            supported_space_modes = self._config["calib2d_dict"]["supported_space_modes"]
         # pylint: disable=duplicate-code
         except KeyError as exc:
             raise KeyError(
@@ -139,9 +136,9 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
             )
 
         try:
-            old_db = self._correction_matrix_dict[lens_mode][kinetic_energy][
-                pass_energy
-            ][work_function]
+            old_db = self._correction_matrix_dict[lens_mode][kinetic_energy][pass_energy][
+                work_function
+            ]
 
             ek_axis = old_db["ek_axis"]
             angle_axis = old_db["angle_axis"]
