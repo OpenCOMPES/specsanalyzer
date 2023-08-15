@@ -153,7 +153,7 @@ class SpecsScan:
 
         self._scan_info = parse_info_to_dict(path)
         config_meta = copy.deepcopy(self.config)
-        config_meta['spa_params'].pop('calib2d_dict')
+        config_meta["spa_params"].pop("calib2d_dict")
 
         loader_dict = {
             "iterations": iterations,
@@ -202,9 +202,7 @@ class SpecsScan:
             res_xarray = xr.concat(
                 xr_list,
                 dim=xr.DataArray(
-                    coords[
-                        : len(data)
-                    ],  # slice coords for aborted/ongoing scans
+                    coords[: len(data)],  # slice coords for aborted/ongoing scans
                     dims=dim,
                     name=dim,
                 ),
@@ -215,7 +213,7 @@ class SpecsScan:
                 res_xarray = res_xarray.transpose("Angle", "Ekin", dim)
 
         for name in res_xarray.dims:
-            res_xarray[name].attrs['unit'] = default_units[name]
+            res_xarray[name].attrs["unit"] = default_units[name]
 
         res_xarray.attrs["metadata"] = self.metadata
 
@@ -271,7 +269,7 @@ class SpecsScan:
         )
         self._scan_info = parse_info_to_dict(path)
         config_meta = copy.deepcopy(self.config)
-        config_meta['spa_params'].pop('calib2d_dict')
+        config_meta["spa_params"].pop("calib2d_dict")
 
         loader_dict = {
             "delays": delays,
@@ -301,8 +299,7 @@ class SpecsScan:
         )
         if scan_type == "single":
             raise ValueError(
-                "Invalid input. A 3-D scan is expected, "
-                "a 2-D single scan was provided instead.",
+                "Invalid input. A 3-D scan is expected, a 2-D single scan was provided instead.",
             )
         xr_list = []
         for image in data:
@@ -326,7 +323,7 @@ class SpecsScan:
         res_xarray = res_xarray.transpose("Angle", "Ekin", "Iteration")
         for name in res_xarray.dims:
             try:
-                res_xarray[name].attrs['unit'] = default_units[name]
+                res_xarray[name].attrs["unit"] = default_units[name]
             except KeyError:
                 pass
 
