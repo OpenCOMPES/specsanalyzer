@@ -179,8 +179,7 @@ def load_h5(faddr: str, mode: str = "r") -> xr.DataArray:
             data = np.asarray(h5_file["binned"]["BinnedData"])
         except KeyError as exc:
             raise ValueError(
-                "Wrong Data Format, the BinnedData were not found. "
-                f"The error was{exc}.",
+                f"Wrong Data Format, the BinnedData were not found. The error was{exc}.",
             ) from exc
 
         # Reading the axes
@@ -209,15 +208,9 @@ def load_h5(faddr: str, mode: str = "r") -> xr.DataArray:
 
         try:
             for axis in range(len(bin_axes)):
-                xarray[bin_names[axis]].attrs["unit"] = h5_file["axes"][
-                    f"ax{axis}"
-                ].attrs["unit"]
-            xarray.attrs["units"] = h5_file["binned"]["BinnedData"].attrs[
-                "units"
-            ]
-            xarray.attrs["long_name"] = h5_file["binned"]["BinnedData"].attrs[
-                "long_name"
-            ]
+                xarray[bin_names[axis]].attrs["unit"] = h5_file["axes"][f"ax{axis}"].attrs["unit"]
+            xarray.attrs["units"] = h5_file["binned"]["BinnedData"].attrs["units"]
+            xarray.attrs["long_name"] = h5_file["binned"]["BinnedData"].attrs["long_name"]
         except (KeyError, TypeError):
             pass
 
@@ -326,9 +319,7 @@ def _fill_missing_dims(dims: list, alias_dict: dict = None) -> list:
         alias_dict = {}
     else:
         for k, v in alias_dict.items():
-            assert k in _IMAGEJ_DIMS_ORDER, (
-                "keys must all be one of " f"{_IMAGEJ_DIMS_ALIAS}"
-            )
+            assert k in _IMAGEJ_DIMS_ORDER, "keys must all be one of " f"{_IMAGEJ_DIMS_ALIAS}"
             if not isinstance(v, (list, tuple)):
                 alias_dict[k] = [v]
 
