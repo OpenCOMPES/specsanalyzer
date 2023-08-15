@@ -78,7 +78,7 @@ def recursive_write_metadata(h5group: h5py.Group, node: dict):
                 h5group.create_dataset(key, data=str(item))
                 print(f"Saved {key} as string.")
             except BaseException as exc:
-                raise Exception(
+                raise ValueError(
                     f"Unknown error occured, cannot save {item} of type {type(item)}.",
                 ) from exc
 
@@ -178,7 +178,7 @@ def load_h5(faddr: str, mode: str = "r") -> xr.DataArray:
         try:
             data = np.asarray(h5_file["binned"]["BinnedData"])
         except KeyError as exc:
-            raise Exception(
+            raise ValueError(
                 "Wrong Data Format, the BinnedData were not found. "
                 f"The error was{exc}.",
             ) from exc
@@ -192,7 +192,7 @@ def load_h5(faddr: str, mode: str = "r") -> xr.DataArray:
                 bin_axes.append(h5_file["axes"][axis])
                 bin_names.append(h5_file["axes"][axis].attrs["name"])
         except KeyError as exc:
-            raise Exception(
+            raise ValueError(
                 f"Wrong Data Format, the axes were not found. The error was {exc}",
             ) from exc
 
