@@ -43,8 +43,9 @@ def parse_config(
             Defaults to the file ".specsanalyzer/config.yaml" in the current user's home directory.
         system_config (Union[ dict, str, ], optional): system-wide config dictionary
             or file path. The loaded dictionary is completed with the system-wide values,
-            taking preference over default values. Defaults to the file "/etc/specsanalyzer/config.yaml"
-            on linux, and "%ALLUSERPROFILE%/specsanalyzer/config.yaml" on windows.
+            taking preference over default values.
+            Defaults to the file "/etc/specsanalyzer/config.yaml" on linux,
+            and "%ALLUSERPROFILE%/specsanalyzer/config.yaml" on windows.
         default_config (Union[ dict, str, ], optional): default config dictionary
             or file path. The loaded dictionary is completed with the default values.
             Defaults to *package_dir*/config/default.yaml".
@@ -101,7 +102,9 @@ def parse_config(
                 )
             elif platform.system() == "Windows":
                 system_config = str(
-                    Path(os.environ["ALLUSERPROFILE"]).joinpath("specsanalyzer").joinpath("config.yaml"),
+                    Path(os.environ["ALLUSERPROFILE"])
+                    .joinpath("specsanalyzer")
+                    .joinpath("config.yaml"),
                 )
         if Path(system_config).exists():
             system_dict = load_config(system_config)

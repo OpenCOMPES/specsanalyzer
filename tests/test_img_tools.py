@@ -5,9 +5,9 @@ import os
 import numpy as np
 import xarray as xr
 
+from specsanalyzer.config import parse_config
 from specsanalyzer.img_tools import crop_xarray
 from specsanalyzer.img_tools import fourier_filter_2d
-from specsanalyzer.config import parse_config
 
 test_dir = os.path.dirname(__file__)
 

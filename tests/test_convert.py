@@ -26,9 +26,7 @@ def test_da_matrix():  # pylint: disable=too-many-locals
     igor_data_path = os.fspath(f"{test_dir}/data/dataEPFL/R9132")
 
     # get the Da coefficients
-    di_file_list = [
-        f"{igor_data_path}/Da{i}_value.tsv" for i in np.arange(1, 8, 2)
-    ]
+    di_file_list = [f"{igor_data_path}/Da{i}_value.tsv" for i in np.arange(1, 8, 2)]
     igor_d_value_list = []
     for file in di_file_list:
         with open(file, encoding="utf-8") as f_handle:
@@ -36,9 +34,7 @@ def test_da_matrix():  # pylint: disable=too-many-locals
     igor_d_value_matrix = np.vstack(igor_d_value_list)
 
     # get the fitted polynomial coefficients
-    di_coef_list = [
-        f"{igor_data_path}/D{i}_coef.tsv" for i in np.arange(1, 8, 2)
-    ]
+    di_coef_list = [f"{igor_data_path}/D{i}_coef.tsv" for i in np.arange(1, 8, 2)]
     igor_d_coef_list = []
     for file in di_coef_list:
         with open(file, encoding="utf-8") as f_handle:
