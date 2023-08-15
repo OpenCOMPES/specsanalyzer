@@ -1,4 +1,4 @@
-data_path: "//mnt/topfloor/PESData/"
+data_path: "//mnt/topfloor/trARPES/PESData/"
 enable_nested_progress_bar: false
 epics_channels:
   tempa: "trARPES:Carving:TEMP_RBV"
