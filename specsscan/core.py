@@ -38,6 +38,7 @@ default_units = {
     "polar": "degrees",
     "tilt": "degrees",
     "azimuth": "degrees",
+    "voltage": "V",
 }
 
 
@@ -153,22 +154,16 @@ class SpecsScan:
 
         self._scan_info = parse_info_to_dict(path)
         config_meta = copy.deepcopy(self.config)
-        config_meta['spa_params'].pop('calib2d_dict')
 
         loader_dict = {
             "iterations": iterations,
             "scan_path": path,
             "raw_data": data,
-            "convert_config": config_meta,
+            "convert_config": config_meta[
+                'spa_params'
+            ].pop('calib2d_dict'),
         }
-        self.metadata.update(
-            **handle_meta(
-                df_lut,
-                self._scan_info,
-                config_meta,
-            ),
-            **{"loader": loader_dict},
-        )
+
         (scan_type, lens_mode, kin_energy, pass_energy, work_function) = (
             self._scan_info["ScanType"],
             self._scan_info["LensMode"],
@@ -217,6 +212,15 @@ class SpecsScan:
         for name in res_xarray.dims:
             res_xarray[name].attrs['unit'] = default_units[name]
 
+        self.metadata.update(
+            **handle_meta(
+                df_lut,
+                self._scan_info,
+                self.config,
+                dim,
+            ),
+            **{"loader": loader_dict},
+        )
         res_xarray.attrs["metadata"] = self.metadata
 
         return res_xarray
@@ -271,7 +275,6 @@ class SpecsScan:
         )
         self._scan_info = parse_info_to_dict(path)
         config_meta = copy.deepcopy(self.config)
-        config_meta['spa_params'].pop('calib2d_dict')
 
         loader_dict = {
             "delays": delays,
@@ -280,17 +283,11 @@ class SpecsScan:
                 path,
                 df_lut,
             ),
-            "convert_config": config_meta,
+            "convert_config": config_meta[
+                'spa_params'
+            ].pop('calib2d_dict'),
             "check_scan": True,
         }
-        self.metadata.update(
-            **handle_meta(
-                df_lut,
-                self._scan_info,
-                config_meta,
-            ),
-            **{"loader": loader_dict},
-        )
 
         (scan_type, lens_mode, kin_energy, pass_energy, work_function) = (
             self._scan_info["ScanType"],
@@ -315,6 +312,14 @@ class SpecsScan:
                     work_function,
                 ),
             )
+
+        dims = get_coords(
+            scan_path=path,
+            scan_type=scan_type,
+            scan_info=self._scan_info,
+            df_lut=df_lut,
+        )
+
         res_xarray = xr.concat(
             xr_list,
             dim=xr.DataArray(
@@ -330,6 +335,15 @@ class SpecsScan:
             except KeyError:
                 pass
 
+        self.metadata.update(
+            **handle_meta(
+                df_lut,
+                self._scan_info,
+                self.config,
+                dims[1],
+            ),
+            **{"loader": loader_dict},
+        )
         res_xarray.attrs["metadata"] = self.metadata
 
         return res_xarray
