@@ -73,7 +73,6 @@ class SpecsScan:
                 folder_config={},
                 user_config={},
                 system_config={},
-                default_config={},
             )
         except KeyError:
             self.spa = SpecsAnalyzer()
