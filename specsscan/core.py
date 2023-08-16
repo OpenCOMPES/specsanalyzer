@@ -14,10 +14,10 @@ from typing import Union
 import numpy as np
 import xarray as xr
 from specsanalyzer import SpecsAnalyzer
+from specsanalyzer.config import parse_config
 from specsanalyzer.io import to_h5
 from specsanalyzer.io import to_nexus
 from specsanalyzer.io import to_tiff
-from specsanalyzer.settings import parse_config
 
 from specsscan.helpers import find_scan
 from specsscan.helpers import get_coords
@@ -53,11 +53,13 @@ class SpecsScan:
         self,
         metadata: dict = {},
         config: Union[dict, str] = {},
+        **kwds,
     ):
 
         self._config = parse_config(
             config,
             default_config=f"{package_dir}/config/default.yaml",
+            **kwds,
         )
 
         # self.metadata = MetaHandler(meta=metadata)
@@ -66,7 +68,13 @@ class SpecsScan:
         self._scan_info: Dict[Any, Any] = {}
 
         try:
-            self.spa = SpecsAnalyzer(config=self._config["spa_params"])
+            self.spa = SpecsAnalyzer(
+                config=self._config["spa_params"],
+                folder_config={},
+                user_config={},
+                system_config={},
+                default_config={},
+            )
         except KeyError:
             self.spa = SpecsAnalyzer()
 
@@ -109,6 +117,7 @@ class SpecsScan:
             Sequence[int],
             Sequence[slice],
         ] = None,
+        metadata: dict = None,
     ) -> xr.DataArray:
         """Load scan with given scan number. When iterations is
             given, average is performed over the iterations over
@@ -124,6 +133,7 @@ class SpecsScan:
                 slice objects and integers. For ex.,
                 np.s_[1:10, 15, -1] would be a valid input for
                 iterations.
+            metadata (dict, optional): Metadata dictionary with additional metadata for the scan
         Raises:
             FileNotFoundError, IndexError
 
@@ -224,6 +234,9 @@ class SpecsScan:
             ),
             **{"loader": loader_dict},
         )
+        if metadata is not None:
+            self.metadata.update(**metadata)
+
         res_xarray.attrs["metadata"] = self.metadata
 
         self._result = res_xarray
@@ -238,6 +251,7 @@ class SpecsScan:
             int,
         ],
         path: Union[str, Path] = "",
+        metadata: dict = None,
     ) -> xr.DataArray:
         """Function to explore a given 3-D scan as a function
             of iterations for a given range of delays
@@ -247,6 +261,7 @@ class SpecsScan:
                 to be averaged over.
             path: Either a string of the path to the folder
                 containing the scan or a Path object
+            metadata (dict, optional): Metadata dictionary with additional metadata for the scan
         Raises:
             FileNotFoundError
         Returns:
@@ -280,6 +295,7 @@ class SpecsScan:
         )
         self._scan_info = parse_info_to_dict(path)
         config_meta = copy.deepcopy(self.config)
+        config_meta["spa_params"].pop("calib2d_dict")
 
         loader_dict = {
             "delays": delays,
@@ -288,7 +304,7 @@ class SpecsScan:
                 path,
                 df_lut,
             ),
-            "convert_config": config_meta["spa_params"].pop("calib2d_dict"),
+            "convert_config": config_meta["spa_params"],
             "check_scan": True,
         }
 
@@ -346,6 +362,9 @@ class SpecsScan:
             ),
             **{"loader": loader_dict},
         )
+        if metadata is not None:
+            self.metadata.update(**metadata)
+
         res_xarray.attrs["metadata"] = self.metadata
 
         self._result = res_xarray
