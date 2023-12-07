@@ -31,18 +31,38 @@ from specsscan.helpers import parse_lut_to_df
 package_dir = os.path.dirname(find_spec("specsscan").origin)
 
 default_units: Dict[Any, Any] = {
-    "Angle": "degrees",
-    "Ekin": "eV",
+    "angular1": "degrees",
+    "energy": "eV",
     "delay": "fs",
     "mirrorX": "steps",
     "mirrorY": "steps",
     "X": "mm",
     "Y": "mm",
     "Z": "mm",
-    "polar": "degrees",
-    "tilt": "degrees",
-    "azimuth": "degrees",
+    "angular2": "degrees",
     "voltage": "V",
+}
+
+coordinate_mapping = {
+    "Ekin": "energy",
+    "Angle": "angular1",
+    "polar": "angular2",
+    "tilt": "angular2",
+    "azimuth": "angular2",
+    "X": "spatial1",
+    "Y": "spatial1",
+    "Z": "spatial1",
+}
+
+coordinate_depends = {
+    "Ekin": "/entry/instrument/electronanalyser/energydispersion/kinetic_energy",
+    "Angle": "/entry/instrument/electronanalyser/transformations/analyzer_dispersion",
+    "polar": "/entry/sample/transformations/rot_tht",
+    "tilt": "/entry/sample/transformations/rot_phi",
+    "azimuth": "/entry/sample/transformations/rot_omg",
+    "X": "/entry/sample/transformations/trans_x",
+    "Y": "/entry/sample/transformations/trans_y",
+    "Z": "/entry/sample/transformations/trans_z",
 }
 
 
@@ -232,6 +252,12 @@ class SpecsScan:
                 res_xarray = res_xarray.transpose("Angle", dim, "Ekin")
             else:
                 res_xarray = res_xarray.transpose("Angle", "Ekin", dim)
+
+        # rename coords and store mapping information
+        rename_dict = {k:coordinate_mapping[k] for k in coordinate_mapping.keys() if k in res_xarray.dims}
+        depends_dict = {rename_dict[k]:coordinate_depends[k] for k in coordinate_depends.keys() if k in res_xarray.dims}
+        res_xarray = res_xarray.rename(rename_dict)
+        self._scan_info["coordinate_depends"] = depends_dict
 
         for name in res_xarray.dims:
             res_xarray[name].attrs["unit"] = default_units[name]
