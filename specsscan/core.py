@@ -13,6 +13,7 @@ from typing import Union
 
 import numpy as np
 import xarray as xr
+from tqdm import tqdm
 
 from specsanalyzer import SpecsAnalyzer
 from specsanalyzer.config import parse_config
@@ -149,6 +150,7 @@ class SpecsScan:
             Sequence[slice],
         ] = None,
         metadata: dict = None,
+        **kwds,
     ) -> xr.DataArray:
         """Load scan with given scan number. When iterations is
             given, average is performed over the iterations over
@@ -239,6 +241,16 @@ class SpecsScan:
 
         if scan_type == "single":
             res_xarray = xr_list[0]
+        elif scan_type == "voltage":
+            # assert dim == "kinetic energy"
+            res_xarray = self.process_sweep_scan(
+                raw_data=xr_list,
+                voltages=coords,
+                pass_energy=pass_energy,
+                lens_mode=lens_mode,
+                work_function=work_function,
+                **kwds,
+            )
         else:
             res_xarray = xr.concat(
                 xr_list,
@@ -254,8 +266,14 @@ class SpecsScan:
                 res_xarray = res_xarray.transpose("Angle", "Ekin", dim)
 
         # rename coords and store mapping information
-        rename_dict = {k:coordinate_mapping[k] for k in coordinate_mapping.keys() if k in res_xarray.dims}
-        depends_dict = {rename_dict[k]:coordinate_depends[k] for k in coordinate_depends.keys() if k in res_xarray.dims}
+        rename_dict = {
+            k: coordinate_mapping[k] for k in coordinate_mapping.keys() if k in res_xarray.dims
+        }
+        depends_dict = {
+            rename_dict[k]: coordinate_depends[k]
+            for k in coordinate_depends.keys()
+            if k in res_xarray.dims
+        }
         res_xarray = res_xarray.rename(rename_dict)
         self._scan_info["coordinate_depends"] = depends_dict
 
@@ -488,3 +506,65 @@ class SpecsScan:
             raise NotImplementedError(
                 f"Unrecognized file format: {extension}.",
             )
+
+    def process_sweep_scan(
+        self,
+        raw_data: xr.DataArray,
+        voltages: np.array,
+        pass_energy: float,
+        lens_mode: str,
+        work_function: float,
+        **kwds,
+    ) -> xr.DataArray:
+        estep = voltages[1] - voltages[0]
+        # TODO check equidistant
+
+        ek_min0 = kwds.pop("ek_min", self.spa._config["ek_min"])
+        ek_max0 = kwds.pop("ek_max", self.spa._config["ek_max"])
+        ang_min0 = kwds.pop("ang_min", self.spa._config["ang_min"])
+        ang_max0 = kwds.pop("ang_max", self.spa._config["ang_max"])
+
+        # convert first image
+        converted = self.spa.convert_image(
+            raw_data[0],
+            lens_mode,
+            voltages[0],
+            pass_energy,
+            work_function,
+            ang_min=ang_min0,
+            ang_max=ang_max0,
+            ek_min=ek_min0,
+            ek_max=ek_max0,
+            **kwds,
+        )
+        e0 = converted.Ekin[-1]
+        e1 = converted.Ekin[0] + voltages[-1] - voltages[0]
+        data = xr.DataArray(
+            data=np.zeros((len(converted.Angle), len(np.arange(e0, e1, estep)))),
+            coords={"Angle": converted.Angle, "Ekin": np.arange(e0, e1, estep)},
+            dims=["Angle", "Ekin"],
+        )
+        for i, voltage in enumerate(tqdm(voltages)):
+            ek_min = (ek_min0 + i * estep,)
+            ek_max = (ek_max0 + i * estep,)
+            converted = self.spa.convert_image(
+                raw_data[i],
+                lens_mode,
+                voltage,
+                pass_energy,
+                work_function,
+                ang_min=ang_min0,
+                ang_max=ang_max0,
+                ek_min=ek_min,
+                ek_max=ek_max,
+                **kwds,
+            )
+            energies = converted.Ekin.where(
+                (converted.Ekin >= data.Ekin[0]) & (converted.Ekin < data.Ekin[-1]),
+                drop=True,
+            )
+            for energy in energies:
+                target_energy = data.Ekin.sel(Ekin=energy, method="nearest")
+                data.loc[{"Ekin": target_energy}] += converted.loc[{"Ekin": energy}]
+
+        return data
