@@ -8,6 +8,7 @@ from typing import Generator
 from typing import Tuple
 from typing import Union
 
+import imutils
 import numpy as np
 import xarray as xr
 
@@ -128,6 +129,12 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
                 img = raw_img
         else:
             img = raw_img
+
+        rotation_angle = kwds.pop("rotation_angle", self._config.get("rotation_angle", 0))
+
+        if rotation_angle:
+            img_rotated = imutils.rotate(img, angle=rotation_angle)
+            img = img_rotated
 
         # TODO add image rotation
 
