@@ -15,7 +15,6 @@ from specsanalyzer import io
 from specsanalyzer.config import parse_config
 from specsanalyzer.convert import calculate_matrix_correction
 from specsanalyzer.convert import physical_unit_data
-from specsanalyzer.img_tools import crop_xarray
 from specsanalyzer.img_tools import fourier_filter_2d
 from specsanalyzer.metadata import MetaHandler
 
@@ -33,7 +32,6 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
     ):
 
         self._config = parse_config(config, **kwds,)
-
         self._attributes = MetaHandler(meta=metadata)
 
         try:
@@ -220,23 +218,6 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
         # TODO discuss how to handle cropping. Can he store one set of cropping
         # parameters in the config, or should we store one set per pass energy/
         # lens mode/ kinetic energy in the dict?
-
-        crop = kwds.pop("crop", self._config.get("crop", False))
-        if crop:
-            try:
-                ek_min = kwds.pop("ek_min", self._config["ek_min"])
-                ek_max = kwds.pop("ek_max", self._config["ek_max"])
-                ang_min = kwds.pop("ang_min", self._config["ang_min"])
-                ang_max = kwds.pop("ang_max", self._config["ang_max"])
-                data_array = crop_xarray(
-                    data_array,
-                    ang_min,
-                    ang_max,
-                    ek_min,
-                    ek_max,
-                )
-            except KeyError:
-                pass
 
         return data_array
 
