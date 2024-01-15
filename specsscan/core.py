@@ -10,6 +10,11 @@ from typing import Any
 from typing import Dict
 from typing import Sequence
 from typing import Union
+import matplotlib
+import matplotlib.pyplot as plt
+import ipywidgets as ipw
+from matplotlib.widgets import Button
+from IPython.display import display
 
 import numpy as np
 import xarray as xr
@@ -18,6 +23,8 @@ from specsanalyzer.config import parse_config
 from specsanalyzer.io import to_h5
 from specsanalyzer.io import to_nexus
 from specsanalyzer.io import to_tiff
+from specsanalyzer.img_tools import DraggableLines
+from specsanalyzer.img_tools import crop_xarray
 
 from specsscan.helpers import find_scan
 from specsscan.helpers import get_coords
@@ -93,6 +100,11 @@ class SpecsScan:
     def config(self):
         """Get config"""
         return self._config
+    
+    @property
+    def result(self):
+        """Get result xarray"""
+        return self._result
 
     @config.setter
     def config(self, config: Union[dict, str]):
@@ -117,6 +129,7 @@ class SpecsScan:
             Sequence[slice],
         ] = None,
         metadata: dict = None,
+        **kwds,
     ) -> xr.DataArray:
         """Load scan with given scan number. When iterations is
             given, average is performed over the iterations over
@@ -141,6 +154,7 @@ class SpecsScan:
                 and optionally a third scanned axis (for ex., delay, temperature)
                 as coordinates.
         """
+        cid_refs = None
         if path:
             path = Path(path).joinpath(str(scan).zfill(4))
             if not path.is_dir():
@@ -223,7 +237,6 @@ class SpecsScan:
 
         for name in res_xarray.dims:
             res_xarray[name].attrs["unit"] = default_units[name]
-
         self.metadata.update(
             **handle_meta(
                 df_lut,
@@ -237,10 +250,110 @@ class SpecsScan:
             self.metadata.update(**metadata)
 
         res_xarray.attrs["metadata"] = self.metadata
-
         self._result = res_xarray
+        try:
+            range_dict = self.spa.correction_matrix_dict[lens_mode][kin_energy][pass_energy][
+                work_function
+            ]["crop_params"]
+        except KeyError:
+            old_matrix_check = False
+            range_dict = {
+                "Ek1":{"x":0.15, "y":0.9, "val":20.2},
+                "Ek2":{"x":0.30, "y":0.9, "val":20.8},
+                "Ang1":{"x":0.45, "y":0.9, "val":-3.0},
+                "Ang2":{"x":0.60, "y":0.9, "val":3.0}
+            }
+        else:
+            old_matrix_check = True
 
-        return res_xarray
+        crop = kwds.pop("crop", self._config.get("crop", False))
+        if crop:
+            cid_refs = self.crop_tool(
+                res_xarray,
+                range_dict,
+                old_matrix_check,
+            )
+        return cid_refs
+
+    def crop_tool(
+            self,
+            res_xarray: xr.DataArray,
+            range_dict: dict,
+            old_matrix_check: bool,
+    ):
+        """Crop tool for the loader
+        Args:
+            res_xarray: xarray obtained from the converted raw data
+            range_dict: Dictionary containing box positions and the
+                        text value
+            old_matrix_check: True if crop params exist alreadty,
+                        false otherwise.
+        returns:
+            cid_refs: cid references to the callbacks for interaction
+        """
+
+        matplotlib.use("module://ipympl.backend_nbagg")
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        plt.subplots_adjust(top=0.75)
+
+        if len(self._result.dims) == 3:
+                self._result[:,:,0].plot(ax = ax)
+        else:  # dim == 2
+            self._result.plot(ax = ax)
+
+        Vline = DraggableLines(ax, fig, "Ek1", range_dict, self._result)
+        Vline2 = DraggableLines(ax, fig, "Ek2", range_dict, self._result)
+        Tline = DraggableLines(ax, fig, "Ang1", range_dict, self._result)
+        Tline2 = DraggableLines(ax, fig, "Ang2", range_dict, self._result)
+
+        def cropit(val):
+            ang_min = min([Tline.xory, Tline2.xory])
+            ang_max = max([Tline.xory, Tline2.xory])
+            ek_min = min([Vline.xory, Vline2.xory])
+            ek_max = max([Vline.xory, Vline2.xory])
+            self._result = crop_xarray(
+                res_xarray,
+                ang_min,
+                ang_max,
+                ek_min,
+                ek_max
+                )
+
+            self.spa.correction_matrix_dict[self._scan_info['LensMode']][
+                self._scan_info["KineticEnergy"]][self._scan_info["PassEnergy"]][
+                    self._scan_info["WorkFunction"]
+                ] = {"crop_params":{
+                    "Ek1":{"x":0.15, "y":0.9, "val":ek_min},
+                    "Ek2":{"x":0.30, "y":0.9, "val":ek_max},
+                    "Ang1":{"x":0.45, "y":0.9, "val":ang_min},
+                    "Ang2":{"x":0.60, "y":0.9, "val":ang_max}
+                }
+
+                }
+            
+            Vline.c.mpl_disconnect(Vline.sid)
+            Vline2.c.mpl_disconnect(Vline2.sid)
+            Tline.c.mpl_disconnect(Tline.sid)
+            Tline2.c.mpl_disconnect(Tline2.sid)
+
+        # axes = plt.axes([0.81, 0.000001, 0.1, 0.075])
+        # bnext = Button(axes, 'Crop')
+        # bnext.on_clicked(cropit)
+        apply_button = ipw.Button(description="Crop")
+        display(apply_button)
+        apply_button.on_click(cropit)
+        plt.show()
+
+        if old_matrix_check:
+            print("Using existing crop parameters")
+            cropit(True)
+            apply_button.close()
+            # plt.close(fig)
+
+        cid_refs = [Vline, Vline2, Tline, Tline2]
+        return cid_refs
+
 
     def check_scan(
         self,
@@ -251,6 +364,7 @@ class SpecsScan:
         ],
         path: Union[str, Path] = "",
         metadata: dict = None,
+        **kwds,
     ) -> xr.DataArray:
         """Function to explore a given 3-D scan as a function
             of iterations for a given range of delays
@@ -327,6 +441,7 @@ class SpecsScan:
                     kin_energy,
                     pass_energy,
                     work_function,
+                    **kwds,
                 ),
             )
 
