@@ -20,6 +20,7 @@ license = "MIT"
 [tool.poetry.dependencies]
 python = ">=3.8, <3.12"
 h5py = ">=3.6.0"
+imutils = ">=0.5.4"
 ipympl = ">=0.9.1"
 ipywidgets = ">=7.7.1"
 matplotlib = ">=3.5.1"
