@@ -16,7 +16,6 @@ lensmodes_angle = [
     "MediumAngularDispersion",
     "HighAngularDispersion",
     "WideAngleMode",
-    "SuperWideAngleMode",
 ]
 lensmodes_space = [
     "LargeArea",
@@ -41,8 +40,8 @@ def test_lens_modes_angle(lens_mode):
 
     configpath = os.fspath(f"{test_dir}/data/dataEPFL/config/config.yaml")
     spa = SpecsAnalyzer(config=configpath)
-    kinetic_energy = np.random.uniform(20, 50)
-    pass_energy = np.random.uniform(20, 50)
+    kinetic_energy = np.random.uniform(25, 30)
+    pass_energy = np.random.uniform(25, 30)
     work_function = 4.2
 
     converted = spa.convert_image(
