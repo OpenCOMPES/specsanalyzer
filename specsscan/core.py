@@ -516,7 +516,7 @@ class SpecsScan:
         work_function: float,
         **kwds,
     ) -> xr.DataArray:
-        estep = voltages[1] - voltages[0]
+        voltage_step = voltages[1] - voltages[0]
         # TODO check equidistant
 
         ek_min0 = kwds.pop("ek_min", self.spa._config["ek_min"])
@@ -537,16 +537,17 @@ class SpecsScan:
             ek_max=ek_max0,
             **kwds,
         )
-        e0 = converted.Ekin[-1]
+        e_step = converted.Ekin[1] - converted.Ekin[0]
+        e0 = converted.Ekin[-1] - voltage_step
         e1 = converted.Ekin[0] + voltages[-1] - voltages[0]
         data = xr.DataArray(
-            data=np.zeros((len(converted.Angle), len(np.arange(e0, e1, estep)))),
-            coords={"Angle": converted.Angle, "Ekin": np.arange(e0, e1, estep)},
+            data=np.zeros((len(converted.Angle), len(np.arange(e0, e1, e_step)))),
+            coords={"Angle": converted.Angle, "Ekin": np.arange(e0, e1, e_step)},
             dims=["Angle", "Ekin"],
         )
         for i, voltage in enumerate(tqdm(voltages)):
-            ek_min = (ek_min0 + i * estep,)
-            ek_max = (ek_max0 + i * estep,)
+            ek_min = ek_min0 + i * voltage_step
+            ek_max = ek_max0 + i * voltage_step
             converted = self.spa.convert_image(
                 raw_data[i],
                 lens_mode,
