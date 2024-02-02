@@ -10,22 +10,18 @@ from typing import Any
 from typing import Dict
 from typing import Sequence
 from typing import Union
-import matplotlib
-import matplotlib.pyplot as plt
-import ipywidgets as ipw
-from matplotlib.widgets import Button
-from IPython.display import display
 
+import ipywidgets as ipw
+import matplotlib
 import numpy as np
 import xarray as xr
+from IPython.display import display
+
 from specsanalyzer import SpecsAnalyzer
 from specsanalyzer.config import parse_config
 from specsanalyzer.io import to_h5
 from specsanalyzer.io import to_nexus
 from specsanalyzer.io import to_tiff
-from specsanalyzer.img_tools import DraggableLines
-from specsanalyzer.img_tools import crop_xarray
-
 from specsscan.helpers import find_scan
 from specsscan.helpers import get_coords
 from specsscan.helpers import handle_meta
@@ -100,7 +96,7 @@ class SpecsScan:
     def config(self):
         """Get config"""
         return self._config
-    
+
     @property
     def result(self):
         """Get result xarray"""
@@ -210,7 +206,7 @@ class SpecsScan:
                     pass_energy,
                     work_function,
                     **kwds,
-                )
+                ),
             )
         self.spa.print_msg = True
         coords, dim = get_coords(
@@ -255,13 +251,23 @@ class SpecsScan:
 
         return res_xarray
 
-
     def crop_tool(self):
         """
         Croping tool interface to crop_tool method
         of the SpecsAnalyzer class.
         """
-        self.spa.crop_tool(self._result, self._scan_info)
+        matplotlib.use("module://ipympl.backend_nbagg")
+        image = self.metadata["loader"]["raw_data"][0]
+        converted = self.spa.convert_image(
+            raw_img=image,
+            lens_mode=self._scan_info["LensMode"],
+            kin_energy=self._scan_info["KineticEnergy"],
+            pass_energy=self._scan_info["PassEnergy"],
+            work_function=self._scan_info["WorkFunction"],
+            crop=False,
+        )
+        self.spa.crop_tool(converted, self._scan_info)
+
         def to_specsscan(val):
             if self.spa._data_array is not None:
                 self._result = self.spa._data_array
@@ -270,7 +276,6 @@ class SpecsScan:
         load_button = ipw.Button(description="Load")
         display(load_button)
         load_button.on_click(to_specsscan)
-
 
     def check_scan(
         self,
