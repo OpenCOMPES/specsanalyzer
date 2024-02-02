@@ -154,7 +154,7 @@ class SpecsScan:
                 and optionally a third scanned axis (for ex., delay, temperature)
                 as coordinates.
         """
-        cid_refs = None
+
         if path:
             path = Path(path).joinpath(str(scan).zfill(4))
             if not path.is_dir():
@@ -209,9 +209,10 @@ class SpecsScan:
                     kin_energy,
                     pass_energy,
                     work_function,
-                ),
+                    **kwds,
+                )
             )
-
+        self.spa.print_msg = True
         coords, dim = get_coords(
             scan_path=path,
             scan_type=scan_type,
@@ -251,108 +252,24 @@ class SpecsScan:
 
         res_xarray.attrs["metadata"] = self.metadata
         self._result = res_xarray
-        try:
-            range_dict = self.spa.correction_matrix_dict[lens_mode][kin_energy][pass_energy][
-                work_function
-            ]["crop_params"]
-        except KeyError:
-            old_matrix_check = False
-            range_dict = {
-                "Ek1":{"x":0.15, "y":0.9, "val":20.2},
-                "Ek2":{"x":0.30, "y":0.9, "val":20.8},
-                "Ang1":{"x":0.45, "y":0.9, "val":-3.0},
-                "Ang2":{"x":0.60, "y":0.9, "val":3.0}
-            }
-        else:
-            old_matrix_check = True
 
-        crop = kwds.pop("crop", self._config.get("crop", False))
-        if crop:
-            cid_refs = self.crop_tool(
-                res_xarray,
-                range_dict,
-                old_matrix_check,
-            )
-        return cid_refs
+        return res_xarray
 
-    def crop_tool(
-            self,
-            res_xarray: xr.DataArray,
-            range_dict: dict,
-            old_matrix_check: bool,
-    ):
-        """Crop tool for the loader
-        Args:
-            res_xarray: xarray obtained from the converted raw data
-            range_dict: Dictionary containing box positions and the
-                        text value
-            old_matrix_check: True if crop params exist alreadty,
-                        false otherwise.
-        returns:
-            cid_refs: cid references to the callbacks for interaction
+
+    def crop_tool(self):
         """
+        Croping tool interface to crop_tool method
+        of the SpecsAnalyzer class.
+        """
+        self.spa.crop_tool(self._result, self._scan_info)
+        def to_specsscan(val):
+            if self.spa._data_array is not None:
+                self._result = self.spa._data_array
+            load_button.close()
 
-        matplotlib.use("module://ipympl.backend_nbagg")
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
-        plt.subplots_adjust(top=0.75)
-
-        if len(self._result.dims) == 3:
-                self._result[:,:,0].plot(ax = ax)
-        else:  # dim == 2
-            self._result.plot(ax = ax)
-
-        Vline = DraggableLines(ax, fig, "Ek1", range_dict, self._result)
-        Vline2 = DraggableLines(ax, fig, "Ek2", range_dict, self._result)
-        Tline = DraggableLines(ax, fig, "Ang1", range_dict, self._result)
-        Tline2 = DraggableLines(ax, fig, "Ang2", range_dict, self._result)
-
-        def cropit(val):
-            ang_min = min([Tline.xory, Tline2.xory])
-            ang_max = max([Tline.xory, Tline2.xory])
-            ek_min = min([Vline.xory, Vline2.xory])
-            ek_max = max([Vline.xory, Vline2.xory])
-            self._result = crop_xarray(
-                res_xarray,
-                ang_min,
-                ang_max,
-                ek_min,
-                ek_max
-                )
-
-            self.spa.correction_matrix_dict[self._scan_info['LensMode']][
-                self._scan_info["KineticEnergy"]][self._scan_info["PassEnergy"]][
-                    self._scan_info["WorkFunction"]
-                ] = {"crop_params":{
-                    "Ek1":{"x":0.15, "y":0.9, "val":ek_min},
-                    "Ek2":{"x":0.30, "y":0.9, "val":ek_max},
-                    "Ang1":{"x":0.45, "y":0.9, "val":ang_min},
-                    "Ang2":{"x":0.60, "y":0.9, "val":ang_max}
-                }
-
-                }
-            
-            Vline.c.mpl_disconnect(Vline.sid)
-            Vline2.c.mpl_disconnect(Vline2.sid)
-            Tline.c.mpl_disconnect(Tline.sid)
-            Tline2.c.mpl_disconnect(Tline2.sid)
-
-        # axes = plt.axes([0.81, 0.000001, 0.1, 0.075])
-        # bnext = Button(axes, 'Crop')
-        # bnext.on_clicked(cropit)
-        apply_button = ipw.Button(description="Crop")
-        display(apply_button)
-        apply_button.on_click(cropit)
-        plt.show()
-
-        if old_matrix_check:
-            print("Using existing crop parameters")
-            cropit(True)
-            apply_button.close()
-            # plt.close(fig)
-
-        cid_refs = [Vline, Vline2, Tline, Tline2]
-        return cid_refs
+        load_button = ipw.Button(description="Load")
+        display(load_button)
+        load_button.on_click(to_specsscan)
 
 
     def check_scan(
