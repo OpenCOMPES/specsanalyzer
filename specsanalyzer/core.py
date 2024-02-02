@@ -6,20 +6,20 @@ from typing import Any
 from typing import Dict
 from typing import Generator
 from typing import Tuple
-from typing import Union, Any
+from typing import Union
 
-import numpy as np
-import xarray as xr
 import ipywidgets as ipw
-from IPython.display import display
 import matplotlib
 import matplotlib.pyplot as plt
-from specsanalyzer.img_tools import DraggableLines
-from specsanalyzer.img_tools import crop_xarray
+import numpy as np
+import xarray as xr
+from IPython.display import display
+
 from specsanalyzer import io
 from specsanalyzer.config import parse_config
 from specsanalyzer.convert import calculate_matrix_correction
 from specsanalyzer.convert import physical_unit_data
+from specsanalyzer.img_tools import crop_xarray
 from specsanalyzer.img_tools import fourier_filter_2d
 from specsanalyzer.metadata import MetaHandler
 
@@ -36,13 +36,12 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
         **kwds,
     ):
 
-        self._config = parse_config(config, **kwds,)
+        self._config = parse_config(
+            config,
+            **kwds,
+        )
         self._attributes = MetaHandler(meta=metadata)
         self._data_array = None
-        self.vline = Any
-        self.tline = Any
-        self.vline2 = Any
-        self.tline2 = Any
         self.print_msg = True
         try:
             self._config["calib2d_dict"] = io.parse_calib2d_to_dict(
@@ -232,15 +231,14 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
         crop = kwds.pop("crop", self._config.get("crop", False))
         if crop:
             try:
-                range_dict: dict = self._correction_matrix_dict[lens_mode][
-                    kinetic_energy][pass_energy][
-                    work_function
-                ]["crop_params"]
+                range_dict: dict = self._correction_matrix_dict[lens_mode][kinetic_energy][
+                    pass_energy
+                ][work_function]["crop_params"]
             except KeyError:
                 if self.print_msg:
                     print(
                         "Warning: Cropping parameters not found, "
-                        "use method crop_tool() after loading."
+                        "use method crop_tool() after loading.",
                     )
                     self.print_msg = False
             else:
@@ -250,17 +248,11 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
             if self.print_msg:
                 print("Using existing crop parameters...")
                 self.print_msg = False
-            ang_min = min(range_dict['Ang1']['val'], range_dict['Ang2']['val'])
-            ang_max = max(range_dict['Ang1']['val'], range_dict['Ang2']['val'])
-            ek_min = min(range_dict['Ek1']['val'], range_dict['Ek2']['val'])
-            ek_max = max(range_dict['Ek1']['val'], range_dict['Ek2']['val'])
-            data_array = crop_xarray(
-                data_array,
-                ang_min,
-                ang_max,
-                ek_min,
-                ek_max
-            )
+            ang_min = min(range_dict["Ang1"]["val"], range_dict["Ang2"]["val"])
+            ang_max = max(range_dict["Ang1"]["val"], range_dict["Ang2"]["val"])
+            ek_min = min(range_dict["Ek1"]["val"], range_dict["Ek2"]["val"])
+            ek_max = max(range_dict["Ek1"]["val"], range_dict["Ek2"]["val"])
+            data_array = crop_xarray(data_array, ang_min, ang_max, ek_min, ek_max)
 
         return data_array
 
@@ -274,17 +266,10 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
             res_xarray: xarray obtained from the converted raw data
             scan_info_dict: dict containing the contents of info.txt file
         """
-        range_dict = {
-            "Ek1": {"x": 0.15, "y": 0.9, "val": 20.2},
-            "Ek2": {"x": 0.30, "y": 0.9, "val": 20.8},
-            "Ang1": {"x": 0.45, "y": 0.9, "val": -3.0},
-            "Ang2": {"x": 0.60, "y": 0.9, "val": 3.0}
-        }
 
         matplotlib.use("module://ipympl.backend_nbagg")
         fig = plt.figure()
         ax = fig.add_subplot(111)
-        plt.subplots_adjust(top=0.75)
         try:
             if len(res_xarray.dims) == 3:
                 res_xarray[:, :, 0].plot(ax=ax)
@@ -294,42 +279,50 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
             print("Load the scan first!")
             raise
 
-        self.vline = DraggableLines(ax, fig, "Ek1", range_dict, res_xarray)
-        self.vline2 = DraggableLines(ax, fig, "Ek2", range_dict, res_xarray)
-        self.tline = DraggableLines(ax, fig, "Ang1", range_dict, res_xarray)
-        self.tline2 = DraggableLines(ax, fig, "Ang2", range_dict, res_xarray)
+        vline = ipw.FloatRangeSlider(
+            value=[res_xarray.Ekin[0], res_xarray.Ekin[-1]],
+            min=res_xarray.Ekin[0],
+            max=res_xarray.Ekin[-1],
+            step=0.01,
+        )
+        tline = ipw.FloatRangeSlider(
+            value=[res_xarray.Angle[0], res_xarray.Angle[-1]],
+            min=res_xarray.Angle[0],
+            max=res_xarray.Angle[-1],
+            step=0.01,
+        )
+
+        def update(tline, vline):
+            return
+
+        ipw.interact(
+            update,
+            tline=tline,
+            vline=vline,
+        )
 
         def cropit(val):  # pylint: disable=unused-argument
-            ang_min = min([self.tline.xory, self.tline2.xory])
-            ang_max = max([self.tline.xory, self.tline2.xory])
-            ek_min = min([self.vline.xory, self.vline2.xory])
-            ek_max = max([self.vline.xory, self.vline2.xory])
-            self._data_array = crop_xarray(
-                res_xarray,
-                ang_min,
-                ang_max,
-                ek_min,
-                ek_max
-            )
-            self._correction_matrix_dict[scan_info_dict['LensMode']][
+            ang_min = min(tline.value)
+            ang_max = max(tline.value)
+            ek_min = min(vline.value)
+            ek_max = max(vline.value)
+            self._data_array = crop_xarray(res_xarray, ang_min, ang_max, ek_min, ek_max)
+            self._correction_matrix_dict[scan_info_dict["LensMode"]][
                 scan_info_dict["KineticEnergy"]
-            ][
-                scan_info_dict["PassEnergy"]
-            ][
-                scan_info_dict["WorkFunction"]
-            ] = {
+            ][scan_info_dict["PassEnergy"]][scan_info_dict["WorkFunction"]] = {
                 "crop_params": {
                     "Ek1": {"x": 0.15, "y": 0.9, "val": ek_min},
                     "Ek2": {"x": 0.30, "y": 0.9, "val": ek_max},
                     "Ang1": {"x": 0.45, "y": 0.9, "val": ang_min},
-                    "Ang2": {"x": 0.60, "y": 0.9, "val": ang_max}
-                }
+                    "Ang2": {"x": 0.60, "y": 0.9, "val": ang_max},
+                },
             }
+            ax.cla()
+            self._data_array.plot(ax=ax, add_colorbar=False)
+            fig.canvas.draw_idle()
 
-            self.vline.c.mpl_disconnect(self.vline.sid)
-            self.vline2.c.mpl_disconnect(self.vline2.sid)
-            self.tline.c.mpl_disconnect(self.tline.sid)
-            self.tline2.c.mpl_disconnect(self.tline2.sid)
+            vline.close()
+            tline.close()
             apply_button.close()
 
         apply_button = ipw.Button(description="Crop")
