@@ -292,7 +292,7 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
             step=0.01,
         )
 
-        def update(tline, vline):
+        def update(tline, vline):  # pylint: disable=unused-argument
             return
 
         ipw.interact(

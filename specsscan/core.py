@@ -11,11 +11,9 @@ from typing import Dict
 from typing import Sequence
 from typing import Union
 
-import ipywidgets as ipw
 import matplotlib
 import numpy as np
 import xarray as xr
-from IPython.display import display
 
 from specsanalyzer import SpecsAnalyzer
 from specsanalyzer.config import parse_config
@@ -261,21 +259,12 @@ class SpecsScan:
         converted = self.spa.convert_image(
             raw_img=image,
             lens_mode=self._scan_info["LensMode"],
-            kin_energy=self._scan_info["KineticEnergy"],
+            kinetic_energy=self._scan_info["KineticEnergy"],
             pass_energy=self._scan_info["PassEnergy"],
             work_function=self._scan_info["WorkFunction"],
             crop=False,
         )
         self.spa.crop_tool(converted, self._scan_info)
-
-        def to_specsscan(val):
-            if self.spa._data_array is not None:
-                self._result = self.spa._data_array
-            load_button.close()
-
-        load_button = ipw.Button(description="Load")
-        display(load_button)
-        load_button.on_click(to_specsscan)
 
     def check_scan(
         self,
