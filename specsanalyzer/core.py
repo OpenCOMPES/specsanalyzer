@@ -227,13 +227,21 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
         # TODO discuss how to handle cropping. Can he store one set of cropping
         # parameters in the config, or should we store one set per pass energy/
         # lens mode/ kinetic energy in the dict?
-        saved_rangedict = False
         crop = kwds.pop("crop", self._config.get("crop", False))
         if crop:
             try:
                 range_dict: dict = self._correction_matrix_dict[lens_mode][kinetic_energy][
                     pass_energy
                 ][work_function]["crop_params"]
+                if self.print_msg:
+                    print("Using saved crop parameters...")
+                    self.print_msg = False
+
+                ang_min = range_dict["Ang1"]
+                ang_max = range_dict["Ang2"]
+                ek_min = range_dict["Ek1"]
+                ek_max = range_dict["Ek2"]
+                data_array = crop_xarray(data_array, ang_min, ang_max, ek_min, ek_max)
             except KeyError:
                 if self.print_msg:
                     print(
@@ -241,18 +249,6 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
                         "use method crop_tool() after loading.",
                     )
                     self.print_msg = False
-            else:
-                saved_rangedict = True
-
-        if saved_rangedict:
-            if self.print_msg:
-                print("Using existing crop parameters...")
-                self.print_msg = False
-            ang_min = min(range_dict["Ang1"]["val"], range_dict["Ang2"]["val"])
-            ang_max = max(range_dict["Ang1"]["val"], range_dict["Ang2"]["val"])
-            ek_min = min(range_dict["Ek1"]["val"], range_dict["Ek2"]["val"])
-            ek_max = max(range_dict["Ek1"]["val"], range_dict["Ek2"]["val"])
-            data_array = crop_xarray(data_array, ang_min, ang_max, ek_min, ek_max)
 
         return data_array
 
@@ -272,57 +268,88 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
         ax = fig.add_subplot(111)
         try:
             if len(res_xarray.dims) == 3:
-                res_xarray[:, :, 0].plot(ax=ax)
+                mesh_obj = res_xarray[:, :, 0].plot(ax=ax)
             else:  # dim == 2
-                res_xarray.plot(ax=ax)
+                mesh_obj = res_xarray.plot(ax=ax)
         except AttributeError:
             print("Load the scan first!")
             raise
 
-        vline = ipw.FloatRangeSlider(
-            value=[res_xarray.Ekin[0], res_xarray.Ekin[-1]],
+        lineh1 = ax.axhline(y=res_xarray.Angle[0])
+        lineh2 = ax.axhline(y=res_xarray.Angle[-1])
+        linev1 = ax.axvline(x=res_xarray.Ekin[0])
+        linev2 = ax.axvline(x=res_xarray.Ekin[-1])
+
+        try:
+            range_dict = self._correction_matrix_dict[scan_info_dict["LensMode"]][
+                scan_info_dict["KineticEnergy"]
+            ][scan_info_dict["PassEnergy"]][scan_info_dict["WorkFunction"]]["crop_params"]
+
+            vline_range = [range_dict["Ek1"], range_dict["Ek2"]]
+            hline_range = [range_dict["Ang1"], range_dict["Ang2"]]
+        except KeyError:
+            vline_range = [res_xarray.Ekin[0], res_xarray.Ekin[-1]]
+            hline_range = [res_xarray.Angle[0], res_xarray.Angle[-1]]
+
+        vline_slider = ipw.FloatRangeSlider(
+            description="Ekin",
+            value=vline_range,
             min=res_xarray.Ekin[0],
             max=res_xarray.Ekin[-1],
             step=0.01,
         )
-        tline = ipw.FloatRangeSlider(
-            value=[res_xarray.Angle[0], res_xarray.Angle[-1]],
+        hline_slider = ipw.FloatRangeSlider(
+            description="Angle",
+            value=hline_range,
             min=res_xarray.Angle[0],
             max=res_xarray.Angle[-1],
             step=0.01,
         )
+        clim_slider = ipw.FloatRangeSlider(
+            description="colorbar limits",
+            value=[res_xarray.data.min(), res_xarray.data.max()],
+            min=res_xarray.data.min(),
+            max=res_xarray.data.max(),
+        )
 
-        def update(tline, vline):  # pylint: disable=unused-argument
-            return
+        def update(hline, vline, v_vals):
+            lineh1.set_ydata(hline[0])
+            lineh2.set_ydata(hline[1])
+            linev1.set_xdata(vline[0])
+            linev2.set_xdata(vline[1])
+            mesh_obj.set_clim(vmin=v_vals[0], vmax=v_vals[1])
+            fig.canvas.draw_idle()
 
         ipw.interact(
             update,
-            tline=tline,
-            vline=vline,
+            hline=hline_slider,
+            vline=vline_slider,
+            v_vals=clim_slider,
         )
 
         def cropit(val):  # pylint: disable=unused-argument
-            ang_min = min(tline.value)
-            ang_max = max(tline.value)
-            ek_min = min(vline.value)
-            ek_max = max(vline.value)
+            ang_min = min(hline_slider.value)
+            ang_max = max(hline_slider.value)
+            ek_min = min(vline_slider.value)
+            ek_max = max(vline_slider.value)
             self._data_array = crop_xarray(res_xarray, ang_min, ang_max, ek_min, ek_max)
             self._correction_matrix_dict[scan_info_dict["LensMode"]][
                 scan_info_dict["KineticEnergy"]
             ][scan_info_dict["PassEnergy"]][scan_info_dict["WorkFunction"]] = {
                 "crop_params": {
-                    "Ek1": {"x": 0.15, "y": 0.9, "val": ek_min},
-                    "Ek2": {"x": 0.30, "y": 0.9, "val": ek_max},
-                    "Ang1": {"x": 0.45, "y": 0.9, "val": ang_min},
-                    "Ang2": {"x": 0.60, "y": 0.9, "val": ang_max},
+                    "Ek1": ek_min,
+                    "Ek2": ek_max,
+                    "Ang1": ang_min,
+                    "Ang2": ang_max,
                 },
             }
             ax.cla()
             self._data_array.plot(ax=ax, add_colorbar=False)
             fig.canvas.draw_idle()
 
-            vline.close()
-            tline.close()
+            vline_slider.close()
+            hline_slider.close()
+            clim_slider.close()
             apply_button.close()
 
         apply_button = ipw.Button(description="Crop")
