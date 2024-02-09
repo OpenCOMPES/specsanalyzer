@@ -1,5 +1,38 @@
 data_path: "//mnt/topfloor/trARPES/PESData/"
 enable_nested_progress_bar: false
+
+coordinate_mapping:
+  Ekin: "energy"
+  Angle: "angular1"
+  polar: "angular2"
+  tilt: "angular2"
+  azimuth: "angular2"
+  X: "spatial1"
+  Y: "spatial1"
+  Z: "spatial1"
+
+coordinate_depends:
+  Ekin: "/entry/instrument/electronanalyser/energydispersion/kinetic_energy"
+  Angle: "/entry/instrument/electronanalyser/transformations/analyzer_dispersion"
+  polar: "/entry/sample/transformations/rot_tht"
+  tilt: "/entry/sample/transformations/rot_phi"
+  azimuth: "/entry/sample/transformations/rot_omg"
+  X: "/entry/sample/transformations/trans_x"
+  Y: "/entry/sample/transformations/trans_y"
+  Z: "/entry/sample/transformations/trans_z"
+
+units:
+  angular1: "degree"
+  angular2: "degree"
+  energy: "eV"
+  delay: "fs"
+  mirrorX: "steps"
+  mirrorY: "steps"
+  X: "mm"
+  Y: "mm"
+  Z: "mm"
+  voltage: "V"
+
 epics_channels:
   tempa: "trARPES:Carving:TEMP_RBV"
   x: "trARPES:Carving:TRX.RBV"
@@ -10,17 +43,19 @@ epics_channels:
   azimuth: "trARPES:Carving:OMG.RBV"
   sample_bias: "KTOF:Lens:Sample:V"
   pressure: "trARPES:XGS600:PressureAC:P_RD"
+
 nexus:
   reader: "mpes"
   definition: "NXmpes"
-  input_files: ["../tests/data/phoibos_config.json"]
+  input_files: ["../specsscan/config/NXmpes_arpes_phoibos_config.json"]
+
 spa_params:
   calib2d_file: "../tests/data/phoibos150.calib2d"
   nx_pixel: 1376
   ny_pixel: 1024
   pixel_size: 0.00645
   magnification: 4.54
-  crop: False
+  crop: false
   apply_fft_filter: true
   fft_filter_peaks:
     - amplitude: 1
