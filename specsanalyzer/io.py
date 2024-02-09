@@ -126,7 +126,6 @@ def to_h5(data: xr.DataArray, faddr: str, mode: str = "w"):
     Returns:
     """
     with h5py.File(faddr, mode) as h5_file:
-
         print(f"saving data to {faddr}")
 
         # Saving data, make a single dataset
@@ -474,7 +473,6 @@ def read_calib2d(filepath: str) -> List[Any]:
 
     listf: List[Any] = []
     for line in lines:
-
         if "# !!!!! Place a valid calib2D file from your Specslab Installation here!" in line:
             print("No valid calib2 file found. Please provide the path to the calib2d file",
                   "\r\ncorresponding to your detector in the config, or copy into the config",
