@@ -444,7 +444,7 @@ class SpecsScan:
             )
             input_files = kwds.pop(
                 "input_files",
-                self._config["nexus"]["input_files"],
+                copy.deepcopy(self._config["nexus"]["input_files"]),
             )
             if isinstance(input_files, str):
                 input_files = [input_files]
