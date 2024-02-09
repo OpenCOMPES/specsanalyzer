@@ -30,41 +30,6 @@ from specsscan.helpers import parse_lut_to_df
 
 package_dir = os.path.dirname(find_spec("specsscan").origin)
 
-default_units: Dict[Any, Any] = {
-    "angular1": "degrees",
-    "energy": "eV",
-    "delay": "fs",
-    "mirrorX": "steps",
-    "mirrorY": "steps",
-    "X": "mm",
-    "Y": "mm",
-    "Z": "mm",
-    "angular2": "degrees",
-    "voltage": "V",
-}
-
-coordinate_mapping = {
-    "Ekin": "energy",
-    "Angle": "angular1",
-    "polar": "angular2",
-    "tilt": "angular2",
-    "azimuth": "angular2",
-    "X": "spatial1",
-    "Y": "spatial1",
-    "Z": "spatial1",
-}
-
-coordinate_depends = {
-    "Ekin": "/entry/instrument/electronanalyser/energydispersion/kinetic_energy",
-    "Angle": "/entry/instrument/electronanalyser/transformations/analyzer_dispersion",
-    "polar": "/entry/sample/transformations/rot_tht",
-    "tilt": "/entry/sample/transformations/rot_phi",
-    "azimuth": "/entry/sample/transformations/rot_omg",
-    "X": "/entry/sample/transformations/trans_x",
-    "Y": "/entry/sample/transformations/trans_y",
-    "Z": "/entry/sample/transformations/trans_z",
-}
-
 
 class SpecsScan:
     """SpecsAnalyzer class for loading scans and data from SPECS phoibos electron analyzers,
@@ -253,14 +218,25 @@ class SpecsScan:
             else:
                 res_xarray = res_xarray.transpose("Angle", "Ekin", dim)
 
-        # rename coords and store mapping information
-        rename_dict = {k:coordinate_mapping[k] for k in coordinate_mapping.keys() if k in res_xarray.dims}
-        depends_dict = {rename_dict[k]:coordinate_depends[k] for k in coordinate_depends.keys() if k in res_xarray.dims}
+        # rename coords and store mapping information, if available
+        coordinate_mapping = self._config.get("coordinate_mapping", {})
+        coordinate_depends = self._config.get("coordinate_depends", {})
+        rename_dict = {
+            k: coordinate_mapping[k] for k in coordinate_mapping.keys() if k in res_xarray.dims
+        }
+        depends_dict = {
+            rename_dict[k]: coordinate_depends[k]
+            for k in coordinate_depends.keys()
+            if k in res_xarray.dims
+        }
         res_xarray = res_xarray.rename(rename_dict)
         self._scan_info["coordinate_depends"] = depends_dict
 
         for name in res_xarray.dims:
-            res_xarray[name].attrs["unit"] = default_units[name]
+            try:
+                res_xarray[name].attrs["unit"] = self._config["units"][name]
+            except KeyError:
+                pass
 
         self.metadata.update(
             **handle_meta(
@@ -314,7 +290,6 @@ class SpecsScan:
         else:
             # search for the given scan using the default path
             path = Path(self._config["data_path"])
-            # path_scan = sorted(path.glob(f"20[1,2][9,0-9]/*/*/Raw Data/{scan}"))
             path_scan_list = find_scan(path, scan)
             if not path_scan_list:
                 raise FileNotFoundError(
@@ -386,7 +361,7 @@ class SpecsScan:
         res_xarray = res_xarray.transpose("Angle", "Ekin", "Iteration")
         for name in res_xarray.dims:
             try:
-                res_xarray[name].attrs["unit"] = default_units[name]
+                res_xarray[name].attrs["unit"] = self._config["units"][name]
             except KeyError:
                 pass
 
@@ -441,6 +416,8 @@ class SpecsScan:
                   config["nexus"]["definition"]
                 - **input_files**: A list of input files to pass to the reader.
                   Defaults to config["nexus"]["input_files"]
+                - **eln_data**: Path to a json file with data from an electronic lab notebook.
+                  Its is appended to the ``input_files``.
         """
         if self._result is None:
             raise NameError("Need to load data first!")
