@@ -41,13 +41,13 @@ epics_channels:
   polar: "trARPES:Carving:THT.RBV"
   tilt: "trARPES:Carving:PHI.RBV"
   azimuth: "trARPES:Carving:OMG.RBV"
-  sample_bias: "KTOF:Lens:Sample:V"
+  drain_current: "trARPES:Sample:Measure"
   pressure: "trARPES:XGS600:PressureAC:P_RD"
 
 nexus:
   reader: "mpes"
   definition: "NXmpes"
-  input_files: ["../specsscan/config/NXmpes_arpes_phoibos_config.json"]
+  input_files: ["../specsscan/config/NXmpes_arpes_config.json"]
 
 spa_params:
   calib2d_file: "../tests/data/phoibos150.calib2d"
