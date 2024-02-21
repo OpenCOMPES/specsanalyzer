@@ -21,7 +21,7 @@
     "address": "@attrs:metadata/user0/address",
     "email": "@attrs:metadata/user0/email"
   },
-  "/ENTRY[entry]/COORDINATE_SYSTEM_SET[geometries]/COORDINATE_SYSTEM[arpesgeometry]": {
+  "/ENTRY[entry]/geometries/arpes_geometry": {
     "depends_on": "/entry/geometries/arpesgeometry/transformations/rot_y",
     "TRANSFORMATIONS[transformations]": {
       "AXISNAME[rot_y]/@depends_on": ".",
@@ -90,7 +90,7 @@
 
 
     "depends_on": "/entry/instrument/electronanalyser/transformations/trans_z",
-    "TRANSFORMATIONS[transformations]": {
+    "transformations": {
       "AXISNAME[trans_z]/@depends_on": "analyzer_elevation",
       "AXISNAME[trans_z]": 40.0,
       "AXISNAME[trans_z]/@transformation_type": "translation",
@@ -124,15 +124,7 @@
     "scheme": "@attrs:metadata/scan_info/scheme",
     "lens_mode": "@attrs:metadata/scan_info/LensMode",
     "working_distance": 40.0,
-    "working_distance/@units": "mm",
-    "entrance_slit": {
-      "shape": "curved",
-      "size": "1.0",
-      "size/@units": "mm"
-    },
-    "exit_slit": {
-      "shape": "mesh"
-    }
+    "working_distance/@units": "mm"
   },
   "/ENTRY[entry]/INSTRUMENT[instrument]/ELECTRONANALYSER[electronanalyser]/ENERGYDISPERSION[energydispersion]": {
     "energy_scan_mode": "@attrs:metadata/scan_info/energy_scan_mode",
@@ -142,7 +134,15 @@
     "kinetic_energy/@units": "eV",
     "scheme": "hemispherical",
     "diameter": 300.0,
-    "diameter/@units": "mm"
+    "diameter/@units": "mm",
+    "entrance_slit": {
+      "shape": "curved",
+      "size": 1.0,
+      "size/@units": "mm"
+    },
+    "exit_slit": {
+      "shape": "grid"
+    }
   },
   "/ENTRY[entry]/INSTRUMENT[instrument]/ELECTRONANALYSER[electronanalyser]/DETECTOR[detector]": {
     "amplifier_type": "MCP",
@@ -240,7 +240,7 @@
       "AXISNAME[trans_z]/@transformation_type": "translation",
       "AXISNAME[trans_z]/@units": "m",
       "AXISNAME[trans_z]/@vector": [0, 0, 1],
-      "AXISNAME[rot_z]/@depends_on": "rot_x",
+      "AXISNAME[rot_z]/@depends_on": ".",
       "AXISNAME[rot_z]": -25.0,
       "AXISNAME[rot_z]/@transformation_type": "rotation",
       "AXISNAME[rot_z]/@units": "degrees",
@@ -271,28 +271,38 @@
     "drain_current": {
       "amperemeter": "@link:/entry/instrument/manipulator/drain_current_amperemeter"
     },
-    "depends_on": "/entry/sample/transformations/corrected_phi",
-    "TRANSFORMATIONS[transformations]": {
-      "AXISNAME[corrected_phi]/@depends_on": "rot_omg",
-      "AXISNAME[corrected_phi]": 90.0,
-      "AXISNAME[corrected_phi]/@units": "degrees",
-      "AXISNAME[corrected_phi]/@transformation_type": "rotation",
-      "AXISNAME[corrected_phi]/@vector": [0, 1, 0],
-      "AXISNAME[rot_omg]/@depends_on": "rot_phi",
-      "AXISNAME[rot_omg]": "@attrs:metadata/scan_info/trARPES:Carving:OMG.RBV",
-      "AXISNAME[rot_omg]/@units": "degrees",
-      "AXISNAME[rot_omg]/@transformation_type": "rotation",
-      "AXISNAME[rot_omg]/@vector": [1, 0, 0],
-      "AXISNAME[rot_phi]/@depends_on": "rot_tht",
-      "AXISNAME[rot_phi]": "@attrs:metadata/scan_info/trARPES:Carving:PHI.RBV",
-      "AXISNAME[rot_phi]/@units": "degrees",
-      "AXISNAME[rot_phi]/@transformation_type": "rotation",
-      "AXISNAME[rot_phi]/@vector": [0, 1, 0],
-      "AXISNAME[rot_tht]/@depends_on": "trans_z",
-      "AXISNAME[rot_tht]": "@attrs:metadata/scan_info/trARPES:Carving:THT.RBV",
-      "AXISNAME[rot_tht]/@units": "degrees",
-      "AXISNAME[rot_tht]/@transformation_type": "rotation",
-      "AXISNAME[rot_tht]/@vector": [0, 0, 1],
+    "depends_on": "/entry/sample/transformations/bz_offset",
+    "transformations": {
+      "AXISNAME[bz_offset]/@depends_on": "sample_azimuth",
+      "AXISNAME[bz_offset]": 0,
+      "AXISNAME[bz_offset]/@units": "degrees",
+      "AXISNAME[bz_offset]/@transformation_type": "rotation",
+      "AXISNAME[bz_offset]/@vector": [0, 0, 1],
+      "sample_azimuth/@depends_on": "sample_tilt",
+      "sample_azimuth": "@attrs:metadata/scan_info/trARPES:Carving:OMG.RBV",
+      "sample_azimuth/@units": "degrees",
+      "sample_azimuth/@transformation_type": "rotation",
+      "sample_azimuth/@vector": [0, 0, 1],
+      "sample_tilt/@depends_on": "sample_polar",
+      "sample_tilt": "@attrs:metadata/scan_info/trARPES:Carving:PHI.RBV",
+      "sample_tilt/@units": "degrees",
+      "sample_tilt/@transformation_type": "rotation",
+      "sample_tilt/@vector": [1, 0, 0],
+      "sample_polar/@depends_on": "xy_flip",
+      "sample_polar": "@attrs:metadata/scan_info/trARPES:Carving:THT.RBV",
+      "sample_polar/@units": "degrees",
+      "sample_polar/@transformation_type": "rotation",
+      "sample_polar/@vector": [0, 1, 0],
+      "AXISNAME[xy_flip]/@depends_on": "xz_flip",
+      "AXISNAME[xy_flip]": -90.0,
+      "AXISNAME[xy_flip]/@units": "degrees",
+      "AXISNAME[xy_flip]/@transformation_type": "rotation",
+      "AXISNAME[xy_flip]/@vector": [0, 0, 1],
+      "AXISNAME[xz_flip]/@depends_on": "trans_z",
+      "AXISNAME[xz_flip]": -90.0,
+      "AXISNAME[xz_flip]/@units": "degrees",
+      "AXISNAME[xz_flip]/@transformation_type": "rotation",
+      "AXISNAME[xz_flip]/@vector": [0, 1, 0],
       "AXISNAME[trans_z]/@depends_on": "trans_y",
       "AXISNAME[trans_z]": "@attrs:metadata/scan_info/trARPES:Carving:TRZ.RBV",
       "AXISNAME[trans_z]/@units": "mm",
@@ -307,13 +317,13 @@
       "AXISNAME[trans_x]": "@attrs:metadata/scan_info/trARPES:Carving:TRX.RBV",
       "AXISNAME[trans_x]/@units": "mm",
       "AXISNAME[trans_x]/@transformation_type": "translation",
-      "AXISNAME[trans_x]/@vector": [1, 0, 0]
+      "AXISNAME[trans_x]/@vector": [0, 1, 0]
     }
   },
   "/ENTRY[entry]/PROCESS[process]/energy_calibration":{
     "calibrated_axis": "@link:/entry/data/energy"
   },
-  "/ENTRY[entry]/PROCESS[process]/angular1_calibration":{
+  "/ENTRY[entry]/PROCESS[process]/CALIBRATION[angular1_calibration]":{
     "calibrated_axis": "@link:/entry/data/angular1"
   },
   "/ENTRY[entry]/data": {
@@ -324,7 +334,7 @@
     "data/@units": "counts",
     "AXISNAME[*]": "@data:*.data",
     "AXISNAME[*]/@units": "@data:*.unit",
-    "@*_depends": "@attrs:metadata/scan_info/coordinate_depends/*",
+    "AXISNAME_depends[@*_depends]": "@attrs:metadata/scan_info/coordinate_depends/*",
     "energy/@type": "kinetic"
   }
 }
