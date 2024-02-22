@@ -22,7 +22,7 @@
     "email": "@attrs:metadata/user0/email"
   },
   "/ENTRY[entry]/geometries/arpes_geometry": {
-    "depends_on": "/entry/geometries/arpesgeometry/transformations/rot_y",
+    "depends_on": "/entry/geometries/arpes_geometry/transformations/rot_y",
     "TRANSFORMATIONS[transformations]": {
       "AXISNAME[rot_y]/@depends_on": ".",
       "AXISNAME[rot_y]": 140.0,
