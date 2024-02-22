@@ -232,6 +232,16 @@ class SpecsScan:
         res_xarray = res_xarray.rename(rename_dict)
         self._scan_info["coordinate_depends"] = depends_dict
 
+        axis_dict = {
+            "/entry/sample/transformations/sample_polar": "Polar",
+            "/entry/sample/transformations/sample_tilt": "Tilt",
+            "/entry/sample/transformations/sample_azimuth": "Azimuth",
+        }
+
+        for k, v in depends_dict.items():
+            if v in axis_dict:
+                self._scan_info[axis_dict[v]] = "@link:/entry/data/" + k
+
         for name in res_xarray.dims:
             try:
                 res_xarray[name].attrs["unit"] = self._config["units"][name]
