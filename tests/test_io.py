@@ -71,7 +71,7 @@ def test_save_and_load_tiff_xarray(_da):
 )
 def test_save_and_load_hdf5(_da):
     """Test the hdf5 saving/loading function."""
-    faddr = "test.h5"
+    faddr = f"test_{len(_da.shape)}.h5"
     to_h5(_da, faddr, mode="w")
     loaded = load_h5(faddr)
     xr.testing.assert_equal(_da, loaded)

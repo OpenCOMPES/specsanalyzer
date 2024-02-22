@@ -24,15 +24,15 @@ jobs:
         python -m pip install .
     - name: pycodestyle
       run: |
-        python -m pycodestyle --ignore=E203,E501,W503 specsanalyzer tests
+        python -m pycodestyle --ignore=E203,E501,W503 specsanalyzer specsscan tests
     - name: pylint
       if: ${{ always() }}
       run: |
-        python -m pylint --good-names=i,j,k,ex,x,y,t,k,v,ax,df,ec,mc,dc,ct --disable=fixme,too-many-branches,too-many-locals,too-many-statements,too-many-arguments,too-many-lines,too-many-public-methods,too-many-instance-attributes,too-few-public-methods specsanalyzer tests
+        python -m pylint --good-names=i,j,k,ex,x,y,t,k,v,ax,df,ec,mc,dc,ct --disable=fixme,too-many-branches,too-many-locals,too-many-statements,too-many-arguments,too-many-lines,too-many-public-methods,too-many-instance-attributes,too-few-public-methods specsanalyzer specsscan tests
     - name: mypy
       if: ${{ always() }}
       run: |
-        python -m mypy --ignore-missing-imports --follow-imports=silent --no-strict-optional specsanalyzer tests
+        python -m mypy --ignore-missing-imports --follow-imports=silent --no-strict-optional specsanalyzer specsscan tests
     - name: Test with pytest
       if: ${{ always() }}
       run: |

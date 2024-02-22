@@ -32,7 +32,10 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
         **kwds,
     ):
 
-        self._config = parse_config(config, **kwds,)
+        self._config = parse_config(
+            config,
+            **kwds,
+        )
 
         self._attributes = MetaHandler(meta=metadata)
 
@@ -48,6 +51,7 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
 
         self._correction_matrix_dict: Dict[Any, Any] = {}
 
+    # pylint: disable=duplicate-code
     def __repr__(self):
         if self._config is None:
             pretty_str = "No configuration available"
