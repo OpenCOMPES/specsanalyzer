@@ -14,8 +14,9 @@ from urllib.request import urlopen
 
 import numpy as np
 import pandas as pd
-from specsanalyzer.config import complete_dictionary  # name can be generalized
 from tqdm.auto import tqdm
+
+from specsanalyzer.config import complete_dictionary  # name can be generalized
 
 
 def load_images(
@@ -199,7 +200,7 @@ def parse_lut_to_df(scan_path: Path) -> Union[pd.DataFrame, None]:
         new_cols[new_cols.index("delaystage")] = "Delay"
         new_cols.insert(3, "delay (fs)")  # Create label to drop the column later
 
-        df_lut.columns = new_cols
+        df_lut = df_lut.set_axis(new_cols, axis="columns")
         df_lut.drop(columns="delay (fs)", inplace=True)
 
     except FileNotFoundError:
@@ -264,7 +265,7 @@ def get_coords(
                 "scanvector.txt not found. Obtaining coordinates from LUT",
             )
 
-            df_new: pd.DataFrame = df_lut.loc[:, df_lut.columns[2:]]
+            df_new: pd.DataFrame = df_lut.loc[df_lut.columns[2:]]
 
             coords, index = compare_coords(df_new.to_numpy())
             dim = df_new.columns[index]
