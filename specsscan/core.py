@@ -13,12 +13,12 @@ from typing import Union
 
 import numpy as np
 import xarray as xr
+
 from specsanalyzer import SpecsAnalyzer
 from specsanalyzer.config import parse_config
 from specsanalyzer.io import to_h5
 from specsanalyzer.io import to_nexus
 from specsanalyzer.io import to_tiff
-
 from specsscan.helpers import find_scan
 from specsscan.helpers import get_coords
 from specsscan.helpers import handle_meta
@@ -30,7 +30,7 @@ from specsscan.helpers import parse_lut_to_df
 
 package_dir = os.path.dirname(find_spec("specsscan").origin)
 
-default_units = {
+default_units: Dict[Any, Any] = {
     "Angle": "degrees",
     "Ekin": "eV",
     "delay": "fs",
@@ -77,8 +77,9 @@ class SpecsScan:
         except KeyError:
             self.spa = SpecsAnalyzer()
 
-        self._result = None
+        self._result: xr.DataArray = None
 
+    # pylint: disable=duplicate-code
     def __repr__(self):
         if self._config is None:
             pretty_str = "No configuration available"
