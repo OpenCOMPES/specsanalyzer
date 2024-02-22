@@ -265,7 +265,7 @@ def get_coords(
                 "scanvector.txt not found. Obtaining coordinates from LUT",
             )
 
-            df_new: pd.DataFrame = df_lut.loc[df_lut.columns[2:]]
+            df_new: pd.DataFrame = df_lut.loc[:, df_lut.columns[2:]]
 
             coords, index = compare_coords(df_new.to_numpy())
             dim = df_new.columns[index]
