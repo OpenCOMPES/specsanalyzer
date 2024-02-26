@@ -30,7 +30,7 @@ from specsscan.helpers import parse_lut_to_df
 
 package_dir = os.path.dirname(find_spec("specsscan").origin)
 
-default_units = {
+default_units: Dict[Any, Any] = {
     "Angle": "degrees",
     "Ekin": "eV",
     "delay": "fs",
@@ -89,8 +89,9 @@ class SpecsScan:
                 system_config={},
             )
 
-        self._result = None
+        self._result: xr.DataArray = None
 
+    # pylint: disable=duplicate-code
     def __repr__(self):
         if self._config is None:
             pretty_str = "No configuration available"
