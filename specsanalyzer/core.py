@@ -136,8 +136,6 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
             img_rotated = imutils.rotate(img, angle=rotation_angle)
             img = img_rotated
 
-        # TODO add image rotation
-
         # look for the lens mode in the dictionary
         try:
             supported_angle_modes = self._config["calib2d_dict"]["supported_angle_modes"]
