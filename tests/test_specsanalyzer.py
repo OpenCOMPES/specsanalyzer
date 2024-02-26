@@ -17,6 +17,6 @@ def test_version():
 
 def test_default_config():
     """Test if the default config can be loaded and test for one entry."""
-    spa = SpecsAnalyzer()
+    spa = SpecsAnalyzer(user_config={}, system_config={})
     assert isinstance(spa.config, dict)
     assert spa.config["apply_fft_filter"] is False

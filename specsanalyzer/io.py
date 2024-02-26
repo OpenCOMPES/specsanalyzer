@@ -475,6 +475,12 @@ def read_calib2d(filepath: str) -> List[Any]:
     listf: List[Any] = []
     for line in lines:
 
+        if "# !!!!! Place a valid calib2D file from your Specslab Installation here!" in line:
+            print("No valid calib2 file found. Please provide the path to the calib2d file",
+                  "\r\ncorresponding to your detector in the config, or copy into the config",
+                  "\r\nfolder of the package! Without valid calib2d file, calibration parameters",
+                  "\r\nhave to be provided explicitly.")
+
         if line[0] == "\n" or line[0] == "#":
             continue
         line_list = line.strip("[]\n").split("=")

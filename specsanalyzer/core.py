@@ -23,7 +23,9 @@ package_dir = os.path.dirname(__file__)
 
 
 class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
-    """[summary]"""
+    """SpecsAnalyzer: A class to convert photoemission data from a SPECS Phoibos analyzer from
+    camera image coordinates into physical units (energy, angle, position).
+    """
 
     def __init__(
         self,
@@ -31,12 +33,20 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
         config: Union[Dict[Any, Any], str] = {},
         **kwds,
     ):
+        """SpecsAnalyzer constructor.
 
+        Args:
+            metadata (dict, optional): Metadata dictionary. Defaults to {}.
+            config (Union[dict, str], optional): Metadata dictionary or file path. Defaults to {}.
+            **kwds: Keyword arguments passed to ``parse_config``.
+        """
         self._config = parse_config(
-            config,
-            **kwds,
-        )
 
+            config,
+
+            **kwds,
+
+        )
         self._attributes = MetaHandler(meta=metadata)
 
         try:
