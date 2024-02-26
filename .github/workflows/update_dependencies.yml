@@ -25,6 +25,8 @@ jobs:
           git submodule sync --recursive
           git submodule update --init --recursive
 
+
+# see https://github.com/peter-evans/create-pull-request/blob/main/docs/concepts-guidelines.md
       - uses: tibdex/github-app-token@v1
         id: generate-token
         with:
