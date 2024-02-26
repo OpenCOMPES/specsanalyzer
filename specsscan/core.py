@@ -58,7 +58,6 @@ class SpecsScan:
         **kwds,
     ):
         """SpecsScan constructor.
-
         Args:
             metadata (dict, optional): Metadata dictionary. Defaults to {}.
             config (Union[dict, str], optional): Metadata dictionary or file path. Defaults to {}.

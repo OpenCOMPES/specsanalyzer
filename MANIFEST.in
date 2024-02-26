@@ -1,1 +1,2 @@
 include specsanalyzer/config/*
+include specsscan/config/*
