@@ -13,7 +13,7 @@ from typing import Union
 
 import numpy as np
 import xarray as xr
-from tqdm import tqdm
+from tqdm.auto import tqdm
 
 from specsanalyzer import SpecsAnalyzer
 from specsanalyzer.config import parse_config
@@ -241,10 +241,9 @@ class SpecsScan:
 
         if scan_type == "single":
             res_xarray = xr_list[0]
-        elif scan_type == "voltage":
-            # assert dim == "kinetic energy"
+        elif scan_type == "voltage":  # and dim == "kinetic energy":
             res_xarray = self.process_sweep_scan(
-                raw_data=xr_list,
+                raw_data=data,
                 voltages=coords,
                 pass_energy=pass_energy,
                 lens_mode=lens_mode,
@@ -509,13 +508,25 @@ class SpecsScan:
 
     def process_sweep_scan(
         self,
-        raw_data: xr.DataArray,
-        voltages: np.array,
+        raw_data: np.ndarray,
+        voltages: np.ndarray,
         pass_energy: float,
         lens_mode: str,
         work_function: float,
         **kwds,
     ) -> xr.DataArray:
+        """_summary_
+
+        Args:
+            raw_data (np.ndarray): _description_
+            voltages (np.ndarray): _description_
+            pass_energy (float): _description_
+            lens_mode (str): _description_
+            work_function (float): _description_
+
+        Returns:
+            xr.DataArray: _description_
+        """
         voltage_step = voltages[1] - voltages[0]
         # TODO check equidistant
 
