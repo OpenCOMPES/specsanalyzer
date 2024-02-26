@@ -41,11 +41,8 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
             **kwds: Keyword arguments passed to ``parse_config``.
         """
         self._config = parse_config(
-
             config,
-
             **kwds,
-
         )
         self._attributes = MetaHandler(meta=metadata)
 

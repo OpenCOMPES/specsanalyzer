@@ -1,40 +1,102 @@
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+![](https://github.com/mpes-kit/specsanalyzer/actions/workflows/linting.yml/badge.svg)
+![](https://github.com/mpes-kit/specsanalyzer/actions/workflows/testing_multiversion.yml/badge.svg?branch=main)
+![](https://img.shields.io/pypi/pyversions/specsanalyzer)
+![](https://img.shields.io/pypi/l/specsanalyzer)
+[![](https://img.shields.io/pypi/v/specsanalyzer)](https://pypi.org/project/specsanalyzer)
+[![Coverage Status](https://coveralls.io/repos/github/mpes-kit/specsanalyzer/badge.svg?branch=main&kill_cache=1)](https://coveralls.io/github/mpes-kit/specsanalyzer?branch=main)
+
 # specsanalyzer
-This is a package to import and convert MCP analyzer images from SPECS Phoibos analyzers into energy and emission angle/physical coordinates.
+This package contains two modules:
+`specsanalyzer` is a package to import and convert MCP analyzer images from SPECS Phoibos analyzers into energy and emission angle/physical coordinates.
+`specsscan` is a Python package for loading Specs Phoibos scans accquired with the labview software developed at FHI/EPFL
 
-## Getting started
+## Installation
 
-You should create a virtual environment. This is optional, but highly recommended as
-the required pypi packages might require many dependencies with specific versions
-that might conflict with other libraries that you have installed. This was tested
-with Python 3.8.
+### Pip (for users)
 
-If you don't have Python 3.8 installed on your computer, follow these commands:
-```
-sudo add-apt-repository ppa:deadsnakes/ppa
-sudo apt install python3.8 python3-dev libpython3.8-dev python-numpy python3-pip
-sudo pip install --upgrade pip
-sudo pip install virtualenv
+- Create a new virtual environment using either venv, pyenv, conda, etc. See below for an example.
+
+```bash
+python -m venv .specs-venv
 ```
 
-You can now install your virtual environment with python3.8 interpreter
+- Activate your environment:
 
-```
-mkdir <your-brand-new-folder>
-cd <your-brand-new-folder>
-virtualenv --python=python3.8 .pyenv
-source .pyenv/bin/activate
+```bash
+source .specs-venv/bin/activate
 ```
 
-Install the specsanalyzer package:
-```
-pip install --upgrade pip
+- Install `specsanalyzer` from PyPI:
+
+```bash
 pip install specsanalyzer
 ```
 
-Development installation:
+- This should install all the requirements to run `specsanalyzer` and `specsscan`in your environment.
+
+- If you intend to work with Jupyter notebooks, it is helpful to install a Jupyter kernel for your environment. This can be done, once your environment is activated, by typing:
+
+```bash
+python -m ipykernel install --user --name=specs_kernel
 ```
-pip install --upgrade pip
-git clone git@github.com:mpes-kit/specsanalyzer.git
+### For Contributors
+
+To contribute to the development of `specsanalyzer`, you can follow these steps:
+
+1. Clone the repository:
+
+```bash
+git clone https://github.com/mpes-kit/specsanalyzer.git
 cd specsanalyzer
+```
+
+2. Check out test data (optional, requires access rights):
+
+```bash
+git submodule sync --recursive
+git submodule update --init --recursive
+```
+
+2. Install the repository in editable mode:
+
+```bash
 pip install -e .
 ```
+
+Now you have the development version of `specsanalyzer` installed in your local environment. Feel free to make changes and submit pull requests.
+
+### Poetry (for maintainers)
+
+- Prerequisites:
+  + Poetry: https://python-poetry.org/docs/
+
+- Create a virtual environment by typing:
+
+```bash
+poetry shell
+```
+
+- A new shell will be spawned with the new environment activated.
+
+- Install the dependencies from the `pyproject.toml` by typing:
+
+```bash
+poetry install --with dev, docs
+```
+
+- If you wish to use the virtual environment created by Poetry to work in a Jupyter notebook, you first need to install the optional notebook dependencies and then create a Jupyter kernel for that.
+
+  + Install the optional dependencies `ipykernel` and `jupyter`:
+
+  ```bash
+  poetry install -E notebook
+  ```
+
+  + Make sure to run the command below within your virtual environment (`poetry run` ensures this) by typing:
+
+  ```bash
+  poetry run ipython kernel install --user --name=specs_poetry
+  ```
+
+  + The new kernel will now be available in your Jupyter kernels list.
