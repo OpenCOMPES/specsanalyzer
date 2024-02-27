@@ -75,7 +75,6 @@ def load_images(
     data = []
 
     if iterations is not None or delays is not None:
-
         avg_dim = "iterations" if iterations is not None else "delays"
 
         if df_lut is not None:
@@ -116,7 +115,6 @@ def load_images(
             avg_list = []
             for image in tqdm(dim, leave=False, disable=not tqdm_enable_nested):
                 if image != "nan":
-
                     with open(
                         scan_path.joinpath(f"RAW/{image}"),
                         encoding="utf-8",
@@ -138,7 +136,6 @@ def load_images(
                 ),
                 encoding="utf-8",
             ) as file:
-
                 new_im = np.loadtxt(file, delimiter="\t")
                 data.append(new_im)
 
@@ -204,7 +201,7 @@ def parse_lut_to_df(scan_path: Path) -> Union[pd.DataFrame, None]:
         new_cols[new_cols.index("delaystage")] = "Delay"
         new_cols.insert(3, "delay (fs)")  # Create label to drop the column later
 
-        df_lut.columns = new_cols
+        df_lut = df_lut.set_axis(new_cols, axis="columns")
         df_lut.drop(columns="delay (fs)", inplace=True)
 
     except FileNotFoundError:
@@ -321,9 +318,7 @@ def parse_info_to_dict(path: Path) -> Dict:
     info_dict: Dict[Any, Any] = {}
     try:
         with open(path.joinpath("info.txt"), encoding="utf-8") as info_file:
-
             for line in info_file.readlines():
-
                 if "=" in line:  # older scans
                     line_list = line.rstrip("\nV").split("=")
 
@@ -401,6 +396,9 @@ def handle_meta(  # pylint:disable=too-many-branches
         if lens_mode in mode_list:
             metadata_dict["scan_info"]["projection"] = projection
             fast = "Angle" if projection == "reciprocal" else "Position"
+            metadata_dict["scan_info"]["scheme"] = (
+                "angular dispersive" if projection == "reciprocal" else "spatial dispersive"
+            )
 
     metadata_dict["scan_info"]["slow_axes"] = dim
     metadata_dict["scan_info"]["fast_axes"] = [
@@ -511,9 +509,7 @@ def find_scan(path: Path, scan: int) -> List[Path]:
     """
     print("Scan path not provided, searching directories...")
     for file in path.iterdir():
-
         if file.is_dir():
-
             try:
                 base = int(file.stem)
 
@@ -521,7 +517,6 @@ def find_scan(path: Path, scan: int) -> List[Path]:
                 continue
 
             if base >= 2019:  # only look at folders 2019 onwards
-
                 scan_path = sorted(
                     file.glob(f"*/*/Raw Data/{scan}"),
                 )
@@ -553,7 +548,6 @@ def find_scan_type(  # pylint:disable=too-many-nested-blocks
                 if day.is_dir():
                     try:
                         for scan_path in day.joinpath("Raw Data").iterdir():
-
                             stype = parse_info_to_dict(scan_path)["ScanType"]
                             if stype == scan_type:
                                 print(scan_path)

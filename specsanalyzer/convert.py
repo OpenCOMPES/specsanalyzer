@@ -45,7 +45,6 @@ def get_damatrix_fromcalib2d(  # pylint: disable=too-many-locals
         ) from exc
 
     if lens_mode in supported_angle_modes:
-
         # given the lens mode get all the retardation ratios available
         rr_vec, damatrix_full = get_rr_da(lens_mode, config_dict)
         # find closest retardation ratio in table
@@ -334,7 +333,6 @@ def zinner_diff(
     out = np.zeros(angle.shape, float)
 
     for i in np.arange(0, da_poly_matrix.shape[0], 1):
-
         out = out + (
             (10.0 ** (-2 * i))
             * (1 + 2 * i)
