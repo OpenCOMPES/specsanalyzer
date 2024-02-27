@@ -10,6 +10,11 @@ from typing import Any
 from typing import Dict
 from typing import Sequence
 from typing import Union
+import matplotlib
+import matplotlib.pyplot as plt
+import ipywidgets as ipw
+from matplotlib.widgets import Button
+from IPython.display import display
 
 import matplotlib
 import numpy as np
@@ -140,6 +145,8 @@ class SpecsScan:
                 np.s_[1:10, 15, -1] would be a valid input for
                 iterations.
             metadata (dict, optional): Metadata dictionary with additional metadata for the scan
+            kwds: Additional arguments for the SpecsAnalyzer converter. For ex., passing
+                crop=True crops the data if cropping data is already present in the given instance. 
         Raises:
             FileNotFoundError, IndexError
 
@@ -195,7 +202,8 @@ class SpecsScan:
         )
 
         xr_list = []
-        for image in data:
+        for i in range(len(data)):
+            image = data[i]
             xr_list.append(
                 self.spa.convert_image(
                     image,
@@ -206,7 +214,10 @@ class SpecsScan:
                     **kwds,
                 ),
             )
+            if i == 0:
+                self.spa.print_msg = False
         self.spa.print_msg = True
+
         coords, dim = get_coords(
             scan_path=path,
             scan_type=scan_type,
@@ -256,15 +267,13 @@ class SpecsScan:
         """
         matplotlib.use("module://ipympl.backend_nbagg")
         image = self.metadata["loader"]["raw_data"][0]
-        converted = self.spa.convert_image(
-            raw_img=image,
-            lens_mode=self._scan_info["LensMode"],
-            kinetic_energy=self._scan_info["KineticEnergy"],
-            pass_energy=self._scan_info["PassEnergy"],
-            work_function=self._scan_info["WorkFunction"],
-            crop=False,
+        self.spa.crop_tool(
+            image,
+            self._scan_info["LensMode"],
+            self._scan_info["KineticEnergy"],
+            self._scan_info["PassEnergy"],
+            self._scan_info["WorkFunction"],
         )
-        self.spa.crop_tool(converted, self._scan_info)
 
     def check_scan(
         self,
@@ -286,6 +295,8 @@ class SpecsScan:
             path: Either a string of the path to the folder
                 containing the scan or a Path object
             metadata (dict, optional): Metadata dictionary with additional metadata for the scan
+            kwds: Additional arguments for the SpecsAnalyzer converter. For ex., passing
+                crop=True crops the data if cropping data is already present in the given instance.
         Raises:
             FileNotFoundError
         Returns:
@@ -344,7 +355,8 @@ class SpecsScan:
                 "Invalid input. A 3-D scan is expected, a 2-D single scan was provided instead.",
             )
         xr_list = []
-        for image in data:
+        for i in range(len(data)):
+            image = data[i]
             xr_list.append(
                 self.spa.convert_image(
                     image,
@@ -355,6 +367,9 @@ class SpecsScan:
                     **kwds,
                 ),
             )
+            if i == 0:
+                self.spa.print_msg = False
+        self.spa.print_msg = True
 
         dims = get_coords(
             scan_path=path,
