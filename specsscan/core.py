@@ -49,6 +49,7 @@ default_units = {
     "tilt": "degrees",
     "azimuth": "degrees",
     "voltage": "V",
+    "temperature": "K",
 }
 
 
