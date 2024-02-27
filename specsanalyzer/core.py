@@ -228,20 +228,56 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
                 range_dict: dict = self._correction_matrix_dict[lens_mode][kinetic_energy][
                     pass_energy
                 ][work_function]["crop_params"]
+                ang_min = range_dict["ang_min"]
+                ang_max = range_dict["ang_max"]
+                ek_min = range_dict["ek_min"]
+                ek_max = range_dict["ek_max"]
                 if self.print_msg:
                     print("Using saved crop parameters...")
-
-                ang_min = range_dict["Ang1"]
-                ang_max = range_dict["Ang2"]
-                ek_min = range_dict["Ek1"]
-                ek_max = range_dict["Ek2"]
                 data_array = crop_xarray(data_array, ang_min, ang_max, ek_min, ek_max)
             except KeyError:
-                if self.print_msg:
-                    print(
-                        "Warning: Cropping parameters not found, "
-                        "use method crop_tool() after loading.",
+                try:
+                    ang_min = (
+                        kwds.get("ang_range_min", self._config["ang_range_min"])
+                        * (
+                            data_array.coords[data_array.dims[0]][-1]
+                            - data_array.coords[data_array.dims[0]][0]
+                        )
+                        + data_array.coords[data_array.dims[0]][0]
                     )
+                    ang_max = (
+                        kwds.get("ang_range_max", self._config["ang_range_max"])
+                        * (
+                            data_array.coords[data_array.dims[0]][-1]
+                            - data_array.coords[data_array.dims[0]][0]
+                        )
+                        + data_array.coords[data_array.dims[0]][0]
+                    )
+                    ek_min = (
+                        kwds.get("ek_range_min", self._config["ek_range_min"])
+                        * (
+                            data_array.coords[data_array.dims[1]][-1]
+                            - data_array.coords[data_array.dims[1]][0]
+                        )
+                        + data_array.coords[data_array.dims[1]][0]
+                    )
+                    ek_max = (
+                        kwds.get("ek_range_max", self._config["ek_range_max"])
+                        * (
+                            data_array.coords[data_array.dims[1]][-1]
+                            - data_array.coords[data_array.dims[1]][0]
+                        )
+                        + data_array.coords[data_array.dims[1]][0]
+                    )
+                    if self.print_msg:
+                        print("Cropping parameters not found, using cropping ranges from config...")
+                    data_array = crop_xarray(data_array, ang_min, ang_max, ek_min, ek_max)
+                except KeyError:
+                    if self.print_msg:
+                        print(
+                            "Warning: Cropping parameters not found, "
+                            "use method crop_tool() after loading.",
+                        )
 
         return data_array
 
@@ -252,6 +288,7 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
         kinetic_energy: float,
         pass_energy: float,
         work_function: float,
+        **kwds,
     ):
         """Crop tool for selecting cropping parameters
         Args:
@@ -261,9 +298,15 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
             kinetic_energy (float): set analyser kinetic energy
             pass_energy (float): set analyser pass energy
             work_function (float): set analyser work function
+            **kwds: Keyword parameters for the crop tool:
+
+                -ek_range_min
+                -ek_range_max
+                -ang_range_min
+                -ang_range_max
         """
 
-        res_xarray = self.convert_image(
+        data_array = self.convert_image(
             raw_img=raw_image,
             lens_mode=lens_mode,
             kinetic_energy=kinetic_energy,
@@ -276,46 +319,87 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
         fig = plt.figure()
         ax = fig.add_subplot(111)
         try:
-            mesh_obj = res_xarray.plot(ax=ax)
+            mesh_obj = data_array.plot(ax=ax)
         except AttributeError:
             print("Load the scan first!")
             raise
 
-        lineh1 = ax.axhline(y=res_xarray.Angle[0])
-        lineh2 = ax.axhline(y=res_xarray.Angle[-1])
-        linev1 = ax.axvline(x=res_xarray.Ekin[0])
-        linev2 = ax.axvline(x=res_xarray.Ekin[-1])
+        lineh1 = ax.axhline(y=data_array.Angle[0])
+        lineh2 = ax.axhline(y=data_array.Angle[-1])
+        linev1 = ax.axvline(x=data_array.Ekin[0])
+        linev2 = ax.axvline(x=data_array.Ekin[-1])
 
         try:
             range_dict = self._correction_matrix_dict[lens_mode][kinetic_energy][pass_energy][
                 work_function
             ]["crop_params"]
 
-            vline_range = [range_dict["Ek1"], range_dict["Ek2"]]
-            hline_range = [range_dict["Ang1"], range_dict["Ang2"]]
+            ek_min = range_dict["ek_min"]
+            ek_max = range_dict["ek_max"]
+            ang_min = range_dict["ang_min"]
+            ang_max = range_dict["ang_max"]
         except KeyError:
-            vline_range = [res_xarray.Ekin[0], res_xarray.Ekin[-1]]
-            hline_range = [res_xarray.Angle[0], res_xarray.Angle[-1]]
+            try:
+                ang_min = (
+                    kwds.get("ang_range_min", self._config["ang_range_min"])
+                    * (
+                        data_array.coords[data_array.dims[0]][-1]
+                        - data_array.coords[data_array.dims[0]][0]
+                    )
+                    + data_array.coords[data_array.dims[0]][0]
+                )
+                ang_max = (
+                    kwds.get("ang_range_max", self._config["ang_range_max"])
+                    * (
+                        data_array.coords[data_array.dims[0]][-1]
+                        - data_array.coords[data_array.dims[0]][0]
+                    )
+                    + data_array.coords[data_array.dims[0]][0]
+                )
+                ek_min = (
+                    kwds.get("ek_range_min", self._config["ek_range_min"])
+                    * (
+                        data_array.coords[data_array.dims[1]][-1]
+                        - data_array.coords[data_array.dims[1]][0]
+                    )
+                    + data_array.coords[data_array.dims[1]][0]
+                )
+                ek_max = (
+                    kwds.get("ek_range_max", self._config["ek_range_max"])
+                    * (
+                        data_array.coords[data_array.dims[1]][-1]
+                        - data_array.coords[data_array.dims[1]][0]
+                    )
+                    + data_array.coords[data_array.dims[1]][0]
+                )
+            except KeyError:
+                ek_min = data_array.coords[data_array.dims[1]][0]
+                ek_max = data_array.coords[data_array.dims[1]][-1]
+                ang_min = data_array.coords[data_array.dims[0]][-1]
+                ang_max = data_array.coords[data_array.dims[0]][-1]
+
+        vline_range = [ek_min, ek_max]
+        hline_range = [ang_min, ang_max]
 
         vline_slider = ipw.FloatRangeSlider(
             description="Ekin",
             value=vline_range,
-            min=res_xarray.Ekin[0],
-            max=res_xarray.Ekin[-1],
-            step=0.01,
+            min=data_array.Ekin[0],
+            max=data_array.Ekin[-1],
+            step=0.1,
         )
         hline_slider = ipw.FloatRangeSlider(
             description="Angle",
             value=hline_range,
-            min=res_xarray.Angle[0],
-            max=res_xarray.Angle[-1],
-            step=0.01,
+            min=data_array.Angle[0],
+            max=data_array.Angle[-1],
+            step=0.1,
         )
         clim_slider = ipw.FloatRangeSlider(
             description="colorbar limits",
-            value=[res_xarray.data.min(), res_xarray.data.max()],
-            min=res_xarray.data.min(),
-            max=res_xarray.data.max(),
+            value=[data_array.data.min(), data_array.data.max()],
+            min=data_array.data.min(),
+            max=data_array.data.max(),
         )
 
         def update(hline, vline, v_vals):
@@ -338,15 +422,44 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
             ang_max = max(hline_slider.value)
             ek_min = min(vline_slider.value)
             ek_max = max(vline_slider.value)
-            self._data_array = crop_xarray(res_xarray, ang_min, ang_max, ek_min, ek_max)
+            self._data_array = crop_xarray(data_array, ang_min, ang_max, ek_min, ek_max)
             self._correction_matrix_dict[lens_mode][kinetic_energy][pass_energy][work_function] = {
                 "crop_params": {
-                    "Ek1": ek_min,
-                    "Ek2": ek_max,
-                    "Ang1": ang_min,
-                    "Ang2": ang_max,
+                    "ek_min": ek_min,
+                    "ek_max": ek_max,
+                    "ang_min": ang_min,
+                    "ang_max": ang_max,
                 },
             }
+            self._config["ek_range_min"] = (
+                (ek_min - data_array.coords[data_array.dims[1]][0])
+                / (
+                    data_array.coords[data_array.dims[1]][-1]
+                    - data_array.coords[data_array.dims[1]][0]
+                )
+            ).item()
+            self._config["ek_range_max"] = (
+                (ek_max - data_array.coords[data_array.dims[1]][0])
+                / (
+                    data_array.coords[data_array.dims[1]][-1]
+                    - data_array.coords[data_array.dims[1]][0]
+                )
+            ).item()
+            self._config["ang_range_min"] = (
+                (ang_min - data_array.coords[data_array.dims[0]][0])
+                / (
+                    data_array.coords[data_array.dims[0]][-1]
+                    - data_array.coords[data_array.dims[0]][0]
+                )
+            ).item()
+            self._config["ang_range_max"] = (
+                (ang_max - data_array.coords[data_array.dims[0]][0])
+                / (
+                    data_array.coords[data_array.dims[0]][-1]
+                    - data_array.coords[data_array.dims[0]][0]
+                )
+            ).item()
+
             ax.cla()
             self._data_array.plot(ax=ax, add_colorbar=False)
             fig.canvas.draw_idle()
@@ -371,7 +484,7 @@ def mergedicts(
 
     Args:
         dict1 (dict): dictionary 1
-        dict2 (dict): dictiontary 2
+        dict2 (dict): dictionary 2
 
     Yields:
         dict: merged dictionary generator
