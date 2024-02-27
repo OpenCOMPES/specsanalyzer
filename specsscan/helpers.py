@@ -36,32 +36,36 @@ def load_images(
         Sequence[slice],
     ] = None,
     tqdm_enable_nested: bool = False,
-) -> np.ndarray:
+) -> List[np.ndarray]:
     """Loads a 2D/3D numpy array of images for the given
-        scan path with an optional averaging
-        over the given iterations/delays. The function provides
-        functionality to both load_scan and check_scan methods of
-        the SpecsScan class. When iterations/delays is provided,
-        average is performed over the iterations/delays for all
-        delays/iterations.
+    scan path with an optional averaging
+    over the given iterations/delays. The function provides
+    functionality to both load_scan and check_scan methods of
+    the SpecsScan class. When iterations/delays is provided,
+    average is performed over the iterations/delays for all
+    delays/iterations.
+
     Args:
-        scan_path: object of class Path pointing
-                to the scan folder
-        df_lut: Pandas dataframe containing the contents of LUT.txt
-                as obtained from parse_lut_to_df()
-        iterations: A 1-D array of the indices of iterations over
-                which the images are to be averaged. The array
-                can be a list, numpy array or a Tuple consisting of
-                slice objects and integers. For ex.,
-                np.s_[1:10, 15, -1] would be a valid input.
-        delays: A 1-D array of the indices of delays over
-                which the images are to be averaged. The array can
-                be a list, numpy array or a Tuple consisting of
-                slice objects and integers. For ex.,
-                np.s_[1:10, 15, -1] would be a valid input.
+        scan_path (Path): object of class Path pointing to the scan folder
+        df_lut (Union[pd.DataFrame, None], optional): Pandas dataframe containing the contents
+            of LUT.txt as obtained from parse_lut_to_df(). Defaults to None.
+        iterations (Union[ np.ndarray, slice, Sequence[int], Sequence[slice], ], optional): A 1-D
+            array of the indices of iterations over which the images are to be averaged. The array
+            can be a list, numpy array or a Tuple consisting of slice objects and integers. For
+            ex., np.s_[1:10, 15, -1] would be a valid input. Defaults to None.
+        delays (Union[ np.ndarray, slice, int, Sequence[int], Sequence[slice], ], optional): A 1-D
+            array of the indices of delays over which the images are to be averaged. The array can
+            be a list, numpy array or a Tuple consisting of slice objects and integers. For ex.,
+            np.s_[1:10, 15, -1] would be a valid input. Defaults to None.
+        tqdm_enable_nested (bool, optional): Option to enable a nested progress bar.
+            Defaults to False.
+
+    Raises:
+        ValueError: Raised if both iterations and delays is provided.
+        IndexError: Raised if no valid dimension for averaging is found.
+
     Returns:
-        data: A 2-D or 3-D (concatenated) numpy array consisting
-            of raw data
+        List[np.ndarray]: A list of 2-D numpy arrays of raw data
     """
 
     scan_list = sorted(
@@ -135,7 +139,7 @@ def load_images(
                 new_im = np.loadtxt(file, delimiter="\t")
                 data.append(new_im)
 
-    return np.array(data)
+    return data
 
 
 def get_raw2d(
@@ -359,6 +363,7 @@ def handle_meta(  # pylint:disable=too-many-branches
 
     # get metadata from LUT dataframe
     lut_meta = {}
+    energy_scan_mode = "fixed"
     if df_lut is not None:
         for col in df_lut.columns:
             col_array = df_lut[f"{col}"].to_numpy()
@@ -366,6 +371,10 @@ def handle_meta(  # pylint:disable=too-many-branches
                 lut_meta[col] = col_array[0]
             else:
                 lut_meta[col] = col_array
+
+        kinetic_energy = df_lut["KineticEnergy"].to_numpy()
+        if len(set(kinetic_energy)) > 1 and scan_info["ScanType"] == "voltage":
+            energy_scan_mode = "sweep"
 
     scan_meta = complete_dictionary(lut_meta, scan_info)  # merging two dictionaries
 
@@ -375,6 +384,8 @@ def handle_meta(  # pylint:disable=too-many-branches
         scan_meta,
         config,
     )
+
+    metadata_dict["scan_info"]["energy_scan_mode"] = energy_scan_mode
 
     lens_modes_all = {
         "real": config["spa_params"]["calib2d_dict"]["supported_space_modes"],
@@ -394,12 +405,6 @@ def handle_meta(  # pylint:disable=too-many-branches
         "Ekin",
         fast,
     ]
-
-    kinetic_energy = df_lut["KineticEnergy"].to_numpy()
-    if len(set(kinetic_energy)) > 1 and scan_meta["ScanType"] == "voltage":
-        metadata_dict["scan_info"]["energy_scan_mode"] = "sweep"
-    else:
-        metadata_dict["scan_info"]["energy_scan_mode"] = "fixed"
 
     print("Done!")
 

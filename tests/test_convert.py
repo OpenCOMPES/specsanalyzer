@@ -199,7 +199,7 @@ def test_conversion():
 
 
 def test_recycling():
-    """Test function for chceking that the class correctly re-uses the
+    """Test function for checking that the class correctly re-uses the
     precalculated parameters
     """
     # get the raw data
@@ -237,3 +237,118 @@ def test_recycling():
     )
 
     assert spa.correction_matrix_dict["old_matrix_check"] is True
+
+
+def test_cropping():
+    """Test function for checking that cropping parameters are correctly appield"""
+    # get the raw data
+    raw_image_name = os.fspath(
+        f"{test_dir}/data/dataEPFL/R9132/Data9132_RAWDATA.tsv",
+    )
+    with open(raw_image_name, encoding="utf-8") as file:
+        tsv_data = np.loadtxt(file, delimiter="\t")
+
+    config_path = os.fspath(f"{test_dir}/data/dataEPFL/config/config.yaml")
+    spa = SpecsAnalyzer(config=config_path)
+    lens_mode = "WideAngleMode"
+    kinetic_energy = 35.000000
+    pass_energy = 35.000000
+    work_function = 4.2
+
+    converted = spa.convert_image(
+        raw_img=tsv_data,
+        lens_mode=lens_mode,
+        kinetic_energy=kinetic_energy,
+        pass_energy=pass_energy,
+        work_function=work_function,
+        crop=True,
+    )
+    assert converted.Angle[0] == -18
+    assert converted.Angle[-1] == 17.859375
+    assert converted.Ekin[0] == 32.69
+    assert converted.Ekin[-1] == 37.296569767441866
+
+    converted = spa.convert_image(
+        raw_img=tsv_data,
+        lens_mode=lens_mode,
+        kinetic_energy=kinetic_energy,
+        pass_energy=pass_energy,
+        work_function=work_function,
+        ek_range_min=0.1,
+        ek_range_max=0.9,
+        ang_range_min=0.1,
+        ang_range_max=0.9,
+        crop=True,
+    )
+    assert converted.Angle[0] == -14.34375
+    assert converted.Angle[-1] == 14.203125
+    assert converted.Ekin[0] == 33.16005813953488
+    assert converted.Ekin[-1] == 36.82651162790698
+
+    spa.crop_tool(
+        raw_img=tsv_data,
+        lens_mode=lens_mode,
+        kinetic_energy=kinetic_energy,
+        pass_energy=pass_energy,
+        work_function=work_function,
+        ek_range_min=0.1,
+        ek_range_max=0.9,
+        ang_range_min=0.1,
+        ang_range_max=0.9,
+        apply=True,
+    )
+
+    converted = spa.convert_image(
+        raw_img=tsv_data,
+        lens_mode=lens_mode,
+        kinetic_energy=kinetic_energy,
+        pass_energy=pass_energy,
+        work_function=work_function,
+        crop=True,
+    )
+
+    assert converted.Angle[0] == -14.34375
+    assert converted.Angle[-1] == 14.203125
+    assert converted.Ekin[0] == 33.16005813953488
+    assert converted.Ekin[-1] == 36.82651162790698
+
+    spa.crop_tool(
+        raw_img=tsv_data,
+        lens_mode=lens_mode,
+        kinetic_energy=45.0,
+        pass_energy=pass_energy,
+        work_function=work_function,
+        ek_range_min=0.2,
+        ek_range_max=0.8,
+        ang_range_min=0.2,
+        ang_range_max=0.8,
+        apply=True,
+    )
+
+    converted = spa.convert_image(
+        raw_img=tsv_data,
+        lens_mode=lens_mode,
+        kinetic_energy=50.0,
+        pass_energy=pass_energy,
+        work_function=work_function,
+        crop=True,
+    )
+
+    assert converted.Angle[0] == -10.828125
+    assert converted.Angle[-1] == 10.6875
+    assert converted.Ekin[0] == 48.616686046511624
+    assert converted.Ekin[-1] == 51.36988372093023
+
+    converted = spa.convert_image(
+        raw_img=tsv_data,
+        lens_mode=lens_mode,
+        kinetic_energy=kinetic_energy,
+        pass_energy=pass_energy,
+        work_function=work_function,
+        crop=True,
+    )
+
+    assert converted.Angle[0] == -14.34375
+    assert converted.Angle[-1] == 14.203125
+    assert converted.Ekin[0] == 33.16005813953488
+    assert converted.Ekin[-1] == 36.82651162790698

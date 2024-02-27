@@ -16,3 +16,4 @@ units:
   azimuth: "degree"
   polar: "degree"
   voltage: "V"
+  temperature: "K"
