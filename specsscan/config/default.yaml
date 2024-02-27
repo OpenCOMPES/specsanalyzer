@@ -2,3 +2,17 @@ data_path: "//nap32/topfloor/trARPES/PESData/"
 enable_nested_progress_bar: false
 spa_params:
   apply_fft_filter: false
+
+units:
+  Angle: "degree"
+  Ekin: "eV"
+  delay: "fs"
+  mirrorX: "steps"
+  mirrorY: "steps"
+  X: "mm"
+  Y: "mm"
+  Z: "mm"
+  tilt: "degree"
+  azimuth: "degree"
+  polar: "degree"
+  voltage: "V"

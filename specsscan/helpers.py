@@ -385,6 +385,9 @@ def handle_meta(  # pylint:disable=too-many-branches
         if lens_mode in mode_list:
             metadata_dict["scan_info"]["projection"] = projection
             fast = "Angle" if projection == "reciprocal" else "Position"
+            metadata_dict["scan_info"]["scheme"] = (
+                "angular dispersive" if projection == "reciprocal" else "spatial dispersive"
+            )
 
     metadata_dict["scan_info"]["slow_axes"] = dim
     metadata_dict["scan_info"]["fast_axes"] = [
