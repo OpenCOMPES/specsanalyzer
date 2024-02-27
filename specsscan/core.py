@@ -253,19 +253,23 @@ class SpecsScan:
 
         return res_xarray
 
-    def crop_tool(self):
+    def crop_tool(self, **kwds):
         """
         Croping tool interface to crop_tool method
         of the SpecsAnalyzer class.
         """
         matplotlib.use("module://ipympl.backend_nbagg")
-        image = self.metadata["loader"]["raw_data"][0]
+        try:
+            image = self.metadata["loader"]["raw_data"][0]
+        except KeyError as exc:
+            raise ValueError("No image loaded, load image first!") from exc
         self.spa.crop_tool(
             image,
             self._scan_info["LensMode"],
             self._scan_info["KineticEnergy"],
             self._scan_info["PassEnergy"],
             self._scan_info["WorkFunction"],
+            **kwds,
         )
 
     def check_scan(

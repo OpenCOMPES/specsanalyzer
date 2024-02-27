@@ -283,11 +283,12 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
 
     def crop_tool(
         self,
-        raw_image: np.ndarray,
+        raw_img: np.ndarray,
         lens_mode: str,
         kinetic_energy: float,
         pass_energy: float,
         work_function: float,
+        apply: bool = False,
         **kwds,
     ):
         """Crop tool for selecting cropping parameters
@@ -298,6 +299,8 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
             kinetic_energy (float): set analyser kinetic energy
             pass_energy (float): set analyser pass energy
             work_function (float): set analyser work function
+            apply (bool, optional): Option to directly apply the pre-selected cropping parameters.
+                Defaults to False.
             **kwds: Keyword parameters for the crop tool:
 
                 -ek_range_min
@@ -307,7 +310,7 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
         """
 
         data_array = self.convert_image(
-            raw_img=raw_image,
+            raw_img=raw_img,
             lens_mode=lens_mode,
             kinetic_energy=kinetic_energy,
             pass_energy=pass_energy,
@@ -340,8 +343,28 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
             ang_max = range_dict["ang_max"]
         except KeyError:
             try:
+                ang_range_min = (
+                    kwds["ang_range_min"]
+                    if "ang_range_min" in kwds.keys()
+                    else self._config["ang_range_min"]
+                )
+                ang_range_max = (
+                    kwds["ang_range_max"]
+                    if "ang_range_max" in kwds.keys()
+                    else self._config["ang_range_max"]
+                )
+                ek_range_min = (
+                    kwds["ek_range_min"]
+                    if "ek_range_min" in kwds.keys()
+                    else self._config["ang_range_min"]
+                )
+                ek_range_max = (
+                    kwds["ek_range_max"]
+                    if "ek_range_max" in kwds.keys()
+                    else self._config["ek_range_max"]
+                )
                 ang_min = (
-                    kwds.get("ang_range_min", self._config["ang_range_min"])
+                    ang_range_min
                     * (
                         data_array.coords[data_array.dims[0]][-1]
                         - data_array.coords[data_array.dims[0]][0]
@@ -349,7 +372,7 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
                     + data_array.coords[data_array.dims[0]][0]
                 )
                 ang_max = (
-                    kwds.get("ang_range_max", self._config["ang_range_max"])
+                    ang_range_max
                     * (
                         data_array.coords[data_array.dims[0]][-1]
                         - data_array.coords[data_array.dims[0]][0]
@@ -357,7 +380,7 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
                     + data_array.coords[data_array.dims[0]][0]
                 )
                 ek_min = (
-                    kwds.get("ek_range_min", self._config["ek_range_min"])
+                    ek_range_min
                     * (
                         data_array.coords[data_array.dims[1]][-1]
                         - data_array.coords[data_array.dims[1]][0]
@@ -365,7 +388,7 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
                     + data_array.coords[data_array.dims[1]][0]
                 )
                 ek_max = (
-                    kwds.get("ek_range_max", self._config["ek_range_max"])
+                    ek_range_max
                     * (
                         data_array.coords[data_array.dims[1]][-1]
                         - data_array.coords[data_array.dims[1]][0]
@@ -375,7 +398,7 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
             except KeyError:
                 ek_min = data_array.coords[data_array.dims[1]][0]
                 ek_max = data_array.coords[data_array.dims[1]][-1]
-                ang_min = data_array.coords[data_array.dims[0]][-1]
+                ang_min = data_array.coords[data_array.dims[0]][0]
                 ang_max = data_array.coords[data_array.dims[0]][-1]
 
         vline_range = [ek_min, ek_max]
@@ -473,6 +496,8 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
         display(apply_button)
         apply_button.on_click(cropit)
         plt.show()
+        if apply:
+            cropit("")
 
 
 def mergedicts(
