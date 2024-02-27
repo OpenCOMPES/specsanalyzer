@@ -237,8 +237,28 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
                 data_array = crop_xarray(data_array, ang_min, ang_max, ek_min, ek_max)
             except KeyError:
                 try:
+                    ang_range_min = (
+                        kwds["ang_range_min"]
+                        if "ang_range_min" in kwds
+                        else self._config["ang_range_min"]
+                    )
+                    ang_range_max = (
+                        kwds["ang_range_max"]
+                        if "ang_range_max" in kwds
+                        else self._config["ang_range_max"]
+                    )
+                    ek_range_min = (
+                        kwds["ek_range_min"]
+                        if "ek_range_min" in kwds
+                        else self._config["ek_range_min"]
+                    )
+                    ek_range_max = (
+                        kwds["ek_range_max"]
+                        if "ek_range_max" in kwds
+                        else self._config["ek_range_max"]
+                    )
                     ang_min = (
-                        kwds.get("ang_range_min", self._config["ang_range_min"])
+                        ang_range_min
                         * (
                             data_array.coords[data_array.dims[0]][-1]
                             - data_array.coords[data_array.dims[0]][0]
@@ -246,7 +266,7 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
                         + data_array.coords[data_array.dims[0]][0]
                     )
                     ang_max = (
-                        kwds.get("ang_range_max", self._config["ang_range_max"])
+                        ang_range_max
                         * (
                             data_array.coords[data_array.dims[0]][-1]
                             - data_array.coords[data_array.dims[0]][0]
@@ -254,7 +274,7 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
                         + data_array.coords[data_array.dims[0]][0]
                     )
                     ek_min = (
-                        kwds.get("ek_range_min", self._config["ek_range_min"])
+                        ek_range_min
                         * (
                             data_array.coords[data_array.dims[1]][-1]
                             - data_array.coords[data_array.dims[1]][0]
@@ -262,7 +282,7 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
                         + data_array.coords[data_array.dims[1]][0]
                     )
                     ek_max = (
-                        kwds.get("ek_range_max", self._config["ek_range_max"])
+                        ek_range_max
                         * (
                             data_array.coords[data_array.dims[1]][-1]
                             - data_array.coords[data_array.dims[1]][0]
