@@ -18,6 +18,7 @@ jobs:
         with:
           lfs: true
 
+# see https://stackoverflow.com/questions/57612428/cloning-private-github-repository-within-organisation-in-actions
       - name: checkout test data
         run: |
           eval `ssh-agent -s`
