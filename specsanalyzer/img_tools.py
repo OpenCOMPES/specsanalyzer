@@ -4,89 +4,8 @@
 from typing import Sequence
 from typing import Union
 
-from matplotlib import lines
 import numpy as np
 import xarray as xr
-
-
-class DraggableLines:
-    """
-    Class to run an interactive tool to drag lines over an image
-    an store the last positions. Used by the cropping tool in
-    specsscan.load_scan() method.
-    """
-    def __init__(self, ax, fig, kind, range_dict, xarray):
-        self.ax = ax
-        self.c = ax.get_figure().canvas
-        self.o = kind
-        self.xory = range_dict[kind]['val']
-        self.xarray = xarray
-        self.follower = None
-        self.releaser = None
-        dims = xarray.dims
-        props = {"boxstyle": 'round', "facecolor": 'white', "alpha": 0.5}
-        self.text = ax.text(
-            range_dict[kind]['x'],
-            range_dict[kind]['y'],
-            f"{self.o} " + f"{self.xory:.2f}",
-            transform=fig.transFigure,
-            bbox=props
-        )
-
-        if kind in ("Ang1", "Ang2"):
-            self.x = xarray[f"{dims[1]}"].data
-            self.y = [range_dict[kind]['val']] * len(self.x)
-
-        elif kind in ("Ek1", "Ek2"):
-            self.y = xarray[f"{dims[0]}"].data
-            self.x = [range_dict[kind]['val']] * len(self.y)
-
-        self.line = lines.Line2D(self.x, self.y, picker=5)
-        self.ax.add_line(self.line)
-        self.c.draw_idle()
-
-        self.sid = self.c.mpl_connect('button_press_event', self.clickonline)
-
-    def clickonline(self, event):
-        """
-        Checks if the line clicked belongs to this instance.
-        """
-        if event.inaxes != self.line.axes:
-            return
-        contains = self.line.contains(event)
-        if not contains[0]:
-            return
-
-        self.follower = self.c.mpl_connect("motion_notify_event", self.followmouse)
-        self.releaser = self.c.mpl_connect("button_release_event", self.releaseonclick)
-
-    def followmouse(self, event):
-        """
-        Sets the selected line position to the mouse position,
-        while updating the text box in real time.
-        """
-        if self.o in ("Ang1", "Ang2"):
-            if event.ydata:
-                self.line.set_ydata([event.ydata] * len(self.x))
-            else:
-                self.line.set_ydata([event.ydata] * len(self.x))
-            self.xory = self.line.get_ydata()[0]
-            self.text.set_text(f"{self.o} " + f"{self.xory:.2f}")
-
-        elif self.o in ("Ek1", "Ek2"):
-            self.line.set_xdata([event.xdata] * len(self.y))
-            self.xory = self.line.get_xdata()[0]
-            self.text.set_text(f"{self.o} " + f"{self.xory:.2f}")
-
-        self.c.draw_idle()
-
-    def releaseonclick(self, event):  # pylint: disable=unused-argument
-        """
-        Disconnects the interaction on mouse release.
-        """
-        self.c.draw_idle()
-        self.c.mpl_disconnect(self.releaser)
-        self.c.mpl_disconnect(self.follower)
 
 
 def gauss2d(
