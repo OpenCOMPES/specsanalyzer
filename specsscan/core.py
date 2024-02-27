@@ -11,6 +11,7 @@ from typing import Dict
 from typing import Sequence
 from typing import Union
 
+import matplotlib
 import numpy as np
 import xarray as xr
 from tqdm.auto import tqdm
@@ -27,7 +28,6 @@ from specsscan.helpers import load_images
 from specsscan.helpers import parse_info_to_dict
 from specsscan.helpers import parse_lut_to_df
 
-# from specsanalyzer.io import to_h5, load_h5, to_tiff, load_tiff
 
 package_dir = os.path.dirname(find_spec("specsscan").origin)
 
@@ -104,6 +104,11 @@ class SpecsScan:
         except KeyError:
             self.spa = SpecsAnalyzer()
 
+    @property
+    def result(self):
+        """Get result xarray"""
+        return self._result
+
     def load_scan(
         self,
         scan: int,
@@ -132,6 +137,8 @@ class SpecsScan:
                 np.s_[1:10, 15, -1] would be a valid input for
                 iterations.
             metadata (dict, optional): Metadata dictionary with additional metadata for the scan
+            **kwds: Additional arguments for the SpecsAnalyzer converter. For ex., passing
+                crop=True crops the data if cropping data is already present in the given instance.
         Raises:
             FileNotFoundError, IndexError
 
@@ -140,6 +147,7 @@ class SpecsScan:
                 and optionally a third scanned axis (for ex., delay, temperature)
                 as coordinates.
         """
+
         if path:
             path = Path(path).joinpath(str(scan).zfill(4))
             if not path.is_dir():
@@ -194,8 +202,11 @@ class SpecsScan:
                     kin_energy,
                     pass_energy,
                     work_function,
+                    **kwds,
                 ),
             )
+            self.spa.print_msg = False
+        self.spa.print_msg = True
 
         coords, dim = get_coords(
             scan_path=path,
@@ -272,20 +283,36 @@ class SpecsScan:
             self.metadata.update(**metadata)
 
         res_xarray.attrs["metadata"] = self.metadata
-
         self._result = res_xarray
 
         return res_xarray
 
+    def crop_tool(self, **kwds):
+        """
+        Croping tool interface to crop_tool method
+        of the SpecsAnalyzer class.
+        """
+        matplotlib.use("module://ipympl.backend_nbagg")
+        try:
+            image = self.metadata["loader"]["raw_data"][0]
+        except KeyError as exc:
+            raise ValueError("No image loaded, load image first!") from exc
+        self.spa.crop_tool(
+            image,
+            self._scan_info["LensMode"],
+            self._scan_info["KineticEnergy"],
+            self._scan_info["PassEnergy"],
+            self._scan_info["WorkFunction"],
+            **kwds,
+        )
+
     def check_scan(
         self,
         scan: int,
-        delays: Union[
-            Sequence[int],
-            int,
-        ],
+        delays: Union[Sequence[int], int],
         path: Union[str, Path] = "",
         metadata: dict = None,
+        **kwds,
     ) -> xr.DataArray:
         """Function to explore a given 3-D scan as a function
             of iterations for a given range of delays
@@ -296,6 +323,8 @@ class SpecsScan:
             path: Either a string of the path to the folder
                 containing the scan or a Path object
             metadata (dict, optional): Metadata dictionary with additional metadata for the scan
+            **kwds: Additional arguments for the SpecsAnalyzer converter. For ex., passing
+                crop=True crops the data if cropping data is already present in the given instance.
         Raises:
             FileNotFoundError
         Returns:
@@ -361,8 +390,11 @@ class SpecsScan:
                     kin_energy,
                     pass_energy,
                     work_function,
+                    **kwds,
                 ),
             )
+            self.spa.print_msg = False
+        self.spa.print_msg = True
 
         dims = get_coords(
             scan_path=path,
