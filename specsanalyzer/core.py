@@ -345,23 +345,19 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
             try:
                 ang_range_min = (
                     kwds["ang_range_min"]
-                    if "ang_range_min" in kwds.keys()
+                    if "ang_range_min" in kwds
                     else self._config["ang_range_min"]
                 )
                 ang_range_max = (
                     kwds["ang_range_max"]
-                    if "ang_range_max" in kwds.keys()
+                    if "ang_range_max" in kwds
                     else self._config["ang_range_max"]
                 )
                 ek_range_min = (
-                    kwds["ek_range_min"]
-                    if "ek_range_min" in kwds.keys()
-                    else self._config["ang_range_min"]
+                    kwds["ek_range_min"] if "ek_range_min" in kwds else self._config["ek_range_min"]
                 )
                 ek_range_max = (
-                    kwds["ek_range_max"]
-                    if "ek_range_max" in kwds.keys()
-                    else self._config["ek_range_max"]
+                    kwds["ek_range_max"] if "ek_range_max" in kwds else self._config["ek_range_max"]
                 )
                 ang_min = (
                     ang_range_min
