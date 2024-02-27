@@ -15,6 +15,7 @@ import matplotlib
 import numpy as np
 import xarray as xr
 
+
 from specsanalyzer import SpecsAnalyzer
 from specsanalyzer.config import parse_config
 from specsanalyzer.io import to_h5
@@ -30,25 +31,11 @@ from specsscan.helpers import parse_lut_to_df
 
 package_dir = os.path.dirname(find_spec("specsscan").origin)
 
-default_units: Dict[Any, Any] = {
-    "Angle": "degrees",
-    "Ekin": "eV",
-    "delay": "fs",
-    "mirrorX": "steps",
-    "mirrorY": "steps",
-    "X": "mm",
-    "Y": "mm",
-    "Z": "mm",
-    "polar": "degrees",
-    "tilt": "degrees",
-    "azimuth": "degrees",
-    "voltage": "V",
-    "temperature": "K",
-}
-
 
 class SpecsScan:
-    """[summary]"""
+    """SpecsAnalyzer class for loading scans and data from SPECS phoibos electron analyzers,
+    generated with the ARPESControl software at Fritz Haber Institute, Berlin, and EPFL, Lausanne.
+    """
 
     def __init__(  # pylint: disable=dangerous-default-value
         self,
@@ -56,7 +43,12 @@ class SpecsScan:
         config: Union[dict, str] = {},
         **kwds,
     ):
-
+        """SpecsScan constructor.
+        Args:
+            metadata (dict, optional): Metadata dictionary. Defaults to {}.
+            config (Union[dict, str], optional): Metadata dictionary or file path. Defaults to {}.
+            **kwds: Keyword arguments passed to ``parse_config``.
+        """
         self._config = parse_config(
             config,
             default_config=f"{package_dir}/config/default.yaml",
@@ -76,10 +68,15 @@ class SpecsScan:
                 system_config={},
             )
         except KeyError:
-            self.spa = SpecsAnalyzer()
+            self.spa = SpecsAnalyzer(
+                folder_config={},
+                user_config={},
+                system_config={},
+            )
 
         self._result: xr.DataArray = None
 
+    # pylint: disable=duplicate-code
     def __repr__(self):
         if self._config is None:
             pretty_str = "No configuration available"
@@ -234,8 +231,36 @@ class SpecsScan:
             else:
                 res_xarray = res_xarray.transpose("Angle", "Ekin", dim)
 
+        # rename coords and store mapping information, if available
+        coordinate_mapping = self._config.get("coordinate_mapping", {})
+        coordinate_depends = self._config.get("coordinate_depends", {})
+        rename_dict = {
+            k: coordinate_mapping[k] for k in coordinate_mapping.keys() if k in res_xarray.dims
+        }
+        depends_dict = {
+            rename_dict[k]: coordinate_depends[k]
+            for k in coordinate_depends.keys()
+            if k in res_xarray.dims
+        }
+        res_xarray = res_xarray.rename(rename_dict)
+        self._scan_info["coordinate_depends"] = depends_dict
+
+        axis_dict = {
+            "/entry/sample/transformations/sample_polar": "Polar",
+            "/entry/sample/transformations/sample_tilt": "Tilt",
+            "/entry/sample/transformations/sample_azimuth": "Azimuth",
+        }
+
+        for k, v in depends_dict.items():
+            if v in axis_dict:
+                self._scan_info[axis_dict[v]] = "@link:/entry/data/" + k
+
         for name in res_xarray.dims:
-            res_xarray[name].attrs["unit"] = default_units[name]
+            try:
+                res_xarray[name].attrs["unit"] = self._config["units"][name]
+            except KeyError:
+                pass
+
         self.metadata.update(
             **handle_meta(
                 df_lut,
@@ -380,7 +405,7 @@ class SpecsScan:
         res_xarray = res_xarray.transpose("Angle", "Ekin", "Iteration")
         for name in res_xarray.dims:
             try:
-                res_xarray[name].attrs["unit"] = default_units[name]
+                res_xarray[name].attrs["unit"] = self._config["units"][name]
             except KeyError:
                 pass
 
@@ -435,6 +460,8 @@ class SpecsScan:
                   config["nexus"]["definition"]
                 - **input_files**: A list of input files to pass to the reader.
                   Defaults to config["nexus"]["input_files"]
+                - **eln_data**: Path to a json file with data from an electronic lab notebook.
+                  Its is appended to the ``input_files``.
         """
         if self._result is None:
             raise NameError("Need to load data first!")
@@ -461,7 +488,7 @@ class SpecsScan:
             )
             input_files = kwds.pop(
                 "input_files",
-                self._config["nexus"]["input_files"],
+                copy.deepcopy(self._config["nexus"]["input_files"]),
             )
             if isinstance(input_files, str):
                 input_files = [input_files]
