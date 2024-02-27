@@ -10,11 +10,6 @@ from typing import Any
 from typing import Dict
 from typing import Sequence
 from typing import Union
-import matplotlib
-import matplotlib.pyplot as plt
-import ipywidgets as ipw
-from matplotlib.widgets import Button
-from IPython.display import display
 
 import matplotlib
 import numpy as np
@@ -32,11 +27,10 @@ from specsscan.helpers import load_images
 from specsscan.helpers import parse_info_to_dict
 from specsscan.helpers import parse_lut_to_df
 
-# from specsanalyzer.io import to_h5, load_h5, to_tiff, load_tiff
 
 package_dir = os.path.dirname(find_spec("specsscan").origin)
 
-default_units = {
+default_units: Dict[Any, Any] = {
     "Angle": "degrees",
     "Ekin": "eV",
     "delay": "fs",
@@ -84,7 +78,7 @@ class SpecsScan:
         except KeyError:
             self.spa = SpecsAnalyzer()
 
-        self._result = None
+        self._result: xr.DataArray = None
 
     def __repr__(self):
         if self._config is None:
@@ -101,11 +95,6 @@ class SpecsScan:
         """Get config"""
         return self._config
 
-    @property
-    def result(self):
-        """Get result xarray"""
-        return self._result
-
     @config.setter
     def config(self, config: Union[dict, str]):
         """Set config"""
@@ -117,6 +106,11 @@ class SpecsScan:
             self.spa = SpecsAnalyzer(config=self._config["spa_params"])
         except KeyError:
             self.spa = SpecsAnalyzer()
+
+    @property
+    def result(self):
+        """Get result xarray"""
+        return self._result
 
     def load_scan(
         self,
@@ -146,8 +140,8 @@ class SpecsScan:
                 np.s_[1:10, 15, -1] would be a valid input for
                 iterations.
             metadata (dict, optional): Metadata dictionary with additional metadata for the scan
-            kwds: Additional arguments for the SpecsAnalyzer converter. For ex., passing
-                crop=True crops the data if cropping data is already present in the given instance. 
+            **kwds: Additional arguments for the SpecsAnalyzer converter. For ex., passing
+                crop=True crops the data if cropping data is already present in the given instance.
         Raises:
             FileNotFoundError, IndexError
 
@@ -203,8 +197,7 @@ class SpecsScan:
         )
 
         xr_list = []
-        for i in range(len(data)):
-            image = data[i]
+        for image in data:
             xr_list.append(
                 self.spa.convert_image(
                     image,
@@ -215,8 +208,7 @@ class SpecsScan:
                     **kwds,
                 ),
             )
-            if i == 0:
-                self.spa.print_msg = False
+            self.spa.print_msg = False
         self.spa.print_msg = True
 
         coords, dim = get_coords(
@@ -279,10 +271,7 @@ class SpecsScan:
     def check_scan(
         self,
         scan: int,
-        delays: Union[
-            Sequence[int],
-            int,
-        ],
+        delays: Union[Sequence[int], int],
         path: Union[str, Path] = "",
         metadata: dict = None,
         **kwds,
@@ -296,7 +285,7 @@ class SpecsScan:
             path: Either a string of the path to the folder
                 containing the scan or a Path object
             metadata (dict, optional): Metadata dictionary with additional metadata for the scan
-            kwds: Additional arguments for the SpecsAnalyzer converter. For ex., passing
+            **kwds: Additional arguments for the SpecsAnalyzer converter. For ex., passing
                 crop=True crops the data if cropping data is already present in the given instance.
         Raises:
             FileNotFoundError
@@ -313,7 +302,6 @@ class SpecsScan:
         else:
             # search for the given scan using the default path
             path = Path(self._config["data_path"])
-            # path_scan = sorted(path.glob(f"20[1,2][9,0-9]/*/*/Raw Data/{scan}"))
             path_scan_list = find_scan(path, scan)
             if not path_scan_list:
                 raise FileNotFoundError(
@@ -356,8 +344,7 @@ class SpecsScan:
                 "Invalid input. A 3-D scan is expected, a 2-D single scan was provided instead.",
             )
         xr_list = []
-        for i in range(len(data)):
-            image = data[i]
+        for image in data:
             xr_list.append(
                 self.spa.convert_image(
                     image,
@@ -368,8 +355,7 @@ class SpecsScan:
                     **kwds,
                 ),
             )
-            if i == 0:
-                self.spa.print_msg = False
+            self.spa.print_msg = False
         self.spa.print_msg = True
 
         dims = get_coords(

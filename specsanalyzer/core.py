@@ -19,8 +19,8 @@ from specsanalyzer import io
 from specsanalyzer.config import parse_config
 from specsanalyzer.convert import calculate_matrix_correction
 from specsanalyzer.convert import physical_unit_data
-from specsanalyzer.img_tools import fourier_filter_2d
 from specsanalyzer.img_tools import crop_xarray
+from specsanalyzer.img_tools import fourier_filter_2d
 from specsanalyzer.metadata import MetaHandler
 
 package_dir = os.path.dirname(__file__)
@@ -91,13 +91,10 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
     ) -> xr.DataArray:
         """Converts an imagin in physical unit data, angle vs energy
 
-
         Args:
             raw_img (np.ndarray): Raw image data, numpy 2d matrix
-            lens_mode (str):
-                analzser lens mode, check calib2d for a list
-                of modes Camelback naming convention e.g. "WideAngleMode"
-
+            lens_mode (str): analzser lens mode, check calib2d for a list
+                of modes Camelcase naming convention e.g. "WideAngleMode"
             kinetic_energy (float): set analyser kinetic energy
             pass_energy (float): set analyser pass energy
             work_function (float): set analyser work function
@@ -224,9 +221,7 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
                 dims=["Position", "Ekin"],
             )
 
-        # TODO discuss how to handle cropping. Can he store one set of cropping
-        # parameters in the config, or should we store one set per pass energy/
-        # lens mode/ kinetic energy in the dict?
+        # Handle cropping based on parameters stored in correction dictionary
         crop = kwds.pop("crop", self._config.get("crop", False))
         if crop:
             try:
@@ -258,10 +253,14 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
         pass_energy: float,
         work_function: float,
     ):
-        """Crop tool
+        """Crop tool for selecting cropping parameters
         Args:
-            res_xarray: xarray obtained from the converted raw data
-            scan_info_dict: dict containing the contents of info.txt file
+            raw_img (np.ndarray): Raw image data, numpy 2d matrix
+            lens_mode (str): analzser lens mode, check calib2d for a list
+                of modes Camelcase naming convention e.g. "WideAngleMode"
+            kinetic_energy (float): set analyser kinetic energy
+            pass_energy (float): set analyser pass energy
+            work_function (float): set analyser work function
         """
 
         res_xarray = self.convert_image(
@@ -288,9 +287,9 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
         linev2 = ax.axvline(x=res_xarray.Ekin[-1])
 
         try:
-            range_dict = self._correction_matrix_dict[lens_mode][kinetic_energy][
-                pass_energy
-            ][work_function]["crop_params"]
+            range_dict = self._correction_matrix_dict[lens_mode][kinetic_energy][pass_energy][
+                work_function
+            ]["crop_params"]
 
             vline_range = [range_dict["Ek1"], range_dict["Ek2"]]
             hline_range = [range_dict["Ang1"], range_dict["Ang2"]]
@@ -340,9 +339,7 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
             ek_min = min(vline_slider.value)
             ek_max = max(vline_slider.value)
             self._data_array = crop_xarray(res_xarray, ang_min, ang_max, ek_min, ek_max)
-            self._correction_matrix_dict[lens_mode][kinetic_energy][
-                pass_energy
-            ][work_function] = {
+            self._correction_matrix_dict[lens_mode][kinetic_energy][pass_energy][work_function] = {
                 "crop_params": {
                     "Ek1": ek_min,
                     "Ek2": ek_max,
