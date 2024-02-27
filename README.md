@@ -1,10 +1,10 @@
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
-![](https://github.com/mpes-kit/specsanalyzer/actions/workflows/linting.yml/badge.svg)
-![](https://github.com/mpes-kit/specsanalyzer/actions/workflows/testing_multiversion.yml/badge.svg?branch=main)
+![](https://github.com/OpenCOMPES/specsanalyzer/actions/workflows/linting.yml/badge.svg)
+![](https://github.com/OpenCOMPES/specsanalyzer/actions/workflows/testing_multiversion.yml/badge.svg?branch=main)
 ![](https://img.shields.io/pypi/pyversions/specsanalyzer)
 ![](https://img.shields.io/pypi/l/specsanalyzer)
 [![](https://img.shields.io/pypi/v/specsanalyzer)](https://pypi.org/project/specsanalyzer)
-[![Coverage Status](https://coveralls.io/repos/github/mpes-kit/specsanalyzer/badge.svg?branch=main&kill_cache=1)](https://coveralls.io/github/mpes-kit/specsanalyzer?branch=main)
+[![Coverage Status](https://coveralls.io/repos/github/OpenCOMPES/specsanalyzer/badge.svg?branch=main&kill_cache=1)](https://coveralls.io/github/OpenCOMPES/specsanalyzer?branch=main)
 
 # specsanalyzer
 This package contains two modules:
