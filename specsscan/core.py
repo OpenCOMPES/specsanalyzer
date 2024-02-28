@@ -5,6 +5,7 @@ import copy
 import os
 import pathlib
 from importlib.util import find_spec
+from logging import warn
 from pathlib import Path
 from typing import Any
 from typing import Dict
@@ -24,6 +25,7 @@ from specsanalyzer.io import to_nexus
 from specsanalyzer.io import to_tiff
 from specsscan.helpers import find_scan
 from specsscan.helpers import get_coords
+from specsscan.helpers import get_scan_path
 from specsscan.helpers import handle_meta
 from specsscan.helpers import load_images
 from specsscan.helpers import parse_info_to_dict
@@ -114,12 +116,7 @@ class SpecsScan:
         self,
         scan: int,
         path: Union[str, Path] = "",
-        iterations: Union[
-            np.ndarray,
-            slice,
-            Sequence[int],
-            Sequence[slice],
-        ] = None,
+        iterations: Union[np.ndarray, slice, Sequence[int], Sequence[slice]] = None,
         metadata: dict = None,
         **kwds,
     ) -> xr.DataArray:
@@ -148,40 +145,23 @@ class SpecsScan:
                 and optionally a third scanned axis (for ex., delay, temperature)
                 as coordinates.
         """
-
-        if path:
-            path = Path(path).joinpath(str(scan).zfill(4))
-            if not path.is_dir():
-                raise FileNotFoundError(
-                    f"The provided path {path} was not found.",
-                )
-        else:
-            # search for the given scan using the default path
-            path = Path(self._config["data_path"])
-            # path_scan = sorted(path.glob(f"20[1,2][9,0-9]/*/*/Raw Data/{scan}"))
-            path_scan_list = find_scan(path, scan)
-            if not path_scan_list:
-                raise FileNotFoundError(
-                    f"Scan number {scan} not found",
-                )
-            path = path_scan_list[0]
-
-        df_lut = parse_lut_to_df(path)  # TODO: storing metadata from df_lut
+        scan_path = get_scan_path(path, scan, self._config["data_path"])
+        df_lut = parse_lut_to_df(scan_path)
 
         data = load_images(
-            scan_path=path,
+            scan_path=scan_path,
             df_lut=df_lut,
             iterations=iterations,
             tqdm_enable_nested=self._config["enable_nested_progress_bar"],
         )
 
-        self._scan_info = parse_info_to_dict(path)
+        self._scan_info = parse_info_to_dict(scan_path)
         config_meta = copy.deepcopy(self.config)
         config_meta["spa_params"].pop("calib2d_dict")
 
         loader_dict = {
             "iterations": iterations,
-            "scan_path": path,
+            "scan_path": scan_path,
             "raw_data": data,
             "convert_config": config_meta["spa_params"],
         }
@@ -194,40 +174,47 @@ class SpecsScan:
             self._scan_info["WorkFunction"],
         )
 
-        xr_list = []
-        for image in data:
-            xr_list.append(
-                self.spa.convert_image(
-                    image,
-                    lens_mode,
-                    kin_energy,
-                    pass_energy,
-                    work_function,
-                    **kwds,
-                ),
-            )
-            self.spa.print_msg = False
-        self.spa.print_msg = True
-
         coords, dim = get_coords(
-            scan_path=path,
+            scan_path=scan_path,
             scan_type=scan_type,
             scan_info=self._scan_info,
             df_lut=df_lut,
         )
 
         if scan_type == "single":
-            res_xarray = xr_list[0]
+            res_xarray = self.spa.convert_image(
+                raw_img=data[0],
+                lens_mode=lens_mode,
+                kinetic_energy=kin_energy,
+                pass_energy=pass_energy,
+                work_function=work_function,
+                **kwds,
+            )
         elif scan_type == "voltage":  # and dim == "kinetic energy":
             res_xarray = self.process_sweep_scan(
                 raw_data=data,
-                voltages=coords,
+                kinetic_energy=coords,
                 pass_energy=pass_energy,
                 lens_mode=lens_mode,
                 work_function=work_function,
                 **kwds,
             )
         else:
+            xr_list = []
+            for image in data:
+                xr_list.append(
+                    self.spa.convert_image(
+                        raw_img=image,
+                        lens_mode=lens_mode,
+                        kinetic_energy=kin_energy,
+                        pass_energy=pass_energy,
+                        work_function=work_function,
+                        **kwds,
+                    ),
+                )
+                self.spa.print_msg = False
+            self.spa.print_msg = True
+
             res_xarray = xr.concat(
                 xr_list,
                 dim=xr.DataArray(
@@ -261,6 +248,7 @@ class SpecsScan:
             "/entry/sample/transformations/sample_azimuth": "Azimuth",
         }
 
+        # store link information for resolved axis coordinates
         for k, v in depends_dict.items():
             if v in axis_dict:
                 self._scan_info[axis_dict[v]] = "@link:/entry/data/" + k
@@ -288,16 +276,28 @@ class SpecsScan:
 
         return res_xarray
 
-    def crop_tool(self, **kwds):
+    def crop_tool(self, scan: int = None, path: Union[Path, str] = "", **kwds):
         """
         Croping tool interface to crop_tool method
         of the SpecsAnalyzer class.
         """
         matplotlib.use("module://ipympl.backend_nbagg")
-        try:
-            image = self.metadata["loader"]["raw_data"][0]
-        except KeyError as exc:
-            raise ValueError("No image loaded, load image first!") from exc
+        if scan is not None:
+            scan_path = get_scan_path(path, scan, self._config["data_path"])
+            df_lut = parse_lut_to_df(scan_path)
+
+            data = load_images(
+                scan_path=scan_path,
+                tqdm_enable_nested=self._config["enable_nested_progress_bar"],
+            )
+            image = data[0]
+            self._scan_info = parse_info_to_dict(scan_path)
+        else:
+            try:
+                image = self.metadata["loader"]["raw_data"][0]
+            except KeyError as exc:
+                raise ValueError("No image loaded, load image first!") from exc
+
         self.spa.crop_tool(
             image,
             self._scan_info["LensMode"],
@@ -331,40 +331,25 @@ class SpecsScan:
         Returns:
             A 3-D numpy array of dimensions (Ekin, K, Iterations)
         """
+        scan_path = get_scan_path(path, scan, self._config["data_path"])
+        df_lut = parse_lut_to_df(scan_path)
 
-        if path:
-            path = Path(path).joinpath(str(scan).zfill(4))
-            if not path.is_dir():
-                raise FileNotFoundError(
-                    f"The provided path {path} was not found.",
-                )
-        else:
-            # search for the given scan using the default path
-            path = Path(self._config["data_path"])
-            path_scan_list = find_scan(path, scan)
-            if not path_scan_list:
-                raise FileNotFoundError(
-                    f"Scan number {scan} not found",
-                )
-            path = path_scan_list[0]
-
-        df_lut = parse_lut_to_df(path)
-
-        data = load_images(
-            scan_path=path,
+        data, df_lut = load_images(
+            scan_path=scan_path,
             df_lut=df_lut,
             delays=delays,
             tqdm_enable_nested=self._config["enable_nested_progress_bar"],
         )
-        self._scan_info = parse_info_to_dict(path)
+
+        self._scan_info = parse_info_to_dict(scan_path)
         config_meta = copy.deepcopy(self.config)
         config_meta["spa_params"].pop("calib2d_dict")
 
         loader_dict = {
             "delays": delays,
-            "scan_path": path,
+            "scan_path": scan_path,
             "raw_data": load_images(  # AVG data
-                path,
+                scan_path,
                 df_lut,
             ),
             "convert_config": config_meta["spa_params"],
@@ -398,7 +383,7 @@ class SpecsScan:
         self.spa.print_msg = True
 
         dims = get_coords(
-            scan_path=path,
+            scan_path=scan_path,
             scan_type=scan_type,
             scan_info=self._scan_info,
             df_lut=df_lut,
@@ -523,74 +508,78 @@ class SpecsScan:
     def process_sweep_scan(
         self,
         raw_data: List[np.ndarray],
-        voltages: np.ndarray,
+        kinetic_energy: np.ndarray,
         pass_energy: float,
         lens_mode: str,
         work_function: float,
         **kwds,
     ) -> xr.DataArray:
-        """_summary_
+        """Process sweep scan by interpolating each frame onto a common grid given by the voltage
+        step, and summing over all frames.
 
         Args:
-            raw_data (np.ndarray): _description_
-            voltages (np.ndarray): _description_
-            pass_energy (float): _description_
-            lens_mode (str): _description_
-            work_function (float): _description_
+            raw_data (List[np.ndarray]): List of raw data images
+            kinetic_energy (np.ndarray): Array of analyzer set kinetic energy values
+            pass_energy (float): set analyser pass energy
+            lens_mode (str): analzser lens mode, check calib2d for a list of modes CamelCase naming
+                convention e.g. "WideAngleMode"
+            work_function (float): set analyser work function
 
         Returns:
-            xr.DataArray: _description_
+            xr.DataArray: Converted sweep scan
         """
-        voltage_step = voltages[1] - voltages[0]
-        # TODO check equidistant
-
-        ek_min0 = kwds.pop("ek_min", self.spa._config["ek_min"])
-        ek_max0 = kwds.pop("ek_max", self.spa._config["ek_max"])
-        ang_min0 = kwds.pop("ang_min", self.spa._config["ang_min"])
-        ang_max0 = kwds.pop("ang_max", self.spa._config["ang_max"])
+        ekin_step = kinetic_energy[1] - kinetic_energy[0]
+        if not (np.diff(kinetic_energy) == ekin_step).all():
+            warn(
+                "Conversion of sweep scans with non-equidistant energy steps "
+                "might produce wrong results!",
+            )
 
         # convert first image
         converted = self.spa.convert_image(
             raw_data[0],
             lens_mode,
-            voltages[0],
+            kinetic_energy[0],
             pass_energy,
             work_function,
-            ang_min=ang_min0,
-            ang_max=ang_max0,
-            ek_min=ek_min0,
-            ek_max=ek_max0,
             **kwds,
         )
+        # check for crop parameters
+        if (
+            not {"ang_range_min", "ang_range_max", "ek_range_min", "ek_range_max"}.issubset(
+                set(self.spa.config.keys()),
+            )
+            or not self.spa.config["crop"]
+        ):
+            warn("No valid cropping parameters found, consider using crop_tool() to set.")
+
         e_step = converted.Ekin[1] - converted.Ekin[0]
-        e0 = converted.Ekin[-1] - voltage_step
-        e1 = converted.Ekin[0] + voltages[-1] - voltages[0]
+        e0 = converted.Ekin[-1] - ekin_step
+        e1 = converted.Ekin[0] + kinetic_energy[-1] - kinetic_energy[0]
         data = xr.DataArray(
             data=np.zeros((len(converted.Angle), len(np.arange(e0, e1, e_step)))),
             coords={"Angle": converted.Angle, "Ekin": np.arange(e0, e1, e_step)},
             dims=["Angle", "Ekin"],
         )
-        for i, voltage in enumerate(tqdm(voltages)):
-            ek_min = ek_min0 + i * voltage_step
-            ek_max = ek_max0 + i * voltage_step
+        for i, ekin in enumerate(tqdm(kinetic_energy)):
+            self.spa.print_msg = False
             converted = self.spa.convert_image(
-                raw_data[i],
-                lens_mode,
-                voltage,
-                pass_energy,
-                work_function,
-                ang_min=ang_min0,
-                ang_max=ang_max0,
-                ek_min=ek_min,
-                ek_max=ek_max,
+                raw_img=raw_data[i],
+                lens_mode=lens_mode,
+                kinetic_energy=ekin,
+                pass_energy=pass_energy,
+                work_function=work_function,
                 **kwds,
             )
             energies = converted.Ekin.where(
                 (converted.Ekin >= data.Ekin[0]) & (converted.Ekin < data.Ekin[-1]),
                 drop=True,
             )
+            # filling target array using "nearest" method
             for energy in energies:
                 target_energy = data.Ekin.sel(Ekin=energy, method="nearest")
                 data.loc[{"Ekin": target_energy}] += converted.loc[{"Ekin": energy}]
+
+        self.spa.print_msg = True
 
         return data
