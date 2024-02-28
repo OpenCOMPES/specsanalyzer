@@ -8,6 +8,7 @@ from importlib.util import find_spec
 from pathlib import Path
 from typing import Any
 from typing import Dict
+from typing import List
 from typing import Sequence
 from typing import Union
 
@@ -521,7 +522,7 @@ class SpecsScan:
 
     def process_sweep_scan(
         self,
-        raw_data: np.ndarray,
+        raw_data: List[np.ndarray],
         voltages: np.ndarray,
         pass_energy: float,
         lens_mode: str,
