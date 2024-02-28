@@ -582,5 +582,7 @@ class SpecsScan:
             data[:, target_indices] += converted[:, energy_indices].values
 
         self.spa.print_msg = True
+        # Strip first and last energy points, as they are not fully filled
+        data = data[:, 1:-1]
 
         return data
