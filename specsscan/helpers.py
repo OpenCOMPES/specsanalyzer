@@ -19,6 +19,26 @@ from tqdm.auto import tqdm
 from specsanalyzer.config import complete_dictionary  # name can be generalized
 
 
+def get_scan_path(path, scan, basepath):
+    if path:
+        path = Path(path).joinpath(str(scan).zfill(4))
+        if not path.is_dir():
+            raise FileNotFoundError(
+                f"The provided path {path} was not found.",
+            )
+    else:
+        # search for the given scan using the default path
+        path = Path(basepath)
+        # path_scan = sorted(path.glob(f"20[1,2][9,0-9]/*/*/Raw Data/{scan}"))
+        path_scan_list = find_scan(path, scan)
+        if not path_scan_list:
+            raise FileNotFoundError(
+                f"Scan number {scan} not found",
+            )
+        path = path_scan_list[0]
+        return path
+
+
 def load_images(
     scan_path: Path,
     df_lut: Union[pd.DataFrame, None] = None,
@@ -67,7 +87,6 @@ def load_images(
     Returns:
         List[np.ndarray]: A list of 2-D numpy arrays of raw data
     """
-
     scan_list = sorted(
         file.stem for file in scan_path.joinpath("AVG").iterdir() if file.suffix == ".tsv"
     )
