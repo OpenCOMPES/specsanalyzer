@@ -19,7 +19,20 @@ from tqdm.auto import tqdm
 from specsanalyzer.config import complete_dictionary  # name can be generalized
 
 
-def get_scan_path(path, scan, basepath):
+def get_scan_path(path: Union[Path, str], scan: int, basepath: Union[Path, str]) -> Path:
+    """Returns the path to the given scan.
+
+    Args:
+        path (Union[Path, str]): Path under which to search. If empty, the basepath will be queried
+        scan (int): Scan number
+        basepath (Union[Path, str]): Default base path to search for scans under
+
+    Raises:
+        FileNotFoundError: Raised if the path or scan cannot be found.
+
+    Returns:
+        Path: Path object to the given scan directory
+    """
     if path:
         path = Path(path).joinpath(str(scan).zfill(4))
         if not path.is_dir():
@@ -36,7 +49,8 @@ def get_scan_path(path, scan, basepath):
                 f"Scan number {scan} not found",
             )
         path = path_scan_list[0]
-        return path
+
+    return path
 
 
 def load_images(
