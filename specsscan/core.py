@@ -573,12 +573,13 @@ class SpecsScan:
             )
             energies = converted.Ekin.where(
                 (converted.Ekin >= data.Ekin[0]) & (converted.Ekin < data.Ekin[-1]),
-                drop=True,
+                0,
             )
+            energy_indices = np.argwhere(energies.values).squeeze()
             # filling target array using "nearest" method
-            for energy in energies:
-                target_energy = data.Ekin.sel(Ekin=energy, method="nearest")
-                data.loc[{"Ekin": target_energy}] += converted.loc[{"Ekin": energy}]
+            target_energy = data.Ekin.sel(Ekin=converted.Ekin[energies > 0], method="nearest")
+            target_indices = np.argwhere(np.in1d(data.Ekin.values, target_energy.values)).squeeze()
+            data[:, target_indices] += converted[:, energy_indices].values
 
         self.spa.print_msg = True
 
