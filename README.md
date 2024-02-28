@@ -47,7 +47,7 @@ To contribute to the development of `specsanalyzer`, you can follow these steps:
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/mpes-kit/specsanalyzer.git
+git clone https://github.com/OpenCOMPES/specsanalyzer.git
 cd specsanalyzer
 ```
 
