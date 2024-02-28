@@ -8,6 +8,7 @@ from typing import Generator
 from typing import Tuple
 from typing import Union
 
+import imutils
 import ipywidgets as ipw
 import matplotlib
 import matplotlib.pyplot as plt
@@ -102,15 +103,14 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
 
         Args:
             raw_img (np.ndarray): Raw image data, numpy 2d matrix
-            lens_mode (str): analzser lens mode, check calib2d for a list
-                of modes Camelcase naming convention e.g. "WideAngleMode"
+            lens_mode (str): analzser lens mode, check calib2d for a list of modes CamelCase naming
+                convention e.g. "WideAngleMode"
             kinetic_energy (float): set analyser kinetic energy
             pass_energy (float): set analyser pass energy
             work_function (float): set analyser work function
 
         Returns:
-            xr.DataArray: xarray containg the corrected data and kinetic
-            and angle axis
+            xr.DataArray: xarray containg the corrected data and kinetic and angle axis
         """
 
         apply_fft_filter = kwds.pop(
@@ -131,7 +131,11 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
         else:
             img = raw_img
 
-        # TODO add image rotation
+        rotation_angle = kwds.pop("rotation_angle", self._config.get("rotation_angle", 0))
+
+        if rotation_angle:
+            img_rotated = imutils.rotate(img, angle=rotation_angle)
+            img = img_rotated
 
         # look for the lens mode in the dictionary
         try:
@@ -434,7 +438,7 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
             value=vline_range,
             min=data_array.Ekin[0],
             max=data_array.Ekin[-1],
-            step=0.1,
+            step=0.01,
         )
         hline_slider = ipw.FloatRangeSlider(
             description="Angle",
@@ -507,6 +511,7 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
                     - data_array.coords[data_array.dims[0]][0]
                 )
             ).item()
+            self._config["crop"] = True
 
             ax.cla()
             self._data_array.plot(ax=ax, add_colorbar=False)
