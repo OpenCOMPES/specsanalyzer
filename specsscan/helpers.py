@@ -1,4 +1,8 @@
-"""This script contains helper functions used by the specscan class"""
+"""This script contains helper functions used by the specscan class
+
+"""
+from __future__ import annotations
+
 import datetime as dt
 import json
 from pathlib import Path
@@ -16,16 +20,16 @@ import numpy as np
 import pandas as pd
 from tqdm.auto import tqdm
 
-from specsanalyzer.config import complete_dictionary  # name can be generalized
+from specsanalyzer.config import complete_dictionary
 
 
-def get_scan_path(path: Union[Path, str], scan: int, basepath: Union[Path, str]) -> Path:
+def get_scan_path(path: Path | str, scan: int, basepath: Path | str) -> Path:
     """Returns the path to the given scan.
 
     Args:
-        path (Union[Path, str]): Path under which to search. If empty, the basepath will be queried
+        path (Path | str): Path under which to search. If empty, the basepath will be queried
         scan (int): Scan number
-        basepath (Union[Path, str]): Default base path to search for scans under
+        basepath (Path | str): Default base path to search for scans under
 
     Raises:
         FileNotFoundError: Raised if the path or scan cannot be found.
@@ -42,7 +46,6 @@ def get_scan_path(path: Union[Path, str], scan: int, basepath: Union[Path, str])
     else:
         # search for the given scan using the default path
         path = Path(basepath)
-        # path_scan = sorted(path.glob(f"20[1,2][9,0-9]/*/*/Raw Data/{scan}"))
         path_scan_list = find_scan(path, scan)
         if not path_scan_list:
             raise FileNotFoundError(
@@ -55,42 +58,28 @@ def get_scan_path(path: Union[Path, str], scan: int, basepath: Union[Path, str])
 
 def load_images(
     scan_path: Path,
-    df_lut: Union[pd.DataFrame, None] = None,
-    iterations: Union[
-        np.ndarray,
-        slice,
-        Sequence[int],
-        Sequence[slice],
-    ] = None,
-    delays: Union[
-        np.ndarray,
-        slice,
-        int,
-        Sequence[int],
-        Sequence[slice],
-    ] = None,
+    df_lut: pd.DataFrame = None,
+    iterations: np.ndarray | slice | Sequence[int] | Sequence[slice] = None,
+    delays: np.ndarray | slice | Sequence[int] | Sequence[slice] = None,
     tqdm_enable_nested: bool = False,
-) -> List[np.ndarray]:
-    """Loads a 2D/3D numpy array of images for the given
-    scan path with an optional averaging
-    over the given iterations/delays. The function provides
-    functionality to both load_scan and check_scan methods of
-    the SpecsScan class. When iterations/delays is provided,
-    average is performed over the iterations/delays for all
-    delays/iterations.
+) -> list[np.ndarray]:
+    """Loads a 2D/3D numpy array of images for the given scan path with an optional averaging
+    over the given iterations/delays. The function provides functionality to both load_scan
+    and check_scan methods of the SpecsScan class. When iterations/delays is provided,
+    average is performed over the iterations/delays for all delays/iterations.
 
     Args:
         scan_path (Path): object of class Path pointing to the scan folder
-        df_lut (Union[pd.DataFrame, None], optional): Pandas dataframe containing the contents
-            of LUT.txt as obtained from parse_lut_to_df(). Defaults to None.
-        iterations (Union[ np.ndarray, slice, Sequence[int], Sequence[slice], ], optional): A 1-D
+        df_lut (pd.DataFrame, optional): Pandas dataframe containing the contents of LUT.txt as
+            obtained from parse_lut_to_df(). Defaults to None.
+        iterations (np.ndarray | slice | Sequence[int] | Sequence[slice], optional): A 1-D
             array of the indices of iterations over which the images are to be averaged. The array
             can be a list, numpy array or a Tuple consisting of slice objects and integers. For
-            ex., np.s_[1:10, 15, -1] would be a valid input. Defaults to None.
-        delays (Union[ np.ndarray, slice, int, Sequence[int], Sequence[slice], ], optional): A 1-D
+            ex., ``np.s_[1:10, 15, -1]`` would be a valid input. Defaults to None.
+        delays (np.ndarray | slice | Sequence[int] | Sequence[slice], optional): A 1-D
             array of the indices of delays over which the images are to be averaged. The array can
             be a list, numpy array or a Tuple consisting of slice objects and integers. For ex.,
-            np.s_[1:10, 15, -1] would be a valid input. Defaults to None.
+            ``np.s_[1:10, 15, -1]`` would be a valid input. Defaults to None.
         tqdm_enable_nested (bool, optional): Option to enable a nested progress bar.
             Defaults to False.
 
@@ -99,7 +88,7 @@ def load_images(
         IndexError: Raised if no valid dimension for averaging is found.
 
     Returns:
-        List[np.ndarray]: A list of 2-D numpy arrays of raw data
+        list[np.ndarray]: A list of 2-D numpy arrays of raw data
     """
     scan_list = sorted(
         file.stem for file in scan_path.joinpath("AVG").iterdir() if file.suffix == ".tsv"
@@ -175,18 +164,15 @@ def load_images(
     return data
 
 
-def get_raw2d(
-    scan_list: List[str],
-    raw_array: np.ndarray,
-) -> np.ndarray:
-    """Converts a 1-D array of raw scan names
-        into 2-D based on the number of iterations
+def get_raw2d(scan_list: list[str], raw_array: np.ndarray) -> np.ndarray:
+    """Converts a 1-D array of raw scan names into 2-D based on the number of iterations
+
     Args:
-        scan_list: A list of AVG scan names.
-        raw_list: 1-D array of RAW scan names.
+        scan_list (list[str]): A list of AVG scan names.
+        raw_list (np.ndarray): 1-D array of RAW scan names.
+
     Returns:
-        raw_2d: 2-D numpy array of size for ex.,
-            (total_iterations, delays) for a delay scan.
+        np.ndarray: 2-D numpy array of size for ex., (total_iterations, delays) for a delay scan.
     """
 
     total_iterations = len(
@@ -219,12 +205,14 @@ def get_raw2d(
     return raw_2d
 
 
-def parse_lut_to_df(scan_path: Path) -> Union[pd.DataFrame, None]:
-    """Loads the contents of LUT.txt file into a pandas
-        data frame to be used as metadata.
+def parse_lut_to_df(scan_path: Path) -> pd.DataFrame:
+    """Loads the contents of LUT.txt file into a pandas data frame to be used as metadata.
+
     Args:
-        scan_path: Path object for the scan path
-    Returns: A pandas DataFrame
+        scan_path (Path): Path object for the scan path
+
+    Returns:
+        pd.DataFrame: A pandas DataFrame
     """
     try:
         df_lut = pd.read_csv(scan_path.joinpath("RAW/LUT.txt"), sep="\t")
@@ -249,44 +237,35 @@ def parse_lut_to_df(scan_path: Path) -> Union[pd.DataFrame, None]:
 def get_coords(
     scan_path: Path,
     scan_type: str,
-    scan_info: Dict[Any, Any],
-    df_lut: Union[pd.DataFrame, None] = None,
-) -> Tuple[np.ndarray, str]:
-    """Reads the contents of scanvector.txt file
-        into a numpy array.
+    scan_info: dict[Any, Any],
+    df_lut: pd.DataFrame = None,
+) -> tuple[np.ndarray, str]:
+    """Reads the contents of scanvector.txt file into a numpy array.
+
     Args:
-        scan_path: Path object for the scan path
-        scan_type: Type of scan (delay, mirror etc.)
-        scan_info: scan_info class dict
-        df_lut: df_lut: Pandas dataframe containing
-                the contents of LUT.txt as obtained
-                from parse_lut_to_df()
+        scan_path (Path): Path object for the scan path
+        scan_type (str): Type of scan (delay, mirror etc.)
+        scan_info (dict[Any, Any]): scan_info class dict
+        df_lut (pd.DataFrame, optional): Pandas dataframe containing the contents of LUT.txt as
+            obtained from parse_lut_to_df(). Defaults to None.
+
     Raises:
-        FileNotFoundError
+        FileNotFoundError: Raised in neither scanvector.txt nor LUT.txt are found.
+
     Returns:
-        coords: 1-D numpy array containing coordinates
-                of the scanned axis.
-        dim: string containing the name of the coordinate
+        tuple[np.ndarray, str]:
+            - coords: 1-D numpy array containing coordinates of the scanned axis.
+            - dim: string containing the name of the coordinate
     """
     try:
-        with open(
-            scan_path.joinpath("scanvector.txt"),
-            encoding="utf-8",
-        ) as file:
+        with open(scan_path.joinpath("scanvector.txt"), encoding="utf-8") as file:
             data = np.loadtxt(file, ndmin=2)
 
         coords, index = compare_coords(data)
         if scan_type == "mirror":
             dim = ["mirrorX", "mirrorY"][index]
         elif scan_type == "manipulator":
-            dim = [
-                "X",
-                "Y",
-                "Z",
-                "polar",
-                "tilt",
-                "azimuth",
-            ][index]
+            dim = ["X", "Y", "Z", "polar", "tilt", "azimuth"][index]
         else:
             dim = scan_type
 
@@ -295,9 +274,7 @@ def get_coords(
             return (np.array([]), "")
 
         if df_lut is not None:
-            print(
-                "scanvector.txt not found. Obtaining coordinates from LUT",
-            )
+            print("scanvector.txt not found. Obtaining coordinates from LUT")
 
             df_new: pd.DataFrame = df_lut.loc[:, df_lut.columns[2:]]
 
@@ -305,28 +282,26 @@ def get_coords(
             dim = df_new.columns[index]
 
         else:
-            raise FileNotFoundError(
-                "scanvector.txt file not found!",
-            ) from exc
+            raise FileNotFoundError("scanvector.txt file not found!") from exc
 
     if scan_type == "delay":
         t_0 = scan_info["TimeZero"]
         coords -= t_0
-        coords *= 2 / (3 * 10**11) * 10**15
+        coords *= 2 / 3e11 * 1e15
 
     return coords, dim
 
 
-def compare_coords(
-    axis_data: np.ndarray,
-) -> Tuple[np.ndarray, int]:
-    """To check the most changing column in a given
-        2-D numpy array.
+def compare_coords(axis_data: np.ndarray) -> tuple[np.ndarray, int]:
+    """Identifies the most changing column in a given 2-D numpy array.
+
     Args:
-        axis_data: 2-D numpy array containing LUT data
+        axis_data (np.ndarray): 2-D numpy array containing LUT data
+
     Returns:
-        coords: Maximum changing column as a coordinate
-        index: Index of the coords in the axis_data array
+        tuple[np.ndarray, int]:
+            - coords: Maximum changing column as a coordinate
+            - index: Index of the coords in the axis_data array
     """
 
     diff_list = [abs(col[-1] - col[0]) for col in axis_data.T]
@@ -340,15 +315,16 @@ def compare_coords(
     return coords, index
 
 
-def parse_info_to_dict(path: Path) -> Dict:
-    """Parses the contents of info.txt file
-        into a dictionary
+def parse_info_to_dict(path: Path) -> dict:
+    """Parses the contents of info.txt file into a dictionary
+
     Args:
-        path: Path object pointing to the scan folder
+        path (Path): Path object pointing to the scan folder
+
     Returns:
-        info_dict: Parsed dictionary
+        dict: Parsed info_dict dictionary
     """
-    info_dict: Dict[Any, Any] = {}
+    info_dict: dict[Any, Any] = {}
     try:
         with open(path.joinpath("info.txt"), encoding="utf-8") as info_file:
             for line in info_file.readlines():
@@ -374,24 +350,23 @@ def parse_info_to_dict(path: Path) -> Dict:
     return info_dict
 
 
-def handle_meta(  # pylint:disable=too-many-branches
+def handle_meta(
     df_lut: pd.DataFrame,
     scan_info: dict,
     config: dict,
     dim: str,
 ) -> dict:
     """Helper function for the handling metadata from different files
+
     Args:
-        df_lut: Pandas dataframe containing
-                the contents of LUT.txt as obtained
-                from parse_lut_to_df()
-        scan_info: scan_info class dict containing
-                containing the contents of info.txt file
-        config: config dictionary containing the contents
-                of config.yaml file
+        df_lut (pd.DataFrame): Pandas dataframe containing the contents of LUT.txt as obtained
+            from ``parse_lut_to_df()``
+        scan_info: scan_info class dict containing containing the contents of info.txt file
+        config: config dictionary containing the contents of config.yaml file
+
     Returns:
-        metadata_dict: metadata dictionary containing additional metadata
-                from the EPICS archive.
+        dict: metadata_dict: metadata dictionary containing additional metadata from the EPICS
+        archive.
     """
 
     # get metadata from LUT dataframe
@@ -434,10 +409,7 @@ def handle_meta(  # pylint:disable=too-many-branches
             )
 
     metadata_dict["scan_info"]["slow_axes"] = dim
-    metadata_dict["scan_info"]["fast_axes"] = [
-        "Ekin",
-        fast,
-    ]
+    metadata_dict["scan_info"]["fast_axes"] = ["Ekin", fast]
 
     print("Done!")
 
@@ -447,10 +419,18 @@ def handle_meta(  # pylint:disable=too-many-branches
 def get_archive_meta(
     scan_meta: dict,
     config: dict,
-):
-    """
-    Function to collect the EPICS archive metadata
-    for the handle_meta function.
+) -> dict:
+    """Function to collect the EPICS archive metadata for the handle_meta function.
+
+    Args:
+        scan_meta (dict): scan_metadata class dict
+        config (dict): config dictionary
+
+    Raises:
+        ValueError: Raised if time stamps cannot be found
+
+    Returns:
+        dict: metadata dict completed with archiver meta data
     """
 
     metadata_dict = {}
@@ -467,14 +447,10 @@ def get_archive_meta(
     ts_to = dt.datetime.timestamp(datetime_list[-1])  # POSIX timestamp
     metadata_dict["timing"] = {
         "acquisition_start": dt.datetime.utcfromtimestamp(ts_from)
-        .replace(
-            tzinfo=dt.timezone.utc,
-        )
+        .replace(tzinfo=dt.timezone.utc)
         .isoformat(),
         "acquisition_stop": dt.datetime.utcfromtimestamp(ts_to)
-        .replace(
-            tzinfo=dt.timezone.utc,
-        )
+        .replace(tzinfo=dt.timezone.utc)
         .isoformat(),
         "acquisition_duration": int(ts_to - ts_from),
         "collection_time": float(ts_to - ts_from),
@@ -532,13 +508,15 @@ def get_archive_meta(
     return metadata_dict
 
 
-def find_scan(path: Path, scan: int) -> List[Path]:
+def find_scan(path: Path, scan: int) -> list[Path]:
     """Search function to locate the scan folder
+
     Args:
-        path: Path object for data from the default config file
-        scan: Scan number of the scan of interest
+        path (Path): Path object for data from the default config file
+        scan (int): Scan number of the scan of interest
+
     Returns:
-        scan_path: Path object pointing to the scan folder
+        List[Path]: scan_path: Path object pointing to the scan folder
     """
     print("Scan path not provided, searching directories...")
     for file in path.iterdir():
@@ -561,20 +539,18 @@ def find_scan(path: Path, scan: int) -> List[Path]:
     return scan_path
 
 
-def find_scan_type(  # pylint:disable=too-many-nested-blocks
+def find_scan_type(
     path: Path,
     scan_type: str,
-) -> None:
+):
     """Rudimentary function to print scan paths given the scan_type
-    Args:
-        path: Path object pointing to the year, for ex.,
-            Path("//nap32/topfloor/trARPES/PESData/2020")
-        scan_type: string containing the scan_type from the list
-            ["delay","temperature","manipulator","mirror","single"]
-    Returns:
-        None
-    """
 
+    Args:
+        path (Path): Path object pointing to the year, for ex.,
+            Path("//nap32/topfloor/trARPES/PESData/2020")
+        scan_type (str): string containing the scan_type from the list
+            ["delay","temperature","manipulator","mirror","single"]
+    """
     for month in path.iterdir():
         if month.is_dir():
             for day in month.iterdir():
