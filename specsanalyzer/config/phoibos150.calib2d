@@ -1,0 +1,15 @@
+# !!!!! Place a valid calib2D file from your Specslab Installation here!
+
+[SPECS Phoibos2D Calibration Dataset Version 100]
+aUnit  = "unit"
+aInner = 10 # unit
+eShift = -0.05 0 0.05 # Ep
+eRange = -0.066 0.066 # Ep
+aRange = -15 15
+eGrid  = 0.01 # Ep
+aGrid  = 1 # unit
+De1    = 0.0033
+Da1    = 1 1 1 # mm_z/unit
+Da3    = 0 0 0 # mm_z/unit^3
+Da5    = 0 0 0 # mm_z/unit^5
+Da7    = 0 0 0 # mm_z/unit^7
