@@ -417,7 +417,6 @@ def handle_meta(  # pylint:disable=too-many-branches
     #         scan_meta[replace_dict[key.lower()]] = scan_meta[key]
     #         scan_meta.pop(key)
 
-    metadata_dict["scan_info"] = scan_meta
     # # Get metadata from Epics archive, if not present already
     # print("Collecting data from the EPICS archive...")
     # if "time" in scan_meta:
@@ -475,7 +474,7 @@ def handle_meta(  # pylint:disable=too-many-branches
     #         break
     print("Done!")
 
-    return metadata_dict['scan_info']
+    return scan_meta
 
 
 def find_scan(path: Path, scan: int) -> List[Path]:

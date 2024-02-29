@@ -173,13 +173,13 @@ class SpecsScan:
         config_meta["fft_filter_peaks"] = str(config_meta["fft_filter_peaks"])
 
         if iterations is None:
-            iterations = 0
+            iterations = slice(0)
 
         loader_dict = {
             "iterations": iterations,
             "scan_path": str(scan_path),
             "raw_data": data,
-            **config_meta["spa_params"],
+            **config_meta,
         }
 
         (scan_type, lens_mode, kin_energy, pass_energy, work_function) = (
@@ -256,7 +256,7 @@ class SpecsScan:
             if k in res_xarray.dims
         }
         res_xarray = res_xarray.rename(rename_dict)
-        self._scan_info["coordinate_depends"] = depends_dict
+        self._scan_info["data_coordinate_depends"] = depends_dict
 
         axis_dict = {
             "/entry/sample/transformations/sample_polar": "Polar",
