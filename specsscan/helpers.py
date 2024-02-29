@@ -7,11 +7,7 @@ import datetime as dt
 import json
 from pathlib import Path
 from typing import Any
-from typing import Dict
-from typing import List
 from typing import Sequence
-from typing import Tuple
-from typing import Union
 from urllib.error import HTTPError
 from urllib.error import URLError
 from urllib.request import urlopen

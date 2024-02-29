@@ -1,11 +1,13 @@
 """This module contains a config library for loading yaml/json files into dicts
+
 """
+from __future__ import annotations
+
 import json
 import os
 import platform
 from importlib.util import find_spec
 from pathlib import Path
-from typing import Union
 
 import yaml
 
@@ -13,14 +15,11 @@ package_dir = os.path.dirname(find_spec("specsanalyzer").origin)
 
 
 def parse_config(
-    config: Union[dict, str] = None,
-    folder_config: Union[dict, str] = None,
-    user_config: Union[dict, str] = None,
-    system_config: Union[dict, str] = None,
-    default_config: Union[
-        dict,
-        str,
-    ] = f"{package_dir}/config/default.yaml",
+    config: dict | str = None,
+    folder_config: dict | str = None,
+    user_config: dict | str = None,
+    system_config: dict | str = None,
+    default_config: dict | str = f"{package_dir}/config/default.yaml",
     verbose: bool = True,
 ) -> dict:
     """Load the config dictionary from a file, or pass the provided config dictionary.
@@ -30,22 +29,22 @@ def parse_config(
     can be also passed as optional arguments (file path strings or dictionaries).
 
     Args:
-        config (Union[dict, str], optional): config dictionary or file path.
+        config (dict | str, optional): config dictionary or file path.
                 Files can be *json* or *yaml*. Defaults to None.
-        folder_config (Union[ dict, str, ], optional): working-folder-based config dictionary
+        folder_config (dict | str, optional): working-folder-based config dictionary
             or file path. The loaded dictionary is completed with the folder-based values,
             taking preference over user, system and default values. Defaults to the file
             "specs_config.yaml" in the current working directory.
-        user_config (Union[ dict, str, ], optional): user-based config dictionary
+        user_config (dict | str, optional): user-based config dictionary
             or file path. The loaded dictionary is completed with the user-based values,
             taking preference over system and default values.
             Defaults to the file ".specsanalyzer/config.yaml" in the current user's home directory.
-        system_config (Union[ dict, str, ], optional): system-wide config dictionary
+        system_config (dict | str, optional): system-wide config dictionary
             or file path. The loaded dictionary is completed with the system-wide values,
             taking preference over default values.
             Defaults to the file "/etc/specsanalyzer/config.yaml" on linux,
-            and "%ALLUSERPROFILE%/specsanalyzer/config.yaml" on windows.
-        default_config (Union[ dict, str, ], optional): default config dictionary
+            and "%ALLUSERSPROFILE%/specsanalyzer/config.yaml" on windows.
+        default_config (dict | str, optional): default config dictionary
             or file path. The loaded dictionary is completed with the default values.
             Defaults to *package_dir*/config/default.yaml".
         verbose (bool, optional): Option to report loaded config files. Defaults to True.
@@ -101,7 +100,7 @@ def parse_config(
                 )
             elif platform.system() == "Windows":
                 system_config = str(
-                    Path(os.environ["ALLUSERPROFILE"])
+                    Path(os.environ["ALLUSERSPROFILE"])
                     .joinpath("specsanalyzer")
                     .joinpath("config.yaml"),
                 )

@@ -10,7 +10,6 @@ from importlib.util import find_spec
 from logging import warn
 from pathlib import Path
 from typing import Any
-from typing import Dict
 from typing import Sequence
 
 import matplotlib
