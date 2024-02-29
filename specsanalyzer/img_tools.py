@@ -1,8 +1,9 @@
 """This module contains image manipulation tools for the specsanalyzer package
 
 """
+from __future__ import annotations
+
 from typing import Sequence
-from typing import Union
 
 import numpy as np
 import xarray as xr
@@ -10,26 +11,26 @@ import xarray as xr
 
 def gauss2d(
     # pylint: disable=invalid-name, too-many-arguments
-    x: Union[float, np.ndarray],
-    y: Union[float, np.ndarray],
+    x: float | np.ndarray,
+    y: float | np.ndarray,
     mx: float,
     my: float,
     sx: float,
     sy: float,
-) -> Union[float, np.ndarray]:
-    """Function to calculate a 2-dimensional Gaussian peak function without
-       correlation, and amplitude 1.
+) -> float | np.ndarray:
+    """Function to calculate a 2-dimensional Gaussian peak function without correlation, and
+    amplitude 1.
 
     Args:
-        x: independent x-variable
-        y: independent y-variable
-        mx: x-center of the 2D Gaussian
-        my: y-center of the 2D Gaussian
-        sx: Sigma in y direction
-        sy: Sigma in x direction
+        x (float | np.ndarray): independent x-variable
+        y (float | np.ndarray): independent y-variable
+        mx (float): x-center of the 2D Gaussian
+        my (float): y-center of the 2D Gaussian
+        sx (float): Sigma in y direction
+        sy (float): Sigma in x direction
 
     Returns:
-        peak intensity at the given (x, y) coordinates.
+        float | np.ndarray: peak intensity at the given (x, y) coordinates.
     """
 
     return np.exp(
@@ -39,24 +40,26 @@ def gauss2d(
 
 def fourier_filter_2d(
     image: np.ndarray,
-    peaks: Sequence,
+    peaks: Sequence[dict],
     ret: str = "filtered",
 ) -> np.ndarray:
     """Function to Fourier filter an image for removal of regular pattern artefacts,
        e.g. grid lines.
 
     Args:
-        image: the input image
-        peaks: list of dicts containing the following information about a "peak" in the
-               Fourier image:
-               'pos_x', 'pos_y', sigma_x', sigma_y', 'amplitude'. Define one entry for
-               each feature you want to suppress in the Fourier image, where amplitude
-               1 corresponds to full suppression.
-        ret: flag to indicate which data to return. Possible values are:
-             'filtered', 'fft', 'mask', 'filtered_fft'
+        image (np.ndarray): the input image
+        peaks (Sequence[dict]): list of dicts containing the following information about a "peak"
+            in the Fourier image:
+
+               'pos_x', 'pos_y', sigma_x', sigma_y', 'amplitude'.
+
+               Define one entry for each feature you want to suppress in the Fourier image, where
+               amplitude 1 corresponds to full suppression.
+        ret (str, optional): flag to indicate which data to return. Possible values are:
+             'filtered', 'fft', 'mask', 'filtered_fft'. Defaults to "filtered"
 
     Returns:
-        The chosen image data. Default is the filtered real image.
+        np.ndarray: The chosen image data. Default is the filtered real image.
     """
 
     # Do Fourier Transform of the (real-valued) image
@@ -109,14 +112,14 @@ def crop_xarray(
     """Crops an xarray according to the provided coordinate boundaries.
 
     Args:
-        data_array: the input xarray DataArray
-        x_min: the minimum position along the first element in the x-array dims list.
-        x_max: the maximum position along the first element in the x-array dims list.
-        y_min: the minimum position along the second element in the x-array dims list.
-        y_max: the maximum position along the second element in the x-array dims list.
+        data_array (xr.DataArray): the input xarray DataArray
+        x_min (float): the minimum position along the first element in the x-array dims list.
+        x_max (float): the maximum position along the first element in the x-array dims list.
+        y_min (float): the minimum position along the second element in the x-array dims list.
+        y_max (float): the maximum position along the second element in the x-array dims list.
 
     Returns:
-        The cropped xarray DataArray.
+        xr.DataArray: The cropped xarray DataArray.
     """
 
     x_axis = data_array.coords[data_array.dims[0]]

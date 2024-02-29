@@ -1,12 +1,11 @@
 """This module contains file input/output functions for the specsanalyzer module
 
 """
+from __future__ import annotations
+
 from pathlib import Path
 from typing import Any
-from typing import Dict
-from typing import List
 from typing import Sequence
-from typing import Union
 
 import h5py
 import numpy as np
@@ -44,8 +43,8 @@ def recursive_write_metadata(h5group: h5py.Group, node: dict):
     """Recurses through a python dictionary and writes it into an hdf5 file.
 
     Args:
-        h5group: hdf5 group element where to store the current dict node to.
-        node: dictionary node to store
+        h5group (h5py.Group): hdf5 group element where to store the current dict node to.
+        node (dict): dictionary node to store
 
     Raises:
         Warning: warns if elements have been converted into strings for saving.
@@ -84,15 +83,15 @@ def recursive_write_metadata(h5group: h5py.Group, node: dict):
 
 
 def recursive_parse_metadata(
-    node: Union[h5py.Group, h5py.Dataset],
+    node: h5py.Group | h5py.Dataset,
 ) -> dict:
     """Recurses through an hdf5 file, and parse it into a dictionary.
 
     Args:
-        node: hdf5 group or dataset to parse into dictionary.
+        node (h5py.Group | h5py.Dataset): hdf5 group or dataset to parse into dictionary.
 
     Returns:
-        dictionary: Dictionary of elements in the hdf5 path contained in node
+        dict: Dictionary of elements in the hdf5 path contained in node
     """
     if isinstance(node, h5py.Group):
         dictionary = {}
@@ -115,15 +114,13 @@ def to_h5(data: xr.DataArray, faddr: str, mode: str = "w"):
     """Save xarray formatted data to hdf5
 
     Args:
-        data: input data
+        data (xr.DataArray): input data
         faddr (str): complete file name (including path)
         mode (str): hdf5 read/write mode
 
     Raises:
         Warning: subfunction warns if elements have been converted into strings for
-        saving.
-
-    Returns:
+            saving.
     """
     with h5py.File(faddr, mode) as h5_file:
         print(f"saving data to {faddr}")
@@ -166,11 +163,11 @@ def load_h5(faddr: str, mode: str = "r") -> xr.DataArray:
     """Read xarray data from formatted hdf5 file
 
     Args:
-        faddr: complete file name (including path)
-        mode: hdf5 read/write mode
+        faddr (str): complete file name (including path)
+        mode (str, optional): hdf5 read/write mode. Defaults to "r"
 
     Returns:
-        xarray: output xarra data
+        xr.DataArray: output xarra data
     """
     with h5py.File(faddr, mode) as h5_file:
         # Reading data array
@@ -220,26 +217,25 @@ def load_h5(faddr: str, mode: str = "r") -> xr.DataArray:
 
 
 def to_tiff(
-    data: Union[xr.DataArray, np.ndarray],
-    faddr: Union[Path, str],
+    data: xr.DataArray | np.ndarray,
+    faddr: Path | str,
     alias_dict: dict = None,
-) -> None:
+):
     """Save an array as a .tiff stack compatible with ImageJ
 
     Args:
-        data: data to be saved. If a np.ndarray, the order is retained. If it
-            is an xarray.DataArray, the order is inferred from axis_dict instead.
-            ImageJ likes tiff files with axis order as
-            TZCYXS. Therefore, best axis order in input should be: Time, Energy,
-            posY, posX. The channels 'C' and 'S' are automatically added and can
-            be ignored.
-        faddr: full path and name of file to save.
-        alias_dict: name pairs for correct axis ordering. Keys should be any of
+        data (xr.DataArray | np.ndarray): data to be saved. If a np.ndarray, the order is retained.
+            If it is an xarray.DataArray, the order is inferred from axis_dict instead.
+            ImageJ likes tiff files with axis order as TZCYXS. Therefore, best axis order in input
+            should be: Time, Energy, posY, posX. The channels 'C' and 'S' are automatically added
+            and can be ignored.
+        faddr (Path | str): full path and name of file to save.
+        alias_dict (dict, optional): name pairs for correct axis ordering. Keys should be any of
             T,Z,C,Y,X,S. The Corresponding value should be a dimension of the xarray or
             the dimension number if a numpy array. This is used to sort the data in the
             correct order for imagej standards. If None it tries to guess the order
             from the name of the axes or assumes T,Z,C,Y,X,S order for numpy arrays.
-            Defaults to None
+            Defaults to None.
 
     Raise:
         AttributeError: if more than one axis corresponds to a single dimension
@@ -247,7 +243,7 @@ def to_tiff(
         TypeError: if data is not a np.ndarray or an xarray.DataArray
     """
 
-    out: Union[np.ndarray, xr.DataArray] = None
+    out: np.ndarray | xr.DataArray = None
     if isinstance(data, np.ndarray):
         # TODO: add sorting by dictionary keys
         dim_expansions = {2: [0, 1, 2, 5], 3: [0, 2, 5], 4: [2, 5]}
@@ -286,14 +282,20 @@ def _sort_dims_for_imagej(dims: list, alias_dict: dict = None) -> list:
     """Guess the order of the dimensions from the alias dictionary
 
     Args:
-        dims: the list of dimensions to sort
+        dims (list): the list of dimensions to sort
+        alias_dict (dict, optional): name pairs for correct axis ordering. Keys should be any of
+            T,Z,C,Y,X,S. The Corresponding value should be a dimension of the xarray or
+            the dimension number if a numpy array. This is used to sort the data in the
+            correct order for imagej standards. If None it tries to guess the order
+            from the name of the axes or assumes T,Z,C,Y,X,S order for numpy arrays.
+            Defaults to None.
 
     Raises:
         ValueError: for duplicate entries for a single imagej dimension
         NameError: when a dimension cannot be found in the alias dictionary
 
     Returns:
-        _description_
+        list: List of sorted dimensions
     """
     order = _fill_missing_dims(dims=dims, alias_dict=alias_dict)
     return [d for d in order if d in dims]
@@ -303,14 +305,20 @@ def _fill_missing_dims(dims: list, alias_dict: dict = None) -> list:
     """Guess the order of the dimensions from the alias dictionary
 
     Args:
-        dims: the list of dimensions to sort
+        dims (list): the list of dimensions to sort
+        alias_dict (dict, optional): name pairs for correct axis ordering. Keys should be any of
+            T,Z,C,Y,X,S. The Corresponding value should be a dimension of the xarray or
+            the dimension number if a numpy array. This is used to sort the data in the
+            correct order for imagej standards. If None it tries to guess the order
+            from the name of the axes or assumes T,Z,C,Y,X,S order for numpy arrays.
+            Defaults to None.
 
     Raises:
         ValueError: for duplicate entries for a single imagej dimension
         NameError: when a dimension cannot be found in the alias dictionary
 
     Returns:
-        _description_
+        list: List of extended dimensions
     """
     order: list = []
     # overwrite the default values with the provided dict
@@ -345,8 +353,8 @@ def _fill_missing_dims(dims: list, alias_dict: dict = None) -> list:
 
 
 def load_tiff(
-    faddr: Union[str, Path],
-    coords: Dict = None,
+    faddr: str | Path,
+    coords: dict = None,
     dims: Sequence = None,
     attrs: dict = None,
 ) -> xr.DataArray:
@@ -357,16 +365,15 @@ def load_tiff(
     only as np.ndarray
 
     Args:
-        faddr: Path to file to load.
-        coords: The axes describing the data, following the tiff stack order:
-        dims: the order of the coordinates provided, considering the data is
-        ordered as TZCYXS. If None (default) it infers the order from the order
-        of the coords dictionary.
-        attrs: dictionary to add as attributes to the xarray.DataArray
+        faddr (str | Path): Path to file to load.
+        coords (dict, optional): The axes describing the data, following the tiff stack order:
+        dims (Sequence, optional): the order of the coordinates provided, considering the data is
+            ordered as TZCYXS. If None (default) it infers the order from the order
+            of the coords dictionary.
+        attrs (dict, optional): dictionary to add as attributes to the xarray.DataArray
 
     Returns:
-        data: an xarray representing the data loaded from the .tiff
-        file
+        xr.DataArray: an xarray representing the data loaded from the .tiff file
     """
     data = tifffile.imread(faddr)
 
@@ -397,7 +404,7 @@ def to_nexus(
     faddr: str,
     reader: str,
     definition: str,
-    input_files: Union[str, Sequence[str]],
+    input_files: str | Sequence[str],
     **kwds,
 ):
     """Saves the x-array provided to a NeXus file at faddr, using the provided reader,
@@ -409,7 +416,7 @@ def to_nexus(
         faddr (str): The file path to save to.
         reader (str): The name of the NeXus reader to use.
         definition (str): The NeXus definiton to use.
-        config_file (str): The file path to the configuration file to use.
+        input_files (str | Sequence[str]): The file path to the configuration file to use.
         **kwds: Keyword arguments for ``nexusutils.dataconverter.convert``.
     """
 
@@ -428,12 +435,12 @@ def to_nexus(
     )
 
 
-def get_pair_from_list(list_line: List[Any]) -> List[Any]:
+def get_pair_from_list(list_line: list) -> list:
     """Returns key value pair for the read function
     where a line in the file contains '=' character.
 
     Args:
-        list_line: list of splitted line from the file.
+        list_line (list): list of splitted line from the file.
 
     Returns:
         list: List of a tuple containing key value pair.
@@ -458,12 +465,12 @@ def get_pair_from_list(list_line: List[Any]) -> List[Any]:
     return [(k, v)]
 
 
-def read_calib2d(filepath: str) -> List[Any]:
+def read_calib2d(filepath: str) -> list:
     """Reads the calib2d file into a convenient list for the parser
     function containing useful and cleaned data.
 
     Args:
-        filepath: Path to file to load.
+        filepath (str): Path to file to load.
 
     Returns:
         list: List containing dictionary, string and float objects.
@@ -471,7 +478,7 @@ def read_calib2d(filepath: str) -> List[Any]:
     with open(filepath, encoding="utf-8") as file:
         lines = file.readlines()
 
-    listf: List[Any] = []
+    listf: list[Any] = []
     for line in lines:
         if "# !!!!! Place a valid calib2D file from your Specslab Installation here!" in line:
             print(
@@ -498,20 +505,19 @@ def read_calib2d(filepath: str) -> List[Any]:
     return listf
 
 
-def parse_calib2d_to_dict(filepath: str) -> Dict[Any, Any]:
+def parse_calib2d_to_dict(filepath: str) -> dict:
     """Parses the given calib2d file into a nested dictionary structure
     to provide parameters for image conversion.
 
     Args:
-        filepath: Path to file to load.
+        filepath (str): Path to file to load.
 
     Returns:
-        calib_dict: Populated nested dictionary parsed from the provided
-        calib2d file.
+        dict: Populated nested dictionary parsed from the provided calib2d file.
     """
     listf = read_calib2d(filepath)
 
-    calib_dict: Dict[Any, Any] = {}
+    calib_dict: dict[Any, Any] = {}
     mode = None
     retardation_ratio = None
     for elem in listf:
@@ -539,15 +545,15 @@ def parse_calib2d_to_dict(filepath: str) -> Dict[Any, Any]:
     return calib_dict
 
 
-def get_modes_from_calib_dict(
-    calib_dict: dict,
-):
+def get_modes_from_calib_dict(calib_dict: dict) -> tuple[list, list]:
     """create a list of supported modes, divided in spatial and angular modes
+
     Args:
         calib_dict (dict): the calibration dictionary, created with the io
         parse_calib2d_to_dict
+
     Returns:
-        _type_: _description_
+        tuple[list, list]: lists of supported angular and spatial lens modes
     """
     key_list = list(calib_dict.keys())
     supported_angle_modes = []

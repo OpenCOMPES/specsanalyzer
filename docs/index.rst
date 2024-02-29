@@ -22,7 +22,6 @@ Concept description. TODO
    specsanalyzer/convert
    specsanalyzer/img_tools
    specsanalyzer/io
-   specsanalyzer/metadata
    specsanalyzer/config
 
 .. toctree::

@@ -1,12 +1,11 @@
 """This is the specsanalyzer core class
 
 """
+from __future__ import annotations
+
 import os
 from typing import Any
-from typing import Dict
 from typing import Generator
-from typing import Tuple
-from typing import Union
 
 import imutils
 import ipywidgets as ipw
@@ -22,34 +21,38 @@ from specsanalyzer.convert import calculate_matrix_correction
 from specsanalyzer.convert import physical_unit_data
 from specsanalyzer.img_tools import crop_xarray
 from specsanalyzer.img_tools import fourier_filter_2d
-from specsanalyzer.metadata import MetaHandler
 
 package_dir = os.path.dirname(__file__)
 
 
-class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
+class SpecsAnalyzer:
     """SpecsAnalyzer: A class to convert photoemission data from a SPECS Phoibos analyzer from
     camera image coordinates into physical units (energy, angle, position).
+
+    Args:
+        metadata (dict, optional): Metadata dictionary. Defaults to {}.
+        config (dict  | str, optional): Metadata dictionary or file path. Defaults to {}.
+        **kwds: Keyword arguments passed to ``parse_config``.
     """
 
     def __init__(
         self,
-        metadata: Dict[Any, Any] = {},
-        config: Union[Dict[Any, Any], str] = {},
+        metadata: dict[Any, Any] = {},
+        config: dict[Any, Any] | str = {},
         **kwds,
     ):
         """SpecsAnalyzer constructor.
 
         Args:
             metadata (dict, optional): Metadata dictionary. Defaults to {}.
-            config (Union[dict, str], optional): Metadata dictionary or file path. Defaults to {}.
+            config (dict | str, optional): Metadata dictionary or file path. Defaults to {}.
             **kwds: Keyword arguments passed to ``parse_config``.
         """
         self._config = parse_config(
             config,
             **kwds,
         )
-        self._attributes = MetaHandler(meta=metadata)
+        self.metadata = metadata
         self._data_array = None
         self.print_msg = True
         try:
@@ -62,9 +65,8 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
                 os.path.join(package_dir, self._config["calib2d_file"]),
             )
 
-        self._correction_matrix_dict: Dict[Any, Any] = {}
+        self._correction_matrix_dict: dict[Any, Any] = {}
 
-    # pylint: disable=duplicate-code
     def __repr__(self):
         if self._config is None:
             pretty_str = "No configuration available"
@@ -81,7 +83,7 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
         return self._config
 
     @config.setter
-    def config(self, config: Union[dict, str]):
+    def config(self, config: dict | str):
         """Set config"""
         self._config = parse_config(config)
 
@@ -113,18 +115,12 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
             xr.DataArray: xarray containg the corrected data and kinetic and angle axis
         """
 
-        apply_fft_filter = kwds.pop(
-            "apply_fft_filter",
-            self._config.get("apply_fft_filter", False),
-        )
+        apply_fft_filter = kwds.pop("apply_fft_filter", self._config.get("apply_fft_filter", False))
         binning = kwds.pop("binning", self._config.get("binning", 1))
 
         if apply_fft_filter:
             try:
-                fft_filter_peaks = kwds.pop(
-                    "fft_filter_peaks",
-                    self._config["fft_filter_peaks"],
-                )
+                fft_filter_peaks = kwds.pop("fft_filter_peaks", self._config["fft_filter_peaks"])
                 img = fourier_filter_2d(raw_img, fft_filter_peaks)
             except KeyError:
                 img = raw_img
@@ -165,7 +161,7 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
 
         except KeyError:
             old_matrix_check = False
-            (  # pylint: disable=duplicate-code
+            (
                 ek_axis,
                 angle_axis,
                 angular_correction_matrix,
@@ -329,7 +325,7 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
         Args:
             raw_img (np.ndarray): Raw image data, numpy 2d matrix
             lens_mode (str): analzser lens mode, check calib2d for a list
-                of modes Camelcase naming convention e.g. "WideAngleMode"
+                of modes CamelCase naming convention e.g. "WideAngleMode"
             kinetic_energy (float): set analyser kinetic energy
             pass_energy (float): set analyser pass energy
             work_function (float): set analyser work function
@@ -337,12 +333,11 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
                 Defaults to False.
             **kwds: Keyword parameters for the crop tool:
 
-                -ek_range_min
-                -ek_range_max
-                -ang_range_min
-                -ang_range_max
+                - ek_range_min
+                - ek_range_max
+                - ang_range_min
+                - ang_range_max
         """
-
         data_array = self.convert_image(
             raw_img=raw_img,
             lens_mode=lens_mode,
@@ -534,7 +529,7 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
 def mergedicts(
     dict1: dict,
     dict2: dict,
-) -> Generator[Tuple[Any, Any], None, None]:
+) -> Generator[tuple[Any, Any], None, None]:
     """Merge two dictionaries, overwriting only existing values and retaining
     previously present values
 
