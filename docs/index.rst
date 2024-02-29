@@ -8,7 +8,13 @@ Welcome to specsanalyzer's documentation!
 Concept description. TODO
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 1
+   :caption: Getting Started
+
+   getting_started
+
+.. toctree::
+   :maxdepth: 1
    :numbered:
    :caption: SpecsAnalyzer Core Modules
 
@@ -17,14 +23,15 @@ Concept description. TODO
    specsanalyzer/img_tools
    specsanalyzer/io
    specsanalyzer/metadata
-   specsanalyzer/settings
+   specsanalyzer/config
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :numbered:
-   :caption: Examples
+   :caption: SpecsScan Core Modules
 
-   examples/example
+   specsscan/core
+   specsscan/helpers
 
 .. toctree::
    :maxdepth: 2

@@ -1,5 +1,5 @@
-Metadata
+Helpers
 ===================================================
-.. automodule:: specsscan.metadata
+.. automodule:: specsscan.helpers
    :members:
    :undoc-members:

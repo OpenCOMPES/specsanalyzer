@@ -1,11 +1,3 @@
-import os
-import sys
-
-import specsanalyzer
-
-
-sys.path.insert(0, os.path.abspath(".."))
-
 # Configuration file for the Sphinx documentation builder.
 #
 # This file only contains a selection of the most common options. For a full
@@ -16,30 +8,33 @@ sys.path.insert(0, os.path.abspath(".."))
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
+import os
+import sys
+
+import tomlkit
+
+
+sys.path.insert(0, os.path.abspath(".."))
 
 # -- Project information -----------------------------------------------------
 
-# The suffix of source filenames.
-source_suffix = ".rst"
 
-# The encoding of source files.
-# source_encoding = 'utf-8-sig'
+def _get_project_meta():
+    with open("../pyproject.toml") as pyproject:
+        file_contents = pyproject.read()
 
-# The master toctree document.
-master_doc = "index"
+    return tomlkit.parse(file_contents)["tool"]["poetry"]
 
-# General information about the project.
-project = "specsanalyzer"
-copyright = "2022, Laurenz Rettig, Michele Puppin, Abeer Arora"
 
-# The version info for the project you're documenting, acts as replacement for
-# |version| and |release|, also used in various other places throughout the
-# built documents.
-#
-# The short X.Y version.
-version = specsanalyzer.__version__
-# The full version, including alpha/beta/rc tags.
-release = specsanalyzer.__version__
+pkg_meta = _get_project_meta()
+project = str(pkg_meta["name"])
+copyright = "2024, OpenCOMPES team"
+author = "OpenCOMPES team"
+
+# The short X.Y version
+version = str(pkg_meta["version"])
+# The full version, including alpha/beta/rc tags
+release = version
 
 # -- General configuration ---------------------------------------------------
 
@@ -55,7 +50,12 @@ extensions = [
     "sphinx.ext.autosummary",
     "sphinx.ext.coverage",
     "sphinx_autodoc_typehints",
+    # "bokeh.sphinxext.bokeh_autodoc",
+    # "bokeh.sphinxext.bokeh_plot",
+    "nbsphinx",
+    "myst_parser",
 ]
+
 
 autoclass_content = "class"
 autodoc_member_order = "bysource"

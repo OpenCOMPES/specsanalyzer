@@ -1,5 +1,5 @@
 Settings
 ===================================================
-.. automodule:: specsanalyzer.settings
+.. automodule:: specsanalyzer.config
    :members:
    :undoc-members:

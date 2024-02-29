@@ -325,6 +325,7 @@ class SpecsAnalyzer:  # pylint: disable=dangerous-default-value
         **kwds,
     ):
         """Crop tool for selecting cropping parameters
+
         Args:
             raw_img (np.ndarray): Raw image data, numpy 2d matrix
             lens_mode (str): analzser lens mode, check calib2d for a list

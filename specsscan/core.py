@@ -317,6 +317,7 @@ class SpecsScan:
     ) -> xr.DataArray:
         """Function to explore a given 3-D scan as a function
             of iterations for a given range of delays
+
         Args:
             scan: The scan number of interest
             delay: A single delay index or a range of delay indices

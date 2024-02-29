@@ -390,9 +390,7 @@ def calculate_matrix_correction(  # pylint: disable=too-many-arguments, too-many
     binning: int,
     config_dict: dict,
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    """Calculate the angular and
-    energy interpolation matrices for
-    the currection function
+    """Calculate the angular and energy interpolation matrices for the currection function
 
     Args:
         lens_mode (str): analyser lens mode
@@ -403,16 +401,13 @@ def calculate_matrix_correction(  # pylint: disable=too-many-arguments, too-many
         config_dict (dict): dictionary containing the calibration files
 
     Returns:
-        tuple[np.ndarray,
-        np.ndarray,
-        np.ndarray,
-        np.ndarray,
-        np.ndarray]: returns ek_axis,  kinetic energy axis
-        angle_axis, angle of emissio axis
-        angular_correction_matrix, the matrix for angular interpolation
-        e_correction, the matrix for energy interpolation
-        jacobian_determinant, the transformation jacobian for area preserving
-        transformation
+        tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+
+            - ek_axis: kinetic energy axis
+            - angle_axis, angle of emissio axis
+            - angular_correction_matrix: the matrix for angular interpolation
+            - e_correction: the matrix for energy interpolation
+            - jacobian_determinant: the transformation jacobian for area preserving transformation
     """
 
     e_shift = np.array(config_dict["calib2d_dict"]["eShift"])
