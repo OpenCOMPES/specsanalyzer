@@ -121,7 +121,8 @@ class SpecsScan:
         scan: int,
         path: str | Path = "",
         iterations: np.ndarray | slice | Sequence[int] | Sequence[slice] = None,
-        metadata: dict = None,
+        metadata: dict = {},
+        collect_metadata: bool = False,
         **kwds,
     ) -> xr.DataArray:
         """Load scan with given scan number. When iterations is given, average is performed over
@@ -137,7 +138,9 @@ class SpecsScan:
                 integers. For ex., ``np.s_[1:10, 15, -1]`` would be a valid input for iterations.
                 Defaults to None.
             metadata (dict, optional): Metadata dictionary with additional metadata for the scan.
-                Defaults to None.
+                Defaults to empty dictionary.
+            collect_metadata (bool, optional): Option to collect further metadata e.g. from EPICS
+                archiver needed for NeXus conversion. Defaults to False.
             **kwds: Additional arguments passed to ``SpecsAnalyzer.convert()``.
 
         Returns:
@@ -264,11 +267,11 @@ class SpecsScan:
                 self._scan_info,
                 self.config,
                 dim,
+                metadata=metadata,
+                collect_metadata=collect_metadata,
             ),
             **{"loader": loader_dict},
         )
-        if metadata is not None:
-            self.metadata.update(**metadata)
 
         res_xarray.attrs["metadata"] = self.metadata
         self._result = res_xarray
@@ -289,7 +292,6 @@ class SpecsScan:
         matplotlib.use("module://ipympl.backend_nbagg")
         if scan is not None:
             scan_path = get_scan_path(path, scan, self._config["data_path"])
-            df_lut = parse_lut_to_df(scan_path)
 
             data = load_images(
                 scan_path=scan_path,
@@ -317,7 +319,8 @@ class SpecsScan:
         scan: int,
         delays: Sequence[int] | int,
         path: str | Path = "",
-        metadata: dict = None,
+        metadata: dict = {},
+        collect_metadata: bool = False,
         **kwds,
     ) -> xr.DataArray:
         """Function to explore a given 3-D scan as a function of iterations for a given range of
@@ -330,7 +333,9 @@ class SpecsScan:
             path (str | Path, optional): Either a string of the path to the folder containing the
                 scan or a Path object. Defaults to config['data_path].
             metadata (dict, optional): Metadata dictionary with additional metadata for the scan.
-                Defaults to None.
+                Defaults to empty dictionary.
+            collect_metadata (bool, optional): Option to collect further metadata e.g. from EPICS
+                archiver needed for NeXus conversion. Defaults to False.
             **kwds: Keyword arguments passed to ``SpecsAnalyzer.convert()``.
 
         Raises:
@@ -342,7 +347,7 @@ class SpecsScan:
         scan_path = get_scan_path(path, scan, self._config["data_path"])
         df_lut = parse_lut_to_df(scan_path)
 
-        data, df_lut = load_images(
+        data = load_images(
             scan_path=scan_path,
             df_lut=df_lut,
             delays=delays,
@@ -418,6 +423,8 @@ class SpecsScan:
                 self._scan_info,
                 self.config,
                 dims[1],
+                metadata=metadata,
+                collect_metadata=collect_metadata,
             ),
             **{"loader": loader_dict},
         )

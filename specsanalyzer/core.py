@@ -148,6 +148,7 @@ class SpecsAnalyzer:
                 f"convert_image: unsupported lens mode: '{lens_mode}'",
             )
 
+        new_matrix = False
         try:
             old_db = self._correction_matrix_dict[lens_mode][kinetic_energy][pass_energy][
                 work_function
@@ -160,6 +161,9 @@ class SpecsAnalyzer:
             jacobian_determinant = old_db["jacobian_determinant"]
 
         except KeyError:
+            new_matrix = True
+
+        if new_matrix or "angle_offset_px" in kwds or "energy_offset_px" in kwds:
             old_matrix_check = False
             (
                 ek_axis,
@@ -174,6 +178,7 @@ class SpecsAnalyzer:
                 work_function,
                 binning,
                 self._config,
+                **kwds,
             )
 
             # save the config parameters for later use
@@ -362,64 +367,60 @@ class SpecsAnalyzer:
         linev2 = ax.axvline(x=data_array.Ekin[-1])
 
         try:
-            range_dict = self._correction_matrix_dict[lens_mode][kinetic_energy][pass_energy][
-                work_function
-            ]["crop_params"]
-
-            ek_min = range_dict["ek_min"]
-            ek_max = range_dict["ek_max"]
-            ang_min = range_dict["ang_min"]
-            ang_max = range_dict["ang_max"]
+            ang_range_min = (
+                kwds["ang_range_min"] if "ang_range_min" in kwds else self._config["ang_range_min"]
+            )
+            ang_range_max = (
+                kwds["ang_range_max"] if "ang_range_max" in kwds else self._config["ang_range_max"]
+            )
+            ek_range_min = (
+                kwds["ek_range_min"] if "ek_range_min" in kwds else self._config["ek_range_min"]
+            )
+            ek_range_max = (
+                kwds["ek_range_max"] if "ek_range_max" in kwds else self._config["ek_range_max"]
+            )
+            ang_min = (
+                ang_range_min
+                * (
+                    data_array.coords[data_array.dims[0]][-1]
+                    - data_array.coords[data_array.dims[0]][0]
+                )
+                + data_array.coords[data_array.dims[0]][0]
+            )
+            ang_max = (
+                ang_range_max
+                * (
+                    data_array.coords[data_array.dims[0]][-1]
+                    - data_array.coords[data_array.dims[0]][0]
+                )
+                + data_array.coords[data_array.dims[0]][0]
+            )
+            ek_min = (
+                ek_range_min
+                * (
+                    data_array.coords[data_array.dims[1]][-1]
+                    - data_array.coords[data_array.dims[1]][0]
+                )
+                + data_array.coords[data_array.dims[1]][0]
+            )
+            ek_max = (
+                ek_range_max
+                * (
+                    data_array.coords[data_array.dims[1]][-1]
+                    - data_array.coords[data_array.dims[1]][0]
+                )
+                + data_array.coords[data_array.dims[1]][0]
+            )
         except KeyError:
             try:
-                ang_range_min = (
-                    kwds["ang_range_min"]
-                    if "ang_range_min" in kwds
-                    else self._config["ang_range_min"]
-                )
-                ang_range_max = (
-                    kwds["ang_range_max"]
-                    if "ang_range_max" in kwds
-                    else self._config["ang_range_max"]
-                )
-                ek_range_min = (
-                    kwds["ek_range_min"] if "ek_range_min" in kwds else self._config["ek_range_min"]
-                )
-                ek_range_max = (
-                    kwds["ek_range_max"] if "ek_range_max" in kwds else self._config["ek_range_max"]
-                )
-                ang_min = (
-                    ang_range_min
-                    * (
-                        data_array.coords[data_array.dims[0]][-1]
-                        - data_array.coords[data_array.dims[0]][0]
-                    )
-                    + data_array.coords[data_array.dims[0]][0]
-                )
-                ang_max = (
-                    ang_range_max
-                    * (
-                        data_array.coords[data_array.dims[0]][-1]
-                        - data_array.coords[data_array.dims[0]][0]
-                    )
-                    + data_array.coords[data_array.dims[0]][0]
-                )
-                ek_min = (
-                    ek_range_min
-                    * (
-                        data_array.coords[data_array.dims[1]][-1]
-                        - data_array.coords[data_array.dims[1]][0]
-                    )
-                    + data_array.coords[data_array.dims[1]][0]
-                )
-                ek_max = (
-                    ek_range_max
-                    * (
-                        data_array.coords[data_array.dims[1]][-1]
-                        - data_array.coords[data_array.dims[1]][0]
-                    )
-                    + data_array.coords[data_array.dims[1]][0]
-                )
+                range_dict = self._correction_matrix_dict[lens_mode][kinetic_energy][pass_energy][
+                    work_function
+                ]["crop_params"]
+
+                ek_min = range_dict["ek_min"]
+                ek_max = range_dict["ek_max"]
+                ang_min = range_dict["ang_min"]
+                ang_max = range_dict["ang_max"]
             except KeyError:
                 ek_min = data_array.coords[data_array.dims[1]][0]
                 ek_max = data_array.coords[data_array.dims[1]][-1]

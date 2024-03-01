@@ -351,14 +351,21 @@ def handle_meta(
     scan_info: dict,
     config: dict,
     dim: str,
+    metadata: dict = {},
+    collect_metadata: bool = False,
 ) -> dict:
     """Helper function for the handling metadata from different files
 
     Args:
         df_lut (pd.DataFrame): Pandas dataframe containing the contents of LUT.txt as obtained
             from ``parse_lut_to_df()``
-        scan_info: scan_info class dict containing containing the contents of info.txt file
-        config: config dictionary containing the contents of config.yaml file
+        scan_info (dict): scan_info class dict containing containing the contents of info.txt file
+        config (dict): config dictionary containing the contents of config.yaml file
+        dim (str): The slow-axis dimension of the scan
+        metadata (dict, optional): Metadata dictionary with additional metadata for the scan.
+            Defaults to empty dictionary.
+        collect_metadata (bool, optional): Option to collect further metadata e.g. from EPICS
+            archiver needed for NeXus conversion. Defaults to False.
 
     Returns:
         dict: metadata_dict: metadata dictionary containing additional metadata from the EPICS
@@ -383,11 +390,16 @@ def handle_meta(
     scan_meta = complete_dictionary(lut_meta, scan_info)  # merging two dictionaries
 
     # Get metadata from Epics archive, if not present already
-    print("Collecting data from the EPICS archive...")
-    metadata_dict = get_archive_meta(
-        scan_meta,
-        config,
-    )
+    if collect_metadata:
+        metadata_dict = get_archive_meta(
+            scan_meta,
+            metadata,
+            config,
+        )
+    else:
+        metadata_dict = {"scan_info": scan_meta}
+
+    metadata_dict = complete_dictionary(metadata_dict, metadata)  # merging two dictionaries
 
     metadata_dict["scan_info"]["energy_scan_mode"] = energy_scan_mode
 
@@ -414,12 +426,14 @@ def handle_meta(
 
 def get_archive_meta(
     scan_meta: dict,
+    metadata: dict,
     config: dict,
 ) -> dict:
     """Function to collect the EPICS archive metadata for the handle_meta function.
 
     Args:
         scan_meta (dict): scan_metadata class dict
+        metadata (dict): external metadata dict
         config (dict): config dictionary
 
     Raises:
@@ -454,6 +468,8 @@ def get_archive_meta(
     filestart = dt.datetime.utcfromtimestamp(ts_from).isoformat()  # Epics time in UTC?
     fileend = dt.datetime.utcfromtimestamp(ts_to).isoformat()
 
+    scan_meta = complete_dictionary(scan_meta, metadata.get("scan_info", {}))
+
     try:
         replace_dict = config["epics_channels"]
         for key in list(scan_meta):
@@ -463,44 +479,45 @@ def get_archive_meta(
         epics_channels = replace_dict.values()
     except KeyError:
         epics_channels = []
-        print("No EPICS archive channels provided in the config")
     metadata_dict["scan_info"] = scan_meta
 
     channels_missing = set(epics_channels) - set(scan_meta.keys())
-    for channel in channels_missing:
-        try:
-            req_str = (
-                "http://aa0.fhi-berlin.mpg.de:17668/retrieval/"
-                + "data/getData.json?pv="
-                + channel
-                + "&from="
-                + filestart
-                + "Z&to="
-                + fileend
-                + "Z"
-            )
-            with urlopen(req_str) as req:
-                data = json.load(req)
-                vals = [x["val"] for x in data[0]["data"]]
-                metadata_dict["scan_info"][f"{channel}"] = sum(vals) / len(vals)
-        except (IndexError, ZeroDivisionError):
-            metadata_dict["scan_info"][f"{channel}"] = np.nan
-            print(f"Data for channel {channel} doesn't exist for time {filestart}")
-        except HTTPError as error:
-            print(
-                f"Incorrect URL for the archive channel {channel}. "
-                "Make sure that the channel name, file start "
-                "and end times are correct.",
-            )
-            print("Error code: ", error)
-        except URLError as error:
-            print(
-                f"Cannot access the archive URL for channel {channel}. "
-                f"Make sure that you are within the FHI network."
-                f"Skipping over channels {channels_missing}.",
-            )
-            print("Error code: ", error)
-            break
+    if channels_missing:
+        print("Collecting data from the EPICS archive...")
+        for channel in channels_missing:
+            try:
+                req_str = (
+                    "http://aa0.fhi-berlin.mpg.de:17668/retrieval/"
+                    + "data/getData.json?pv="
+                    + channel
+                    + "&from="
+                    + filestart
+                    + "Z&to="
+                    + fileend
+                    + "Z"
+                )
+                with urlopen(req_str) as req:
+                    data = json.load(req)
+                    vals = [x["val"] for x in data[0]["data"]]
+                    metadata_dict["scan_info"][f"{channel}"] = sum(vals) / len(vals)
+            except (IndexError, ZeroDivisionError):
+                metadata_dict["scan_info"][f"{channel}"] = np.nan
+                print(f"Data for channel {channel} doesn't exist for time {filestart}")
+            except HTTPError as error:
+                print(
+                    f"Incorrect URL for the archive channel {channel}. "
+                    "Make sure that the channel name, file start "
+                    "and end times are correct.",
+                )
+                print("Error code: ", error)
+            except URLError as error:
+                print(
+                    f"Cannot access the archive URL for channel {channel}. "
+                    f"Make sure that you are within the FHI network."
+                    f"Skipping over channels {channels_missing}.",
+                )
+                print("Error code: ", error)
+                break
     return metadata_dict
 
 

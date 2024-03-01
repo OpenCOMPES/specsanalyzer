@@ -374,6 +374,7 @@ def calculate_matrix_correction(
     work_function: float,
     binning: int,
     config_dict: dict,
+    **kwds,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Calculate the angular and energy interpolation matrices for the currection function
 
@@ -384,6 +385,10 @@ def calculate_matrix_correction(
         work_function (float): analyser set work function
         binning (int): image binning
         config_dict (dict): dictionary containing the calibration files
+        ** kwds: Keyword parameters:
+
+            - eangle_offset_px: Angular offset in pixel
+            - energy_offset_px: Energy offset in pixel
 
     Returns:
         tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
@@ -459,8 +464,8 @@ def calculate_matrix_correction(
     )
 
     # read angular and energy offsets from configuration file
-    angle_offset_px = config_dict.get("Ang_Offset_px", 0)
-    energy_offset_px = config_dict.get("E_Offset_px", 0)
+    angle_offset_px = kwds.get("angle_offset_px", config_dict.get("angle_offset_px", 0))
+    energy_offset_px = kwds.get("energy_offset_px", config_dict.get("energy_offset_px", 0))
 
     angular_correction_matrix = (
         mcp_position_mm_matrix / magnification / (pixel_size * binning)
