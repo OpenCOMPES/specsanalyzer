@@ -56,7 +56,7 @@ def load_images(
     scan_path: Path,
     df_lut: pd.DataFrame = None,
     iterations: np.ndarray | slice | Sequence[int] | Sequence[slice] = None,
-    delays: np.ndarray | slice | Sequence[int] | Sequence[slice] = None,
+    delays: np.ndarray | slice | int | Sequence[int] | Sequence[slice] = None,
     tqdm_enable_nested: bool = False,
 ) -> list[np.ndarray]:
     """Loads a 2D/3D numpy array of images for the given scan path with an optional averaging
@@ -72,7 +72,7 @@ def load_images(
             array of the indices of iterations over which the images are to be averaged. The array
             can be a list, numpy array or a Tuple consisting of slice objects and integers. For
             ex., ``np.s_[1:10, 15, -1]`` would be a valid input. Defaults to None.
-        delays (np.ndarray | slice | Sequence[int] | Sequence[slice], optional): A 1-D
+        delays (np.ndarray | slice | int | Sequence[int] | Sequence[slice], optional): A 1-D
             array of the indices of delays over which the images are to be averaged. The array can
             be a list, numpy array or a Tuple consisting of slice objects and integers. For ex.,
             ``np.s_[1:10, 15, -1]`` would be a valid input. Defaults to None.
