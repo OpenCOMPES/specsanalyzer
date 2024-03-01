@@ -40,6 +40,12 @@ pip install specsanalyzer
 ```bash
 python -m ipykernel install --user --name=specs_kernel
 ```
+
+#### Configuration and calib2d file
+The conversion procedures require to set up several configuration parameters in a config file. An example config file is provided as part of the package (see documentation). Configuration files can either be passed to the class constructures, or are read from system-wide or user-defined locations (see documentation).
+
+Most importantly, conversion of analyzer data to energy/angular coordinates requires detector calibration data provided by the manufacturer. The corresponding *.calib2d file (e.g. phoibos150.calbid2d) are provided together with the spectrometer software, and need to be set in the config file.
+
 ### For Contributors
 
 To contribute to the development of `specsanalyzer`, you can follow these steps:

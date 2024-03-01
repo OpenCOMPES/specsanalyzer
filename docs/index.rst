@@ -12,6 +12,7 @@ Concept description. TODO
    :caption: Getting Started
 
    getting_started
+   specsanalyzer/config
 
 .. toctree::
    :maxdepth: 1
@@ -22,7 +23,6 @@ Concept description. TODO
    specsanalyzer/convert
    specsanalyzer/img_tools
    specsanalyzer/io
-   specsanalyzer/config
 
 .. toctree::
    :maxdepth: 1
