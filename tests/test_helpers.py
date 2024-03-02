@@ -1,7 +1,6 @@
 """This script performs tests for the helper functions
 in the core.py script to support the load_scan method.
 """
-
 import os
 from pathlib import Path
 

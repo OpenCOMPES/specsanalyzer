@@ -1,5 +1,4 @@
 """This module contains image manipulation tools for the specsanalyzer package"""
-
 from __future__ import annotations
 
 from typing import Sequence

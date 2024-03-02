@@ -1,6 +1,4 @@
-# pylint: disable=duplicate-code
 """This is a code that performs several tests for the convert functions"""
-
 import os
 
 import numpy as np

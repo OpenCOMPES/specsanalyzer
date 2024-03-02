@@ -1,5 +1,4 @@
 """This script contains helper functions used by the specscan class"""
-
 from __future__ import annotations
 
 import datetime as dt

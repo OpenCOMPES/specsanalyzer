@@ -1,5 +1,4 @@
 """This module contains a config library for loading yaml/json files into dicts"""
-
 from __future__ import annotations
 
 import json
