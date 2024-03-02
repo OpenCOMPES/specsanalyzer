@@ -13,10 +13,10 @@ Concept description. TODO
 
    getting_started
    specsanalyzer/config
-   1_specsanalyzer_conversion_examples
-   2_specsscan_example
-   3_specsscan_conversion_to_NeXus
-   4_specsscan_load_sweep_scan
+   tutorial/1_specsanalyzer_conversion_examples
+   tutorial/2_specsscan_example
+   tutorial/3_specsscan_conversion_to_NeXus
+   tutorial/4_specsscan_load_sweep_scan
 
 .. toctree::
    :maxdepth: 1
