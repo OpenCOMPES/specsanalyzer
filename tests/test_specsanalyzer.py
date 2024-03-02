@@ -1,6 +1,4 @@
-"""This is a code that performs several tests for the SpecsAnalyzer
-core class functions
-"""
+"""This is a code that performs several tests for the SpecsAnalyzer core class functions"""
 import os
 from importlib.util import find_spec
 

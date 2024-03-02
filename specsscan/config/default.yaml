@@ -1,8 +1,12 @@
-data_path: "//nap32/topfloor/trARPES/PESData/"
+# path to the default data directory
+data_path: ""
+# option to enable nested progress bars
 enable_nested_progress_bar: false
+# dictionary containing parameters passed to the SpecsAnalyzer. Will be completed by the SpecsAnalyzer default config parameters
 spa_params:
   apply_fft_filter: false
 
+# dictionary containing units for the respective axes
 units:
   Angle: "degree"
   Ekin: "eV"

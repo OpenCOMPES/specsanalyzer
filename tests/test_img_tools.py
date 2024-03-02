@@ -1,5 +1,4 @@
-"""This is a code that performs several tests for the image tool module
-"""
+"""This is a code that performs several tests for the image tool module"""
 import os
 
 import numpy as np

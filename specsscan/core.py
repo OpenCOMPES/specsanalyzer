@@ -1,6 +1,6 @@
-"""This is the SpecsScan core class
+"""This is the SpecsScan core class"""
+from __future__ import annotations
 
-"""
 import copy
 import os
 import pathlib
@@ -8,10 +8,7 @@ from importlib.util import find_spec
 from logging import warn
 from pathlib import Path
 from typing import Any
-from typing import Dict
-from typing import List
 from typing import Sequence
-from typing import Union
 
 import matplotlib
 import numpy as np
@@ -23,7 +20,6 @@ from specsanalyzer.config import parse_config
 from specsanalyzer.io import to_h5
 from specsanalyzer.io import to_nexus
 from specsanalyzer.io import to_tiff
-from specsscan.helpers import find_scan
 from specsscan.helpers import get_coords
 from specsscan.helpers import get_scan_path
 from specsscan.helpers import handle_meta
@@ -38,15 +34,21 @@ package_dir = os.path.dirname(find_spec("specsscan").origin)
 class SpecsScan:
     """SpecsAnalyzer class for loading scans and data from SPECS phoibos electron analyzers,
     generated with the ARPESControl software at Fritz Haber Institute, Berlin, and EPFL, Lausanne.
+
+    Args:
+        metadata (dict, optional): Metadata dictionary. Defaults to {}.
+        config (Union[dict, str], optional): Metadata dictionary or file path. Defaults to {}.
+        **kwds: Keyword arguments passed to ``parse_config``.
     """
 
-    def __init__(  # pylint: disable=dangerous-default-value
+    def __init__(
         self,
         metadata: dict = {},
-        config: Union[dict, str] = {},
+        config: dict | str = {},
         **kwds,
     ):
         """SpecsScan constructor.
+
         Args:
             metadata (dict, optional): Metadata dictionary. Defaults to {}.
             config (Union[dict, str], optional): Metadata dictionary or file path. Defaults to {}.
@@ -61,7 +63,7 @@ class SpecsScan:
         # self.metadata = MetaHandler(meta=metadata)
         self.metadata = metadata
 
-        self._scan_info: Dict[Any, Any] = {}
+        self._scan_info: dict[Any, Any] = {}
 
         try:
             self.spa = SpecsAnalyzer(
@@ -96,7 +98,7 @@ class SpecsScan:
         return self._config
 
     @config.setter
-    def config(self, config: Union[dict, str]):
+    def config(self, config: dict | str):
         """Set config"""
         self._config = parse_config(
             config,
@@ -115,35 +117,33 @@ class SpecsScan:
     def load_scan(
         self,
         scan: int,
-        path: Union[str, Path] = "",
-        iterations: Union[np.ndarray, slice, Sequence[int], Sequence[slice]] = None,
-        metadata: dict = None,
+        path: str | Path = "",
+        iterations: np.ndarray | slice | Sequence[int] | Sequence[slice] = None,
+        metadata: dict = {},
+        collect_metadata: bool = False,
         **kwds,
     ) -> xr.DataArray:
-        """Load scan with given scan number. When iterations is
-            given, average is performed over the iterations over
-            all delays.
+        """Load scan with given scan number. When iterations is given, average is performed over
+        the iterations over all delays.
 
         Args:
-            scan: The scan number of interest
-            path: Either a string of the path to the folder
-                containing the scan or a Path object
-            iterations: A 1-D array of the number of iterations over
-                which the images are to be averaged. The array
-                can be a list, numpy array or a Tuple consisting of
-                slice objects and integers. For ex.,
-                np.s_[1:10, 15, -1] would be a valid input for
-                iterations.
-            metadata (dict, optional): Metadata dictionary with additional metadata for the scan
-            **kwds: Additional arguments for the SpecsAnalyzer converter. For ex., passing
-                crop=True crops the data if cropping data is already present in the given instance.
-        Raises:
-            FileNotFoundError, IndexError
+            scan (int): The scan number of interest
+            path (str | Path, optional): Either a string of the path to the folder containing the
+                scan or a Path object. Defaults to "".
+            iterations (np.ndarray | slice | Sequence[int] | Sequence[slice], optional):
+                A 1-D array of the number of iterations over which the images are to be averaged.
+                The array can be a list, numpy array or a Tuple consisting of slice objects and
+                integers. For ex., ``np.s_[1:10, 15, -1]`` would be a valid input for iterations.
+                Defaults to None.
+            metadata (dict, optional): Metadata dictionary with additional metadata for the scan.
+                Defaults to empty dictionary.
+            collect_metadata (bool, optional): Option to collect further metadata e.g. from EPICS
+                archiver needed for NeXus conversion. Defaults to False.
+            **kwds: Additional arguments passed to ``SpecsAnalyzer.convert()``.
 
         Returns:
-            xres: xarray DataArray object with kinetic energy, angle/position
-                and optionally a third scanned axis (for ex., delay, temperature)
-                as coordinates.
+            xr.DataArray: xarray DataArray object with kinetic energy, angle/position and
+            optionally a third scanned axis (for ex., delay, temperature) as coordinates.
         """
         scan_path = get_scan_path(path, scan, self._config["data_path"])
         df_lut = parse_lut_to_df(scan_path)
@@ -265,26 +265,31 @@ class SpecsScan:
                 self._scan_info,
                 self.config,
                 dim,
+                metadata=copy.deepcopy(metadata),
+                collect_metadata=collect_metadata,
             ),
             **{"loader": loader_dict},
         )
-        if metadata is not None:
-            self.metadata.update(**metadata)
 
         res_xarray.attrs["metadata"] = self.metadata
         self._result = res_xarray
 
         return res_xarray
 
-    def crop_tool(self, scan: int = None, path: Union[Path, str] = "", **kwds):
-        """
-        Croping tool interface to crop_tool method
-        of the SpecsAnalyzer class.
+    def crop_tool(self, scan: int = None, path: Path | str = "", **kwds):
+        """Croping tool interface to crop_tool method of the SpecsAnalyzer class.
+
+        Args:
+            scan (int, optional): Scan number to load data from. Defaults to None.
+            path (Path | str, optional): Path in which to search the scan.
+                Defaults to config['data_path'].
+
+        Raises:
+            ValueError: Raised if no image loaded, and scan not provided
         """
         matplotlib.use("module://ipympl.backend_nbagg")
         if scan is not None:
             scan_path = get_scan_path(path, scan, self._config["data_path"])
-            df_lut = parse_lut_to_df(scan_path)
 
             data = load_images(
                 scan_path=scan_path,
@@ -310,31 +315,37 @@ class SpecsScan:
     def check_scan(
         self,
         scan: int,
-        delays: Union[Sequence[int], int],
-        path: Union[str, Path] = "",
-        metadata: dict = None,
+        delays: Sequence[int] | int,
+        path: str | Path = "",
+        metadata: dict = {},
+        collect_metadata: bool = False,
         **kwds,
     ) -> xr.DataArray:
-        """Function to explore a given 3-D scan as a function
-            of iterations for a given range of delays
+        """Function to explore a given 3-D scan as a function of iterations for a given range of
+        delays.
+
         Args:
-            scan: The scan number of interest
-            delay: A single delay index or a range of delay indices
+            scan (int): The scan number of interest
+            delays (Sequence[int] | int): A single delay index or a sequence of delay indices
                 to be averaged over.
-            path: Either a string of the path to the folder
-                containing the scan or a Path object
-            metadata (dict, optional): Metadata dictionary with additional metadata for the scan
-            **kwds: Additional arguments for the SpecsAnalyzer converter. For ex., passing
-                crop=True crops the data if cropping data is already present in the given instance.
+            path (str | Path, optional): Either a string of the path to the folder containing the
+                scan or a Path object. Defaults to config['data_path].
+            metadata (dict, optional): Metadata dictionary with additional metadata for the scan.
+                Defaults to empty dictionary.
+            collect_metadata (bool, optional): Option to collect further metadata e.g. from EPICS
+                archiver needed for NeXus conversion. Defaults to False.
+            **kwds: Keyword arguments passed to ``SpecsAnalyzer.convert()``.
+
         Raises:
-            FileNotFoundError
+            ValueError: Raised if a single image scan was selected
+
         Returns:
-            A 3-D numpy array of dimensions (Ekin, K, Iterations)
+            xr.DataArray: 3-D xarray of dimensions (Ekin, Angle, Iterations)
         """
         scan_path = get_scan_path(path, scan, self._config["data_path"])
         df_lut = parse_lut_to_df(scan_path)
 
-        data, df_lut = load_images(
+        data = load_images(
             scan_path=scan_path,
             df_lut=df_lut,
             delays=delays,
@@ -410,6 +421,8 @@ class SpecsScan:
                 self._scan_info,
                 self.config,
                 dims[1],
+                metadata=metadata,
+                collect_metadata=collect_metadata,
             ),
             **{"loader": loader_dict},
         )
@@ -507,7 +520,7 @@ class SpecsScan:
 
     def process_sweep_scan(
         self,
-        raw_data: List[np.ndarray],
+        raw_data: list[np.ndarray],
         kinetic_energy: np.ndarray,
         pass_energy: float,
         lens_mode: str,
@@ -518,7 +531,7 @@ class SpecsScan:
         step, and summing over all frames.
 
         Args:
-            raw_data (List[np.ndarray]): List of raw data images
+            raw_data (list[np.ndarray]): List of raw data images
             kinetic_energy (np.ndarray): Array of analyzer set kinetic energy values
             pass_energy (float): set analyser pass energy
             lens_mode (str): analzser lens mode, check calib2d for a list of modes CamelCase naming
