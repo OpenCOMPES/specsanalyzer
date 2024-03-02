@@ -1,9 +1,18 @@
+# path to SPECS calib2d file (provided together with your analyzer)
 calib2d_file: "./config/phoibos150.calib2d"
+# number of pixels along the energy dispersing direction
 nx_pixel: 1376
+# number of pixels along the angle/spatially dispersing direction
 ny_pixel: 1024
+# pixel size in millimeters
 pixel_size: 0.00645
+# binning factor applied to the image
 binning: 4
+# magnification of the lens system used for imaging the detector
 magnification: 4.54
-Ang_Offset_px: 0
-E_Offset_px: 0
-apply_fft_filter: False
+# offset in pixels along the angular dispersing axis
+angle_offset_px: 0
+# offset in pixels along the energy dispersing axis
+energy_offset_px: 0
+# flag controlling the application of a Fourier filter to remove grid artefacts
+apply_fft_filter: false
