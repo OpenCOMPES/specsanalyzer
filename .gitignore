@@ -131,6 +131,9 @@ dmypy.json
 # IDE stuff
 \.vscode
 
+# SPECS config files
+*.calib2d
+
 # result files
 *.h5
 *.tiff
