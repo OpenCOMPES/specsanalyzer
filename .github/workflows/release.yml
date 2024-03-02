@@ -36,11 +36,6 @@ jobs:
           python-version: 3.8
           poetry-version: 1.2.2
 
-      - name: Change to distribution name in toml file
-        run: |
-          cd specsanalyzer
-          sed -i 's/name = "specsanalyzer"/name = "specsanalyzer"/' pyproject.toml
-
       - name: bump pre-release version
         id: version
         working-directory: specsanalzer
@@ -53,13 +48,13 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: dist
-          path: specsanalzer/dist
+          path: dist
 
       - name: Upload pyproject.toml
         uses: actions/upload-artifact@v3
         with:
           name: pyproject
-          path: specsanalzer/pyproject.toml
+          path: pyproject.toml
 
   release:
     if: startsWith(github.ref, 'refs/tags/')
@@ -77,11 +72,6 @@ jobs:
           python-version: 3.8
           poetry-version: 1.2.2
 
-      - name: Change to distribution name in toml file
-        run: |
-          cd specsanalyzer
-          sed -i 's/name = "specsanalyzer"/name = "specsanalyzer"/' pyproject.toml
-
       - name: Bump release version and build
         id: version
         working-directory: specsanalyzer
@@ -95,13 +85,13 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: dist
-          path: specsanalyzer/dist
+          path: dist
 
       - name: Upload pyproject.toml
         uses: actions/upload-artifact@v3
         with:
           name: pyproject
-          path: specsanalyzer/pyproject.toml
+          path: pyproject.toml
 
   publish:
     needs: [prerelease, release]
