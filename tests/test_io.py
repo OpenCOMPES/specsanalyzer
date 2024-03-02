@@ -1,5 +1,5 @@
-"""This is a code that performs several tests for the input/output functions
-"""
+"""This is a code that performs several tests for the input/output functions"""
+
 import os
 import random
 from pathlib import Path

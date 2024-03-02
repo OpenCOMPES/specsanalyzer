@@ -1,6 +1,7 @@
 """This is a code that performs several tests for the SpecsScan
 core class functions
 """
+
 import os
 
 import numpy as np

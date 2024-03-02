@@ -1,5 +1,5 @@
-"""This is a code that performs several tests for the convert functions
-"""
+"""This is a code that performs several tests for the convert functions"""
+
 import os
 
 import numpy as np

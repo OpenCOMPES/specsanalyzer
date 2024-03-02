@@ -1,6 +1,5 @@
-"""SpecsAnalyzer class easy access APIs
+"""SpecsAnalyzer class easy access APIs"""
 
-"""
 # Easy access APIs
 from .core import SpecsAnalyzer
 

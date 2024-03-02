@@ -1,6 +1,5 @@
-"""Specsanalyzer image conversion module
+"""Specsanalyzer image conversion module"""
 
-"""
 from __future__ import annotations
 
 import numpy as np

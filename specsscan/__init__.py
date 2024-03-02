@@ -1,6 +1,5 @@
-"""SpecsScan class easy access APIs
+"""SpecsScan class easy access APIs"""
 
-"""
 # Easy access APIs
 from .core import SpecsScan
 

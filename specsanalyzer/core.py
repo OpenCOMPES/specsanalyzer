@@ -1,6 +1,5 @@
-"""This is the specsanalyzer core class
+"""This is the specsanalyzer core class"""
 
-"""
 from __future__ import annotations
 
 import os

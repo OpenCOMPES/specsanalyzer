@@ -1,6 +1,5 @@
-"""This is the SpecsScan core class
+"""This is the SpecsScan core class"""
 
-"""
 from __future__ import annotations
 
 import copy
