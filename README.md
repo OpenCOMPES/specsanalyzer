@@ -14,7 +14,7 @@ This package contains two modules:
 `specsanalyzer` is a package to import and convert MCP analyzer images from SPECS Phoibos analyzers into energy and emission angle/physical coordinates.
 `specsscan` is a Python package for loading Specs Phoibos scans accquired with the labview software developed at FHI/EPFL
 
-Tutorials for usage and the API documentation can be found in the [![Documentation]](https://opencompes.github.io/specsanalyzer/)
+Tutorials for usage and the API documentation can be found in the [Documentation](https://opencompes.github.io/specsanalyzer/)
 
 ## Installation
 
