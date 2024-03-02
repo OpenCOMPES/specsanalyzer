@@ -1,3 +1,4 @@
+[![Documentation Status](https://github.com/OpenCOMPES/specsanalyzer/actions/workflows/documentation.yml/badge.svg)](https://opencompes.github.io/specsanalyzer/)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 ![](https://github.com/OpenCOMPES/specsanalyzer/actions/workflows/linting.yml/badge.svg)
 ![](https://github.com/OpenCOMPES/specsanalyzer/actions/workflows/testing_multiversion.yml/badge.svg?branch=main)
@@ -7,9 +8,13 @@
 [![Coverage Status](https://coveralls.io/repos/github/OpenCOMPES/specsanalyzer/badge.svg?branch=main&kill_cache=1)](https://coveralls.io/github/OpenCOMPES/specsanalyzer?branch=main)
 
 # specsanalyzer
+This is the package `specsanalyzer` for conversion and handling of SPECS Phoibos analyzer data.
+
 This package contains two modules:
 `specsanalyzer` is a package to import and convert MCP analyzer images from SPECS Phoibos analyzers into energy and emission angle/physical coordinates.
 `specsscan` is a Python package for loading Specs Phoibos scans accquired with the labview software developed at FHI/EPFL
+
+Tutorials for usage and the API documentation can be found in the [![Documentation]](https://opencompes.github.io/specsanalyzer/)
 
 ## Installation
 
