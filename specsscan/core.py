@@ -266,7 +266,7 @@ class SpecsScan:
                 self._scan_info,
                 self.config,
                 dim,
-                metadata=metadata,
+                metadata=copy.deepcopy(metadata),
                 collect_metadata=collect_metadata,
             ),
             **{"loader": loader_dict},
