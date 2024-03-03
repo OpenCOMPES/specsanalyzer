@@ -38,7 +38,7 @@ jobs:
 
       - name: bump pre-release version
         id: version
-        working-directory: specsanalzer
+        working-directory: specsanalyzer
         run: |
           VERSION=$(poetry version -s prerelease)
           echo "version=$VERSION" >> $GITHUB_OUTPUT
