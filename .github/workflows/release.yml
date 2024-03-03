@@ -8,8 +8,8 @@ name: Publish to PyPI
 # The package is distributed as sed-processor
 on:
   push:
-#    branches:
-#      - main
+    branches:
+      - main
     tags:
       - 'v*'
     paths:
