@@ -2,8 +2,7 @@ name: documentation
 on:
   # Triggers the workflow on push but only for the main branch
   push:
-#    branches: [ main ]
-
+    branches: [ main ]
     paths:
       - specsanalyzer/**/*
       - specsscan/**/*
