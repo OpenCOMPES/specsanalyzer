@@ -115,6 +115,7 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: .
+          repository-url: https://test.pypi.org/legacy/
 
   bump-version:
     needs: publish
@@ -140,7 +141,6 @@ jobs:
 
       - name: Commit files
         run: |
-          cd specsanalyzer/
           git config --local user.email "bump[bot]@users.noreply.github.com"
           git config --local user.name "bump[bot]"
           git add $GITHUB_WORKSPACE/pyproject.toml
