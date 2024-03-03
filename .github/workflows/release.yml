@@ -101,7 +101,7 @@ jobs:
       version: ${{ needs.prerelease.outputs.version || needs.release.outputs.version }}
     environment:
         name: test-pypi
-        url: https://test-pypi.org/p/specsanalyzer
+        url: https://test.pypi.org/p/specsanalyzer
     permissions:
         id-token: write
 
