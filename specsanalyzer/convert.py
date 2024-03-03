@@ -10,8 +10,8 @@ def get_damatrix_fromcalib2d(
     kinetic_energy: float,
     pass_energy: float,
     work_function: float,
-    config_dict: dict,
-) -> tuple[float, np.ndarray]:
+    calib2d_dict: dict,
+) -> tuple[float, np.ndarray, float, str, list[str]]:
     """This function estimates the best angular conversion coefficients for the current analyser
     mode, starting from a dictionary containing the specs .calib2d database. A linear interpolation
     is performed from the tabulated coefficients based on the retardatio ratio value.
@@ -21,12 +21,13 @@ def get_damatrix_fromcalib2d(
         kinetic_energy (float): kinetic energy of the photoelectron
         pass_energy (float): analyser pass energy
         work_function (float): work function settings
-        config_dict (dict): dictionary containing the configuration parameters for angular
+        calib2d_dict (dict): dictionary containing the configuration parameters for angular
             correction
 
     Returns:
-        tuple[float,np.ndarray]: (a_inner, damatrix)
-        interpolated damatrix and a_inner, needed for the coordinate conversion
+        tuple[float, np.ndarray, float, list[str], str]: (a_inner, da_matrix, rr, source, dims)
+        interpolated a_inner and da_matrix, needed for the coordinate conversion, retardation
+        ratio, interpolation values, dims
     """
 
     # retardation ratio
@@ -34,8 +35,8 @@ def get_damatrix_fromcalib2d(
 
     # check the angular mode type
     try:
-        supported_angle_modes = config_dict["calib2d_dict"]["supported_angle_modes"]
-        supported_space_modes = config_dict["calib2d_dict"]["supported_space_modes"]
+        supported_angle_modes = calib2d_dict["supported_angle_modes"]
+        supported_space_modes = calib2d_dict["supported_space_modes"]
     except KeyError as exc:
         raise KeyError(
             "The supported modes were not found in the calib2d dictionary",
@@ -43,7 +44,7 @@ def get_damatrix_fromcalib2d(
 
     if lens_mode in supported_angle_modes:
         # given the lens mode get all the retardation ratios available
-        rr_vec, damatrix_full = get_rr_da(lens_mode, config_dict)
+        rr_vec, da_matrix_full = get_rr_da(lens_mode, calib2d_dict)
         # find closest retardation ratio in table
         closest_rr_index = bisection(rr_vec, retardation_ratio)
 
@@ -63,25 +64,37 @@ def get_damatrix_fromcalib2d(
         # the factor is obtained by linear interpolation
         rr_factor = np.interp(retardation_ratio, rr_vec, rr_index) - closest_rr_index
 
-        damatrix_close = damatrix_full[closest_rr_index][:][:]
-        damatrix_second = damatrix_full[second_closest_rr_index][:][:]
-        one_mat = np.ones(damatrix_close.shape)
-        rr_factor_mat = np.ones(damatrix_close.shape) * rr_factor
+        source = (
+            f"interpolated as {rr_factor}*{lens_mode}@{rr_vec[closest_rr_index]}"
+            f" + {1-rr_factor}*{lens_mode}@{rr_vec[second_closest_rr_index]}"
+        )
+
+        da_matrix_close = da_matrix_full[closest_rr_index][:][:]
+        da_matrix_second = da_matrix_full[second_closest_rr_index][:][:]
+        one_mat = np.ones(da_matrix_close.shape)
+        rr_factor_mat = np.ones(da_matrix_close.shape) * rr_factor
         # weighted average between two neighboring da matrices
-        damatrix = damatrix_close * (one_mat - rr_factor_mat) + damatrix_second * rr_factor_mat
+        da_matrix = da_matrix_close * (one_mat - rr_factor_mat) + da_matrix_second * rr_factor_mat
         # separate the first line (aInner) from the da coefficients
-        a_inner = damatrix[0][0]
-        damatrix = damatrix[1:][:]
+        a_inner = da_matrix[0][0]
+        da_matrix = da_matrix[1:][:]
+
+        dims = ["Angle", "Ekin"]
+
     elif lens_mode in supported_space_modes:
         # use the mode defaults
         print("This is a spatial mode, using default " + lens_mode + " config")
-        rr_vec, damatrix_full = get_rr_da(lens_mode, config_dict)
-        a_inner = damatrix_full[0][0]
-        damatrix = damatrix_full[1:][:]
+        rr_vec, da_matrix_full = get_rr_da(lens_mode, calib2d_dict)
+        a_inner = da_matrix_full[0][0]
+        da_matrix = da_matrix_full[1:][:]
+        source = f"{lens_mode}@default"
+
+        dims = ["Position", "Ekin"]
+
     else:
         raise ValueError(f"Unrecognized lens mode '{lens_mode}")
 
-    return a_inner, damatrix
+    return a_inner, da_matrix, retardation_ratio, source, dims
 
 
 def bisection(array: np.ndarray, value: float) -> int:
@@ -144,40 +157,42 @@ def second_closest_rr(rrvec: np.ndarray, closest_rr_index: int) -> int:
     return second_closest_rr_index
 
 
-def get_rr_da(  # pylint: disable=too-many-locals
+def get_rr_da(
     lens_mode: str,
-    config_dict: dict,
+    calib2d_dict: dict,
 ) -> tuple[np.ndarray, np.ndarray]:
     """Get the retardatio ratios and the da for a certain lens mode from the confugaration
     dictionary
 
     Args:
         lens_mode (string): string containing the lens mode
-        config_dict (dict): config dictionary
+        calib2d_dict (dict): dictionary containing the configuration parameters for angular
+            correction
 
     Raises:
         KeyError: Raised if the requested lens mode is not found
         ValueError: Raised if no da values are found for the given mode
 
     Returns:
-        tuple[np.ndarray,np.ndarray]: retardation ratio vector, matrix of da coeffients, per row
-        row0 : da1, row1: da3, .. up to da7 non angle resolved lens modes do not posses da values.
+        tuple[np.ndarray,np.ndarray]: rr vector, matrix of da coeffients
+        per row row0 : da1, row1: da3, .. up to da7.
+        Non angle resolved lens modes do only posses da1.
     """
     # check if this is spatial or an angular mode
     # check the angular mode type
     try:
-        supported_angle_modes = config_dict["calib2d_dict"]["supported_angle_modes"]
-        supported_space_modes = config_dict["calib2d_dict"]["supported_space_modes"]
+        supported_angle_modes = calib2d_dict["supported_angle_modes"]
+        supported_space_modes = calib2d_dict["supported_space_modes"]
     except KeyError as exc:
         raise KeyError(
             "The supported modes were not found in the calib2d dictionary",
         ) from exc
 
     if lens_mode in supported_angle_modes:
-        rr_array = np.array(list(config_dict["calib2d_dict"][lens_mode]["rr"]))
+        rr_array = np.array(list(calib2d_dict[lens_mode]["rr"]))
 
         dim1 = rr_array.shape[0]
-        base_dict = config_dict["calib2d_dict"][lens_mode]["rr"]
+        base_dict = calib2d_dict[lens_mode]["rr"]
         dim2 = len(base_dict[rr_array[0]])
 
         try:
@@ -196,18 +211,20 @@ def get_rr_da(  # pylint: disable=too-many-locals
             da_matrix[count] = np.concatenate(
                 (np.array([[a_inner] * dim3]), da_block),
             )
+
     elif lens_mode in supported_space_modes:
         # ok we are in a spatial mode, the calib2d does
         # not contain an rr_array and we should build the da_matrix from the
         # defaults without interpolation
 
-        base_dict = config_dict["calib2d_dict"][lens_mode]["default"]
+        base_dict = calib2d_dict[lens_mode]["default"]
         da1 = np.array(base_dict["Da1"])
         a_inner = base_dict["aInner"]
         rr_array = np.ones(1)
         da_matrix = np.zeros((4, 3))
         da_matrix[0, :] = np.ones(3) * a_inner
         da_matrix[1, :] = da1
+
     else:
         raise ValueError(f"Unrecognized lens mode '{lens_mode}")
 
@@ -223,7 +240,9 @@ def calculate_polynomial_coef_da(
     """Given the da coeffiecients contained in the scanpareters, the program calculate the energy
     range based on the eshift parameter and fits a second order polinomial to the tabulated values.
     The polinomial coefficients are packed in the dapolymatrix array (row0 da1, row1 da3, ..)
-    The dapolymatrix is also saved in the scanparameters dictionary
+    The dapolymatrix is also saved in the scanparameters dictionary.
+    The function now returns a matrix of the fit coeffiecients, given the physical energy scale
+    Each line of the matrix is a set of coefficients for each of the da[i] corrections
 
     Args:
         da_matrix (np.ndarray): the matrix of interpolated da coefficients
@@ -235,18 +254,10 @@ def calculate_polynomial_coef_da(
     Returns:
         np.ndarray: dapolymatrix containg the fit results (row0 da1, row1 da3, ..)
     """
-    # get the Das from the damatrix
-    # da1=currentdamatrix[0][:]
-    # da3=currentdamatrix[1][:]
-    # da5=currentdamatrix[2][:]
-    # da7=currentdamatrix[3][:]
-
     # calcualte the energy values for each da, given the eshift
     da_energy = e_shift * pass_energy + kinetic_energy * np.ones(e_shift.shape)
 
-    # create the polinomial coeffiecient matrix,
-    # each is a second order polinomial
-
+    # create the polinomial coeffiecient matrix, each is a second order polynomial
     da_poly_matrix = np.zeros(da_matrix.shape)
 
     for i in range(0, da_matrix.shape[0]):
@@ -257,14 +268,7 @@ def calculate_polynomial_coef_da(
             2,
         ).transpose()
 
-    # scanparameters['dapolymatrix'] = dapolymatrix
     return da_poly_matrix
-
-
-# the function now returns a matrix of the fit coeffiecients,
-# given the physical energy scale
-# each line of the matrix is a set of coefficients for each of the
-# dai corrections
 
 
 def zinner(
@@ -366,15 +370,22 @@ def mcp_position_mm(
 
 
 def calculate_matrix_correction(
-    lens_mode: str,
     kinetic_energy: float,
     pass_energy: float,
-    work_function: float,
-    binning: int,
-    config_dict: dict,
-    **kwds,
+    nx_pixels,
+    ny_pixels,
+    pixel_size,
+    magnification,
+    e_shift,
+    de1,
+    e_range,
+    a_range,
+    a_inner,
+    da_matrix,
+    angle_offset_px,
+    energy_offset_px,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    """Calculate the angular and energy interpolation matrices for the currection function
+    """Calculate the angular and energy interpolation matrices for the correction function
 
     Args:
         lens_mode (str): analyser lens mode
@@ -382,7 +393,8 @@ def calculate_matrix_correction(
         pass_energy (float): analyser set pass energy
         work_function (float): analyser set work function
         binning (int): image binning
-        config_dict (dict): dictionary containing the calibration files
+        calib2d_dict (dict): dictionary containing the configuration parameters for angular
+            correction
         ** kwds: Keyword parameters:
 
             - eangle_offset_px: Angular offset in pixel
@@ -397,78 +409,28 @@ def calculate_matrix_correction(
             - jacobian_determinant: the transformation jacobian for area preserving transformation
     """
 
-    e_shift = np.array(config_dict["calib2d_dict"]["eShift"])
-    de1 = [config_dict["calib2d_dict"]["De1"]]
-    e_range = config_dict["calib2d_dict"]["eRange"]
-    a_range = config_dict["calib2d_dict"][lens_mode]["default"]["aRange"]
-
-    nx_pixel = config_dict["nx_pixel"]
-    ny_pixel = config_dict["ny_pixel"]
-    pixel_size = config_dict["pixel_size"]
-    magnification = config_dict["magnification"]
-
-    a_inner, da_matrix = get_damatrix_fromcalib2d(
-        lens_mode,
-        kinetic_energy,
-        pass_energy,
-        work_function,
-        config_dict,
-    )
-
-    da_poly_matrix = calculate_polynomial_coef_da(
-        da_matrix,
-        kinetic_energy,
-        pass_energy,
-        e_shift,
-    )
-
-    nx_bins = int(nx_pixel / binning)
-    ny_bins = int(ny_pixel / binning)
-
-    # the bins of the new image, defaul = the original image
-    # get form the configuraton file an upsampling factor
-    ke_upsampling_factor = config_dict.get("ke_upsampling_factor", 1)
-    angle_upsampling_factor = config_dict.get("angle_upsampling_factor", 1)
-
-    n_ke_bins = np.round(ke_upsampling_factor * nx_bins)
-    n_angle_bins = np.round(angle_upsampling_factor * ny_bins)
+    da_poly_matrix = calculate_polynomial_coef_da(da_matrix, kinetic_energy, pass_energy, e_shift)
 
     ek_low = kinetic_energy + e_range[0] * pass_energy
     ek_high = kinetic_energy + e_range[1] * pass_energy
 
-    ek_axis = np.linspace(ek_low, ek_high, n_ke_bins, endpoint=False)
+    ek_axis = np.linspace(ek_low, ek_high, nx_pixels, endpoint=False)
     angle_low = a_range[0] * 1.2
     angle_high = a_range[1] * 1.2
 
-    angle_axis = np.linspace(
-        angle_low,
-        angle_high,
-        n_angle_bins,
-        endpoint=False,
-    )
+    angle_axis = np.linspace(angle_low, angle_high, ny_pixels, endpoint=False)
 
-    mcp_position_mm_matrix = np.zeros([n_ke_bins, n_angle_bins])
-    angular_correction_matrix = np.zeros([n_ke_bins, n_angle_bins])
+    mcp_position_mm_matrix = np.zeros([nx_pixels, ny_pixels])
+    angular_correction_matrix = np.zeros([nx_pixels, ny_pixels])
     e_correction = np.zeros(ek_axis.shape)
 
-    # let's create a meshgrid for vectorized evaluation
+    # create a meshgrid for vectorized evaluation
     ek_mesh, angle_mesh = np.meshgrid(ek_axis, angle_axis)
 
-    mcp_position_mm_matrix = mcp_position_mm(
-        ek_mesh,
-        angle_mesh,
-        a_inner,
-        da_poly_matrix,
-    )
-
-    # read angular and energy offsets from configuration file
-    angle_offset_px = kwds.get("angle_offset_px", config_dict.get("angle_offset_px", 0))
-    energy_offset_px = kwds.get("energy_offset_px", config_dict.get("energy_offset_px", 0))
+    mcp_position_mm_matrix = mcp_position_mm(ek_mesh, angle_mesh, a_inner, da_poly_matrix)
 
     angular_correction_matrix = (
-        mcp_position_mm_matrix / magnification / (pixel_size * binning)
-        + ny_bins / 2
-        + angle_offset_px
+        mcp_position_mm_matrix / magnification / pixel_size + ny_pixels / 2 + angle_offset_px
     )
 
     e_correction = (
@@ -476,8 +438,8 @@ def calculate_matrix_correction(
         / pass_energy
         / de1
         / magnification
-        / (pixel_size * binning)
-        + nx_bins / 2
+        / pixel_size
+        + nx_pixels / 2
         + energy_offset_px
     )
 
@@ -489,13 +451,7 @@ def calculate_matrix_correction(
         angle_axis,
     )
 
-    return (
-        ek_axis,
-        angle_axis,
-        angular_correction_matrix,
-        e_correction,
-        jacobian_determinant,
-    )
+    return ek_axis, angle_axis, angular_correction_matrix, e_correction, jacobian_determinant
 
 
 def calculate_jacobian(
@@ -554,19 +510,12 @@ def physical_unit_data(
 
     # flatten the x and y to a 2 x N coordinates array
     # N = Nxpix x Nypixels
-    coords = np.array(
-        (
-            angular_correction_matrix.flatten(),
-            e_correction_matrix.flatten(),
-        ),
-    )
+    coords = np.array([angular_correction_matrix.flatten(), e_correction_matrix.flatten()])
 
     # the image is expressed as intensity vs pixels,
     # angular correction and e_correction
     corrected_data = (
-        map_coordinates(image, coords, order=1).reshape(
-            angular_correction_matrix.shape,
-        )
+        map_coordinates(image, coords, order=1).reshape(angular_correction_matrix.shape)
         * jacobian_determinant
     )
 

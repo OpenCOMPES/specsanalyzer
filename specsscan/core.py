@@ -60,7 +60,6 @@ class SpecsScan:
             **kwds,
         )
 
-        # self.metadata = MetaHandler(meta=metadata)
         self.metadata = metadata
 
         self._scan_info: dict[Any, Any] = {}
@@ -157,7 +156,6 @@ class SpecsScan:
 
         self._scan_info = parse_info_to_dict(scan_path)
         config_meta = copy.deepcopy(self.config)
-        config_meta["spa_params"].pop("calib2d_dict")
 
         loader_dict = {
             "iterations": iterations,
@@ -264,7 +262,8 @@ class SpecsScan:
                 df_lut,
                 self._scan_info,
                 self.config,
-                dim,
+                fast_axis="Angle" if "Angle" in res_xarray.dims else "Position",
+                slow_axis=dim,
                 metadata=copy.deepcopy(metadata),
                 collect_metadata=collect_metadata,
             ),
@@ -354,7 +353,6 @@ class SpecsScan:
 
         self._scan_info = parse_info_to_dict(scan_path)
         config_meta = copy.deepcopy(self.config)
-        config_meta["spa_params"].pop("calib2d_dict")
 
         loader_dict = {
             "delays": delays,
@@ -420,7 +418,8 @@ class SpecsScan:
                 df_lut,
                 self._scan_info,
                 self.config,
-                dims[1],
+                fast_axis="Angle" if "Angle" in res_xarray.dims else "Position",
+                slow_axis=dims[1],
                 metadata=metadata,
                 collect_metadata=collect_metadata,
             ),

@@ -14,8 +14,10 @@ import xarray as xr
 from IPython.display import display
 
 from specsanalyzer import io
+from specsanalyzer.config import complete_dictionary
 from specsanalyzer.config import parse_config
 from specsanalyzer.convert import calculate_matrix_correction
+from specsanalyzer.convert import get_damatrix_fromcalib2d
 from specsanalyzer.convert import physical_unit_data
 from specsanalyzer.img_tools import crop_xarray
 from specsanalyzer.img_tools import fourier_filter_2d
@@ -54,12 +56,10 @@ class SpecsAnalyzer:
         self._data_array = None
         self.print_msg = True
         try:
-            self._config["calib2d_dict"] = io.parse_calib2d_to_dict(
-                self._config["calib2d_file"],
-            )
+            self._calib2d = io.parse_calib2d_to_dict(self._config["calib2d_file"])
 
         except FileNotFoundError:  # default location relative to package directory
-            self._config["calib2d_dict"] = io.parse_calib2d_to_dict(
+            self._calib2d = io.parse_calib2d_to_dict(
                 os.path.join(package_dir, self._config["calib2d_file"]),
             )
 
@@ -76,17 +76,17 @@ class SpecsAnalyzer:
         return pretty_str if pretty_str is not None else ""
 
     @property
-    def config(self):
+    def config(self) -> dict:
         """Get config"""
         return self._config
 
-    @config.setter
-    def config(self, config: dict | str):
-        """Set config"""
-        self._config = parse_config(config)
+    @property
+    def calib2d(self) -> dict:
+        """Get calib2d dict"""
+        return self._calib2d
 
     @property
-    def correction_matrix_dict(self):
+    def correction_matrix_dict(self) -> dict:
         """Get correction_matrix_dict"""
         return self._correction_matrix_dict
 
@@ -97,6 +97,7 @@ class SpecsAnalyzer:
         kinetic_energy: float,
         pass_energy: float,
         work_function: float,
+        conversion_dict: dict = None,
         **kwds,
     ) -> xr.DataArray:
         """Converts an imagin in physical unit data, angle vs energy
@@ -108,44 +109,64 @@ class SpecsAnalyzer:
             kinetic_energy (float): set analyser kinetic energy
             pass_energy (float): set analyser pass energy
             work_function (float): set analyser work function
+            conversion_dict (dict, optional): dictionary of conversion parameters, overwriting
+                determination from calib2d file. Defaults to None.
 
         Returns:
             xr.DataArray: xarray containg the corrected data and kinetic and angle axis
         """
+        if conversion_dict is None:
+            conversion_dict = {}
 
-        apply_fft_filter = kwds.pop("apply_fft_filter", self._config.get("apply_fft_filter", False))
-        binning = kwds.pop("binning", self._config.get("binning", 1))
+        if "apply_fft_filter" not in conversion_dict.keys():
+            conversion_dict["apply_fft_filter"] = kwds.pop(
+                "apply_fft_filter",
+                self._config.get("apply_fft_filter", False),
+            )
+        if "binning" not in conversion_dict.keys():
+            conversion_dict["binning"] = kwds.pop("binning", self._config.get("binning", 1))
+        if "rotation_angle" not in conversion_dict.keys():
+            conversion_dict["rotation_angle"] = kwds.pop(
+                "rotation_angle",
+                self._config.get("rotation_angle", 0),
+            )
 
-        if apply_fft_filter:
+        if conversion_dict["apply_fft_filter"]:
             try:
-                fft_filter_peaks = kwds.pop("fft_filter_peaks", self._config["fft_filter_peaks"])
-                img = fourier_filter_2d(raw_img, fft_filter_peaks)
+                if "fft_filter_peaks" not in conversion_dict.keys():
+                    conversion_dict["fft_filter_peaks"] = kwds.pop(
+                        "fft_filter_peaks",
+                        self._config["fft_filter_peaks"],
+                    )
+                img = fourier_filter_2d(raw_img, conversion_dict["fft_filter_peaks"])
             except KeyError:
                 img = raw_img
         else:
             img = raw_img
 
-        rotation_angle = kwds.pop("rotation_angle", self._config.get("rotation_angle", 0))
-
-        if rotation_angle:
-            img_rotated = imutils.rotate(img, angle=rotation_angle)
+        if conversion_dict["rotation_angle"]:
+            img_rotated = imutils.rotate(img, angle=conversion_dict["rotation_angle"])
             img = img_rotated
 
-        # look for the lens mode in the dictionary
-        try:
-            supported_angle_modes = self._config["calib2d_dict"]["supported_angle_modes"]
-            supported_space_modes = self._config["calib2d_dict"]["supported_space_modes"]
-        # pylint: disable=duplicate-code
-        except KeyError as exc:
-            raise KeyError(
-                "The supported modes were not found in the calib2d dictionary",
-            ) from exc
-
-        if lens_mode not in [*supported_angle_modes, *supported_space_modes]:
-            raise ValueError(
-                f"convert_image: unsupported lens mode: '{lens_mode}'",
+        if "lens_mode" not in conversion_dict.keys():
+            # Determine conversion parameters from calib2d
+            a_inner, da_matrix, retardation_ratio, source, dims = get_damatrix_fromcalib2d(
+                lens_mode=lens_mode,
+                kinetic_energy=kinetic_energy,
+                pass_energy=pass_energy,
+                work_function=work_function,
+                calib2d_dict=self._calib2d,
             )
+            e_shift = np.array(self._calib2d["eShift"])
+            de1 = [self._calib2d["De1"]]
+            e_range = self._calib2d["eRange"]
+            a_range = self._calib2d[lens_mode]["default"]["aRange"]
+            pixel_size = self._config["pixel_size"] * self._config["binning"]
+            magnification = self._config["magnification"]
+            angle_offset_px = kwds.get("angle_offset_px", self._config.get("angle_offset_px", 0))
+            energy_offset_px = kwds.get("energy_offset_px", self._config.get("energy_offset_px", 0))
 
+        # do we need to calculate a new conversion matrix? Check correction matrix dict:
         new_matrix = False
         try:
             old_db = self._correction_matrix_dict[lens_mode][kinetic_energy][pass_energy][
@@ -170,17 +191,23 @@ class SpecsAnalyzer:
                 e_correction,
                 jacobian_determinant,
             ) = calculate_matrix_correction(
-                lens_mode,
-                kinetic_energy,
-                pass_energy,
-                work_function,
-                binning,
-                self._config,
-                **kwds,
+                kinetic_energy=kinetic_energy,
+                pass_energy=pass_energy,
+                nx_pixels=img.shape[1],
+                ny_pixels=img.shape[0],
+                pixel_size=pixel_size,
+                magnification=magnification,
+                e_shift=e_shift,
+                de1=de1,
+                e_range=e_range,
+                a_range=a_range,
+                a_inner=a_inner,
+                da_matrix=da_matrix,
+                angle_offset_px=angle_offset_px,
+                energy_offset_px=energy_offset_px,
             )
 
-            # save the config parameters for later use
-            # collect the info in a new nested dictionary
+            # save the config parameters for later use collect the info in a new nested dictionary
             current_correction = {
                 lens_mode: {
                     kinetic_energy: {
@@ -198,16 +225,15 @@ class SpecsAnalyzer:
             }
 
             # add the new lens mode to the correction matrix dict
-            self._correction_matrix_dict = dict(
-                mergedicts(self._correction_matrix_dict, current_correction),
+            self._correction_matrix_dict = complete_dictionary(
+                self._correction_matrix_dict,
+                current_correction,
             )
-
         else:
             old_matrix_check = True
 
-        # save a flag called old_matrix_check to determine if the current
-        # image was corrected using (True) or not using (False) the
-        # parameter in the class
+        # save a flag called old_matrix_check to determine if the current image was corrected using
+        # (True) or not using (False) the parameter in the class
 
         self._correction_matrix_dict["old_matrix_check"] = old_matrix_check
 
@@ -218,20 +244,12 @@ class SpecsAnalyzer:
             jacobian_determinant,
         )
 
-        # TODO: annotate with metadata
-
-        if lens_mode in supported_angle_modes:
-            data_array = xr.DataArray(
-                data=conv_img,
-                coords={"Angle": angle_axis, "Ekin": ek_axis},
-                dims=["Angle", "Ekin"],
-            )
-        elif lens_mode in supported_space_modes:
-            data_array = xr.DataArray(
-                data=conv_img,
-                coords={"Position": angle_axis, "Ekin": ek_axis},
-                dims=["Position", "Ekin"],
-            )
+        data_array = xr.DataArray(
+            data=conv_img,
+            coords={dims[0]: angle_axis, dims[1]: ek_axis},
+            dims=dims,
+            attrs={"conversion_parameters": conversion_dict},
+        )
 
         # Handle cropping based on parameters stored in correction dictionary
         crop = kwds.pop("crop", self._config.get("crop", False))
@@ -523,34 +541,3 @@ class SpecsAnalyzer:
         plt.show()
         if apply:
             cropit("")
-
-
-def mergedicts(
-    dict1: dict,
-    dict2: dict,
-) -> Generator[tuple[Any, Any], None, None]:
-    """Merge two dictionaries, overwriting only existing values and retaining
-    previously present values
-
-    Args:
-        dict1 (dict): dictionary 1
-        dict2 (dict): dictionary 2
-
-    Yields:
-        dict: merged dictionary generator
-    """
-    for k in set(dict1.keys()).union(dict2.keys()):
-        if k in dict1 and k in dict2:
-            if isinstance(dict1[k], dict) and isinstance(dict2[k], dict):
-                yield (k, dict(mergedicts(dict1[k], dict2[k])))
-            else:
-                # If one of the values is not a dict,
-                #  you can't continue merging it.
-                # Value from second dict overrides one in first and we move on.
-                yield (k, dict2[k])
-                # Alternatively, replace this with exception
-                # raiser to alert you of value conflicts
-        elif k in dict1:
-            yield (k, dict1[k])
-        else:
-            yield (k, dict2[k])

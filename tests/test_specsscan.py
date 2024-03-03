@@ -166,6 +166,8 @@ def test_crop_tool():
 
     assert res_xarray.Angle[0] == -18
     assert res_xarray.Angle[-1] == 17.859375
+    # assert res_xarray.Angle[0] == -15
+    # assert res_xarray.Angle[-1] == 14.8828125
     assert res_xarray.Ekin[0] == 18.69
     assert res_xarray.Ekin[-1] == 23.29656976744186
 
@@ -180,6 +182,8 @@ def test_crop_tool():
     )
     assert res_xarray.Angle[0] == -14.34375
     assert res_xarray.Angle[-1] == 14.203125
+    # assert res_xarray.Angle[0] == -11.953125
+    # assert res_xarray.Angle[-1] == 11.8359375
     assert res_xarray.Ekin[0] == 19.160058139534886
     assert res_xarray.Ekin[-1] == 22.826511627906974
 
@@ -197,5 +201,7 @@ def test_crop_tool():
     )
     assert res_xarray.Angle[0] == -14.34375
     assert res_xarray.Angle[-1] == 14.203125
+    # assert res_xarray.Angle[0] == -11.953125
+    # assert res_xarray.Angle[-1] == 11.8359375
     assert res_xarray.Ekin[0] == 19.160058139534886
     assert res_xarray.Ekin[-1] == 22.826511627906974

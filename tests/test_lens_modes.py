@@ -111,8 +111,8 @@ def test_lens_raise():
             apply_fft_filter=False,
         )
 
-    spa.config["calib2d_dict"].pop("supported_angle_modes")
-    spa.config["calib2d_dict"].pop("supported_space_modes")
+    spa._calib2d.pop("supported_angle_modes")
+    spa._calib2d.pop("supported_space_modes")
 
     with pytest.raises(KeyError):
         spa.convert_image(
