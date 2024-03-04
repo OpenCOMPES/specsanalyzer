@@ -8,7 +8,6 @@ import xarray as xr
 
 
 def gauss2d(
-    # pylint: disable=invalid-name, too-many-arguments
     x: float | np.ndarray,
     y: float | np.ndarray,
     mx: float,
@@ -81,8 +80,8 @@ def fourier_filter_2d(
             )
         except KeyError as exc:
             raise KeyError(
-                f"The peaks input is supposed to be a list of dicts with the\
-following structure: pos_x, pos_y, sigma_x, sigma_y, amplitude. The error was {exc}.",
+                f"The peaks input is supposed to be a list of dicts with the "
+                "following structure: pos_x, pos_y, sigma_x, sigma_y, amplitude.",
             ) from exc
 
     # apply mask to the FFT, and transform back
