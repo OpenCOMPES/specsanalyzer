@@ -205,3 +205,61 @@ def test_crop_tool():
     # assert res_xarray.Angle[-1] == 11.8359375
     assert res_xarray.Ekin[0] == 19.160058139534886
     assert res_xarray.Ekin[-1] == 22.826511627906974
+
+
+def test_conversion_and_save_to_nexus():
+    """Test the conversion of a tilt scan and saving as NeXus"""
+    config = {"nexus": {"input_files": [package_dir + "/config/NXmpes_arpes_config.json"]}}
+    sps = SpecsScan(
+        config=config,
+        user_config=package_dir + "/config/example_config_FHI.yaml",
+        system_config={},
+    )
+
+    res_xarray = sps.load_scan(
+        scan=1496,
+        path=test_dir,
+        crop=True,
+    )
+
+    assert res_xarray.dims == ("angular1", "angular2", "energy")
+
+    with pytest.raises(NameError):
+        sps.save("result.tiff")
+    sps.save("result.tiff", alias_dict={"X": "angular1", "Y": "angular2"})
+    sps.save("result.h5")
+    with pytest.raises(LookupError):
+        sps.save("result.nxs")
+
+    metadata = {}
+    # General
+    metadata["experiment_summary"] = "summary"
+    metadata["entry_title"] = "title"
+    metadata["experiment_title"] = "exp_title"
+
+    metadata["instrument"] = {}
+    # energy resolution
+    metadata["instrument"]["energy_resolution"] = 150.0
+    metadata["instrument"]["electronanalyser"] = {}
+    metadata["instrument"]["electronanalyser"]["energy_resolution"] = 120
+    metadata["instrument"]["electronanalyser"]["angular_resolution"] = 0.2
+    metadata["instrument"]["electronanalyser"]["spatial_resolution"] = 0.5
+
+    # probe beam
+    metadata["instrument"]["beam"] = {}
+    metadata["instrument"]["beam"]["probe"] = {}
+    metadata["instrument"]["beam"]["probe"]["incident_energy"] = 21.7
+
+    metadata["scan_info"] = {}
+    metadata["scan_info"]["trARPES:XGS600:PressureAC:P_RD"] = 2.5e-11
+    metadata["scan_info"]["trARPES:Carving:TEMP_RBV"] = 70
+    metadata["scan_info"]["trARPES:Sample:Measure"] = 0
+    res_xarray = sps.load_scan(
+        scan=1496,
+        path=test_dir,
+        crop=True,
+        metadata=metadata,
+        collect_metadata=True,
+    )
+
+    sps.save("result.nxs")
