@@ -149,22 +149,38 @@ class SpecsAnalyzer:
             img = img_rotated
 
         if "lens_mode" not in conversion_dict.keys():
+            conversion_dict["lens_mode"] = lens_mode
+            conversion_dict["kinetic_energy"] = kinetic_energy
+            conversion_dict["pass_energy"] = pass_energy
+            conversion_dict["work_function"] = work_function
             # Determine conversion parameters from calib2d
-            a_inner, da_matrix, retardation_ratio, source, dims = get_damatrix_fromcalib2d(
+            (
+                conversion_dict["a_inner"],
+                conversion_dict["da_matrix"],
+                conversion_dict["retardation_ratio"],
+                conversion_dict["source"],
+                conversion_dict["dims"],
+            ) = get_damatrix_fromcalib2d(
                 lens_mode=lens_mode,
                 kinetic_energy=kinetic_energy,
                 pass_energy=pass_energy,
                 work_function=work_function,
                 calib2d_dict=self._calib2d,
             )
-            e_shift = np.array(self._calib2d["eShift"])
-            de1 = [self._calib2d["De1"]]
-            e_range = self._calib2d["eRange"]
-            a_range = self._calib2d[lens_mode]["default"]["aRange"]
-            pixel_size = self._config["pixel_size"] * self._config["binning"]
-            magnification = self._config["magnification"]
-            angle_offset_px = kwds.get("angle_offset_px", self._config.get("angle_offset_px", 0))
-            energy_offset_px = kwds.get("energy_offset_px", self._config.get("energy_offset_px", 0))
+            conversion_dict["e_shift"] = np.array(self._calib2d["eShift"])
+            conversion_dict["de1"] = [self._calib2d["De1"]]
+            conversion_dict["e_range"] = self._calib2d["eRange"]
+            conversion_dict["a_range"] = self._calib2d[lens_mode]["default"]["aRange"]
+            conversion_dict["pixel_size"] = self._config["pixel_size"] * self._config["binning"]
+            conversion_dict["magnification"] = self._config["magnification"]
+            conversion_dict["angle_offset_px"] = kwds.get(
+                "angle_offset_px",
+                self._config.get("angle_offset_px", 0),
+            )
+            conversion_dict["energy_offset_px"] = kwds.get(
+                "energy_offset_px",
+                self._config.get("energy_offset_px", 0),
+            )
 
         # do we need to calculate a new conversion matrix? Check correction matrix dict:
         new_matrix = False
@@ -195,16 +211,16 @@ class SpecsAnalyzer:
                 pass_energy=pass_energy,
                 nx_pixels=img.shape[1],
                 ny_pixels=img.shape[0],
-                pixel_size=pixel_size,
-                magnification=magnification,
-                e_shift=e_shift,
-                de1=de1,
-                e_range=e_range,
-                a_range=a_range,
-                a_inner=a_inner,
-                da_matrix=da_matrix,
-                angle_offset_px=angle_offset_px,
-                energy_offset_px=energy_offset_px,
+                pixel_size=conversion_dict["pixel_size"],
+                magnification=conversion_dict["magnification"],
+                e_shift=conversion_dict["e_shift"],
+                de1=conversion_dict["de1"],
+                e_range=conversion_dict["e_range"],
+                a_range=conversion_dict["a_range"],
+                a_inner=conversion_dict["a_inner"],
+                da_matrix=conversion_dict["da_matrix"],
+                angle_offset_px=conversion_dict["angle_offset_px"],
+                energy_offset_px=conversion_dict["energy_offset_px"],
             )
 
             # save the config parameters for later use collect the info in a new nested dictionary
@@ -246,8 +262,8 @@ class SpecsAnalyzer:
 
         data_array = xr.DataArray(
             data=conv_img,
-            coords={dims[0]: angle_axis, dims[1]: ek_axis},
-            dims=dims,
+            coords={conversion_dict["dims"][0]: angle_axis, conversion_dict["dims"][1]: ek_axis},
+            dims=conversion_dict["dims"],
             attrs={"conversion_parameters": conversion_dict},
         )
 

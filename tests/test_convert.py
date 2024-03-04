@@ -2,6 +2,7 @@
 import os
 
 import numpy as np
+import pytest
 
 import specsanalyzer
 from specsanalyzer import SpecsAnalyzer
@@ -213,6 +214,85 @@ def test_conversion():
         work_function=work_function,
         apply_fft_filter=False,
     )
+    # Calculate the average intensity of the image, neglect the noisy parts
+    # normalize to unit amplitude
+    python_data = converted.data
+    igor_data = reference
+    python_data /= igor_data.max()
+    igor_data /= igor_data.max()
+
+    np.testing.assert_allclose(python_data, igor_data, atol=5e-5)
+
+
+def test_conversion_from_dict():
+    "Test if the conversion pipeline gives the same result as the Igor procedures"
+
+    # get the raw data
+    raw_image_name = os.fspath(
+        f"{test_dir}/dataEPFL/R9132/Data9132_RAWDATA.tsv",
+    )
+    with open(raw_image_name, encoding="utf-8") as file:
+        tsv_data = np.loadtxt(file, delimiter="\t")
+
+    # get the reference data
+    reference_image_name = os.fspath(
+        f"{test_dir}/dataEPFL/R9132/Data9132_IGOR_corrected.tsv",
+    )
+    with open(reference_image_name, encoding="utf-8") as file:
+        reference = np.loadtxt(file, delimiter="\t")
+
+    spa = SpecsAnalyzer(user_config={}, system_config={})
+    lens_mode = "WideAngleMode"
+    kinetic_energy = 35.000000
+    pass_energy = 35.000000
+    work_function = 4.2
+    conversion_parameters = {
+        "lens_mode": "WideAngleMode",
+        "kinetic_energy": 35.0,
+        "pass_energy": 35.0,
+        "work_function": 4.2,
+        "a_inner": 15.0,
+        "da_matrix": np.array(
+            [
+                [7.204000e-01, 7.541250e-01, 7.603750e-01],
+                [-1.093975e-03, 5.881250e-02, 1.341500e-01],
+                [-1.400600e-02, -5.061000e-02, -9.176250e-02],
+                [-3.629475e-04, 9.785000e-03, 1.961750e-02],
+            ],
+        ),
+        "retardation_ratio": 0.88,
+        "source": "interpolated as 0.25*WideAngleMode@0.82 + 0.75*WideAngleMode@0.9",
+        "dims": ["Angle", "Ekin"],
+        "e_shift": np.array([-0.05, 0.0, 0.05]),
+        "de1": [0.0033],
+        "e_range": [-0.066, 0.066],
+        "a_range": [-15.0, 15.0],
+        "pixel_size": 0.0258,
+        "magnification": 4.54,
+        "angle_offset_px": -2,
+        "energy_offset_px": 0,
+    }
+
+    with pytest.raises(ValueError):
+        converted = spa.convert_image(
+            raw_img=tsv_data,
+            lens_mode=lens_mode,
+            kinetic_energy=kinetic_energy,
+            pass_energy=pass_energy,
+            work_function=work_function,
+            apply_fft_filter=False,
+        )
+
+    converted = spa.convert_image(
+        raw_img=tsv_data,
+        lens_mode=lens_mode,
+        kinetic_energy=kinetic_energy,
+        pass_energy=pass_energy,
+        work_function=work_function,
+        apply_fft_filter=False,
+        conversion_dict=conversion_parameters,
+    )
+
     # Calculate the average intensity of the image, neglect the noisy parts
     # normalize to unit amplitude
     python_data = converted.data

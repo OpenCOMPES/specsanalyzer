@@ -65,16 +65,15 @@ def get_damatrix_fromcalib2d(
         rr_factor = np.interp(retardation_ratio, rr_vec, rr_index) - closest_rr_index
 
         source = (
-            f"interpolated as {rr_factor}*{lens_mode}@{rr_vec[closest_rr_index]}"
-            f" + {1-rr_factor}*{lens_mode}@{rr_vec[second_closest_rr_index]}"
+            f"interpolated as {(1-rr_factor)}*{lens_mode}@{rr_vec[closest_rr_index]}"
+            f" + {rr_factor}*{lens_mode}@{rr_vec[second_closest_rr_index]}"
         )
 
-        da_matrix_close = da_matrix_full[closest_rr_index][:][:]
-        da_matrix_second = da_matrix_full[second_closest_rr_index][:][:]
-        one_mat = np.ones(da_matrix_close.shape)
-        rr_factor_mat = np.ones(da_matrix_close.shape) * rr_factor
         # weighted average between two neighboring da matrices
-        da_matrix = da_matrix_close * (one_mat - rr_factor_mat) + da_matrix_second * rr_factor_mat
+        da_matrix = (
+            da_matrix_full[closest_rr_index][:][:] * (1 - rr_factor)
+            + da_matrix_full[second_closest_rr_index][:][:] * rr_factor
+        )
         # separate the first line (aInner) from the da coefficients
         a_inner = da_matrix[0][0]
         da_matrix = da_matrix[1:][:]
