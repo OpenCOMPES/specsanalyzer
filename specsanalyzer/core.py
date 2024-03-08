@@ -97,7 +97,7 @@ class SpecsAnalyzer:
         kinetic_energy: float,
         pass_energy: float,
         work_function: float,
-        conversion_dict: dict = None,
+        conversion_parameters: dict = None,
         **kwds,
     ) -> xr.DataArray:
         """Converts an imagin in physical unit data, angle vs energy
@@ -109,57 +109,60 @@ class SpecsAnalyzer:
             kinetic_energy (float): set analyser kinetic energy
             pass_energy (float): set analyser pass energy
             work_function (float): set analyser work function
-            conversion_dict (dict, optional): dictionary of conversion parameters, overwriting
-                determination from calib2d file. Defaults to None.
+            conversion_parameters (dict, optional): dictionary of conversion parameters,
+                overwriting determination from calib2d file. Defaults to None.
 
         Returns:
             xr.DataArray: xarray containg the corrected data and kinetic and angle axis
         """
-        if conversion_dict is None:
-            conversion_dict = {}
+        if conversion_parameters is None:
+            conversion_parameters = {}
+        else:
+            conversion_parameters = conversion_parameters.copy()
 
-        if "apply_fft_filter" not in conversion_dict.keys():
-            conversion_dict["apply_fft_filter"] = kwds.pop(
+        if "apply_fft_filter" not in conversion_parameters.keys():
+            conversion_parameters["apply_fft_filter"] = kwds.pop(
                 "apply_fft_filter",
                 self._config.get("apply_fft_filter", False),
             )
-        if "binning" not in conversion_dict.keys():
-            conversion_dict["binning"] = kwds.pop("binning", self._config.get("binning", 1))
-        if "rotation_angle" not in conversion_dict.keys():
-            conversion_dict["rotation_angle"] = kwds.pop(
+        if "binning" not in conversion_parameters.keys():
+            conversion_parameters["binning"] = kwds.pop("binning", self._config.get("binning", 1))
+        if "rotation_angle" not in conversion_parameters.keys():
+            conversion_parameters["rotation_angle"] = kwds.pop(
                 "rotation_angle",
                 self._config.get("rotation_angle", 0),
             )
 
-        if conversion_dict["apply_fft_filter"]:
+        if conversion_parameters["apply_fft_filter"]:
             try:
-                if "fft_filter_peaks" not in conversion_dict.keys():
-                    conversion_dict["fft_filter_peaks"] = kwds.pop(
+                if "fft_filter_peaks" not in conversion_parameters.keys():
+                    conversion_parameters["fft_filter_peaks"] = kwds.pop(
                         "fft_filter_peaks",
                         self._config["fft_filter_peaks"],
                     )
-                img = fourier_filter_2d(raw_img, conversion_dict["fft_filter_peaks"])
+                img = fourier_filter_2d(raw_img, conversion_parameters["fft_filter_peaks"])
             except KeyError:
                 img = raw_img
+                conversion_parameters["apply_fft_filter"] = False
         else:
             img = raw_img
 
-        if conversion_dict["rotation_angle"]:
-            img_rotated = imutils.rotate(img, angle=conversion_dict["rotation_angle"])
+        if conversion_parameters["rotation_angle"]:
+            img_rotated = imutils.rotate(img, angle=conversion_parameters["rotation_angle"])
             img = img_rotated
 
-        if "lens_mode" not in conversion_dict.keys():
-            conversion_dict["lens_mode"] = lens_mode
-            conversion_dict["kinetic_energy"] = kinetic_energy
-            conversion_dict["pass_energy"] = pass_energy
-            conversion_dict["work_function"] = work_function
+        if "lens_mode" not in conversion_parameters.keys():
+            conversion_parameters["lens_mode"] = lens_mode
+            conversion_parameters["kinetic_energy"] = kinetic_energy
+            conversion_parameters["pass_energy"] = pass_energy
+            conversion_parameters["work_function"] = work_function
             # Determine conversion parameters from calib2d
             (
-                conversion_dict["a_inner"],
-                conversion_dict["da_matrix"],
-                conversion_dict["retardation_ratio"],
-                conversion_dict["source"],
-                conversion_dict["dims"],
+                conversion_parameters["a_inner"],
+                conversion_parameters["da_matrix"],
+                conversion_parameters["retardation_ratio"],
+                conversion_parameters["source"],
+                conversion_parameters["dims"],
             ) = get_damatrix_fromcalib2d(
                 lens_mode=lens_mode,
                 kinetic_energy=kinetic_energy,
@@ -167,17 +170,19 @@ class SpecsAnalyzer:
                 work_function=work_function,
                 calib2d_dict=self._calib2d,
             )
-            conversion_dict["e_shift"] = np.array(self._calib2d["eShift"])
-            conversion_dict["de1"] = [self._calib2d["De1"]]
-            conversion_dict["e_range"] = self._calib2d["eRange"]
-            conversion_dict["a_range"] = self._calib2d[lens_mode]["default"]["aRange"]
-            conversion_dict["pixel_size"] = self._config["pixel_size"] * self._config["binning"]
-            conversion_dict["magnification"] = self._config["magnification"]
-            conversion_dict["angle_offset_px"] = kwds.get(
+            conversion_parameters["e_shift"] = np.array(self._calib2d["eShift"])
+            conversion_parameters["de1"] = [self._calib2d["De1"]]
+            conversion_parameters["e_range"] = self._calib2d["eRange"]
+            conversion_parameters["a_range"] = self._calib2d[lens_mode]["default"]["aRange"]
+            conversion_parameters["pixel_size"] = (
+                self._config["pixel_size"] * self._config["binning"]
+            )
+            conversion_parameters["magnification"] = self._config["magnification"]
+            conversion_parameters["angle_offset_px"] = kwds.get(
                 "angle_offset_px",
                 self._config.get("angle_offset_px", 0),
             )
-            conversion_dict["energy_offset_px"] = kwds.get(
+            conversion_parameters["energy_offset_px"] = kwds.get(
                 "energy_offset_px",
                 self._config.get("energy_offset_px", 0),
             )
@@ -211,16 +216,16 @@ class SpecsAnalyzer:
                 pass_energy=pass_energy,
                 nx_pixels=img.shape[1],
                 ny_pixels=img.shape[0],
-                pixel_size=conversion_dict["pixel_size"],
-                magnification=conversion_dict["magnification"],
-                e_shift=conversion_dict["e_shift"],
-                de1=conversion_dict["de1"],
-                e_range=conversion_dict["e_range"],
-                a_range=conversion_dict["a_range"],
-                a_inner=conversion_dict["a_inner"],
-                da_matrix=conversion_dict["da_matrix"],
-                angle_offset_px=conversion_dict["angle_offset_px"],
-                energy_offset_px=conversion_dict["energy_offset_px"],
+                pixel_size=conversion_parameters["pixel_size"],
+                magnification=conversion_parameters["magnification"],
+                e_shift=conversion_parameters["e_shift"],
+                de1=conversion_parameters["de1"],
+                e_range=conversion_parameters["e_range"],
+                a_range=conversion_parameters["a_range"],
+                a_inner=conversion_parameters["a_inner"],
+                da_matrix=conversion_parameters["da_matrix"],
+                angle_offset_px=conversion_parameters["angle_offset_px"],
+                energy_offset_px=conversion_parameters["energy_offset_px"],
             )
 
             # save the config parameters for later use collect the info in a new nested dictionary
@@ -262,9 +267,12 @@ class SpecsAnalyzer:
 
         data_array = xr.DataArray(
             data=conv_img,
-            coords={conversion_dict["dims"][0]: angle_axis, conversion_dict["dims"][1]: ek_axis},
-            dims=conversion_dict["dims"],
-            attrs={"conversion_parameters": conversion_dict},
+            coords={
+                conversion_parameters["dims"][0]: angle_axis,
+                conversion_parameters["dims"][1]: ek_axis,
+            },
+            dims=conversion_parameters["dims"],
+            attrs={"conversion_parameters": conversion_parameters},
         )
 
         # Handle cropping based on parameters stored in correction dictionary

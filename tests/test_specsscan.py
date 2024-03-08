@@ -75,11 +75,61 @@ def test_conversion_3d():
     assert res_xarray.sum(axis=(0, 1, 2)) == res_xarray2.sum(axis=(0, 1, 2))
 
     with pytest.raises(IndexError):
-        sps.check_scan(
+        sps.load_scan(
             scan=4450,
-            delays=range(1, 20),
+            iterations=range(1, 20),
             path=test_dir,
         )
+
+
+def test_conversion_from_convert_dict():
+    """Test the conversion without calib2d file, using passen conversion dictionary parameters"""
+    sps = SpecsScan(
+        config={},
+        user_config={},
+        system_config={},
+    )
+    with pytest.raises(ValueError):
+        res_xarray = sps.load_scan(
+            scan=4450,
+            path=test_dir,
+        )
+
+    conversion_parameters = {
+        "lens_mode": "WideAngleMode",
+        "kinetic_energy": 21.9,
+        "pass_energy": 30.0,
+        "work_function": 4.558,
+        "a_inner": 15.0,
+        "da_matrix": np.array(
+            [
+                [0.70585613, 0.74383533, 0.7415424],
+                [-0.00736453, 0.05832768, 0.14868587],
+                [-0.00759583, -0.04533556, -0.09021117],
+                [-0.00180035, 0.00814881, 0.01743308],
+            ],
+        ),
+        "retardation_ratio": 0.5780666666666666,
+        "source": "interpolated as 0.4386666666666681*WideAngleMode@0.55 + 0.5613333333333319*WideAngleMode@0.6",  # noqa
+        "dims": ["Angle", "Ekin"],
+        "e_shift": np.array([-0.05, 0.0, 0.05]),
+        "de1": [0.0033],
+        "e_range": [-0.066, 0.066],
+        "a_range": [-15.0, 15.0],
+        "pixel_size": 0.0258,
+        "magnification": 4.54,
+        "angle_offset_px": 0,
+        "energy_offset_px": 0,
+    }
+
+    res_xarray = sps.load_scan(
+        scan=4450,
+        path=test_dir,
+        conversion_parameters=conversion_parameters,
+    )
+
+    for key in conversion_parameters.keys():
+        assert key in res_xarray.attrs["metadata"]["conversion_parameters"]
 
 
 def test_checkscan():

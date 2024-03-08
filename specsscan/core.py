@@ -155,13 +155,11 @@ class SpecsScan:
         )
 
         self._scan_info = parse_info_to_dict(scan_path)
-        config_meta = copy.deepcopy(self.config)
 
         loader_dict = {
             "iterations": iterations,
             "scan_path": scan_path,
             "raw_data": data,
-            "convert_config": config_meta["spa_params"],
         }
 
         (scan_type, lens_mode, kin_energy, pass_energy, work_function) = (
@@ -198,7 +196,7 @@ class SpecsScan:
                 **kwds,
             )
         else:
-            xr_list = []
+            xr_list: list[xr.DataArray] = []
             for image in data:
                 xr_list.append(
                     self.spa.convert_image(
@@ -225,6 +223,8 @@ class SpecsScan:
                 res_xarray = res_xarray.transpose("Angle", dim, "Ekin")
             else:
                 res_xarray = res_xarray.transpose("Angle", "Ekin", dim)
+
+        conversion_metadata = res_xarray.attrs.pop("conversion_parameters")
 
         # rename coords and store mapping information, if available
         coordinate_mapping = self._config.get("coordinate_mapping", {})
@@ -268,6 +268,7 @@ class SpecsScan:
                 collect_metadata=collect_metadata,
             ),
             **{"loader": loader_dict},
+            **{"conversion_parameters": conversion_metadata},
         )
 
         res_xarray.attrs["metadata"] = self.metadata
@@ -352,16 +353,11 @@ class SpecsScan:
         )
 
         self._scan_info = parse_info_to_dict(scan_path)
-        config_meta = copy.deepcopy(self.config)
 
         loader_dict = {
             "delays": delays,
             "scan_path": scan_path,
-            "raw_data": load_images(  # AVG data
-                scan_path,
-                df_lut,
-            ),
-            "convert_config": config_meta["spa_params"],
+            "raw_data": data,
             "check_scan": True,
         }
 
@@ -390,6 +386,8 @@ class SpecsScan:
             )
             self.spa.print_msg = False
         self.spa.print_msg = True
+
+        conversion_metadata = xr_list[0].attrs["conversion_parameters"]
 
         dims = get_coords(
             scan_path=scan_path,
@@ -424,6 +422,7 @@ class SpecsScan:
                 collect_metadata=collect_metadata,
             ),
             **{"loader": loader_dict},
+            **{"conversion_parameters": conversion_metadata},
         )
         if metadata is not None:
             self.metadata.update(**metadata)
@@ -556,6 +555,7 @@ class SpecsScan:
             work_function,
             **kwds,
         )
+        conversion_parameters = converted.attrs["conversion_parameters"]
         # check for crop parameters
         if (
             not {"ang_range_min", "ang_range_max", "ek_range_min", "ek_range_max"}.issubset(
@@ -596,5 +596,6 @@ class SpecsScan:
         self.spa.print_msg = True
         # Strip first and last energy points, as they are not fully filled
         data = data[:, 1:-1]
+        data.attrs["conversion_parameters"] = conversion_parameters
 
         return data

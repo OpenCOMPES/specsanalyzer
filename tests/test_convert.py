@@ -290,7 +290,7 @@ def test_conversion_from_dict():
         pass_energy=pass_energy,
         work_function=work_function,
         apply_fft_filter=False,
-        conversion_dict=conversion_parameters,
+        conversion_parameters=conversion_parameters,
     )
 
     # Calculate the average intensity of the image, neglect the noisy parts
