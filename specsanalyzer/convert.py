@@ -17,7 +17,7 @@ def get_damatrix_fromcalib2d(
     is performed from the tabulated coefficients based on the retardatio ratio value.
 
     Args:
-        lens_mode (string): the lens mode string description
+        lens_mode (str): the lens mode string description
         kinetic_energy (float): kinetic energy of the photoelectron
         pass_energy (float): analyser pass energy
         work_function (float): work function settings
@@ -25,9 +25,9 @@ def get_damatrix_fromcalib2d(
             correction
 
     Returns:
-        tuple[float, np.ndarray, float, list[str], str]: (a_inner, da_matrix, rr, source, dims)
-        interpolated a_inner and da_matrix, needed for the coordinate conversion, retardation
-        ratio, interpolation values, dims
+        tuple[float, np.ndarray, float, str, list[str]]: (a_inner, da_matrix, retardation_ratio,
+        source, dims) interpolated a_inner and da_matrix, needed for the coordinate conversion,
+        retardation ratio, interpolation values, dims
     """
 
     # retardation ratio
@@ -173,7 +173,7 @@ def get_rr_da(
         ValueError: Raised if no da values are found for the given mode
 
     Returns:
-        tuple[np.ndarray,np.ndarray]: rr vector, matrix of da coeffients
+        tuple[np.ndarray, np.ndarray]: rr vector, matrix of da coeffients
         per row row0 : da1, row1: da3, .. up to da7.
         Non angle resolved lens modes do only posses da1.
     """
@@ -236,11 +236,10 @@ def calculate_polynomial_coef_da(
     pass_energy: float,
     e_shift: np.ndarray,
 ) -> np.ndarray:
-    """Given the da coeffiecients contained in the scanpareters, the program calculate the energy
-    range based on the eshift parameter and fits a second order polinomial to the tabulated values.
-    The polinomial coefficients are packed in the dapolymatrix array (row0 da1, row1 da3, ..)
-    The dapolymatrix is also saved in the scanparameters dictionary.
-    The function now returns a matrix of the fit coeffiecients, given the physical energy scale
+    """Given the da coeffiecients contained in the scanpareters, the program calculates the energy
+    range based on the eshift parameter and fits a second order polynomial to the tabulated values.
+    The polynomial coefficients are packed in the dapolymatrix array (row0 da1, row1 da3, ..)
+    The function returns a matrix of the fit coeffiecients, given the physical energy scale
     Each line of the matrix is a set of coefficients for each of the da[i] corrections
 
     Args:
@@ -256,7 +255,7 @@ def calculate_polynomial_coef_da(
     # calcualte the energy values for each da, given the eshift
     da_energy = e_shift * pass_energy + kinetic_energy * np.ones(e_shift.shape)
 
-    # create the polinomial coeffiecient matrix, each is a second order polynomial
+    # create the polynomial coeffiecient matrix, each is a second order polynomial
     da_poly_matrix = np.zeros(da_matrix.shape)
 
     for i in range(0, da_matrix.shape[0]):
@@ -280,12 +279,12 @@ def zinner(
     mcp withing the a_inner boundaries
 
     Args:
-        kinetic_energy (float): kinetic energy
-        angle (float): angle
+        kinetic_energy (flonp.ndarrayat): kinetic energies
+        angle (np.ndarray): angles
         da_poly_matrix (np.ndarray): matrix with polynomial coefficients
 
     Returns:
-        float: returns the calcualted position on the mcp, valid for low angles  (< ainner)
+        np.ndarray: returns the calcualted positions on the mcp, valid for low angles  (< ainner)
     """
     out = np.zeros(angle.shape, float)
 
@@ -308,13 +307,13 @@ def zinner_diff(
     the mcp outside the a_inner boundaries
 
     Args:
-        kinetic_energy (float): kinetic energy
-        angle (float): angle
+        kinetic_energy (np.ndarray): kinetic energies
+        angle (np.ndarray): angles
         da_poly_matrix (np.ndarray): polynomial matrix
 
     Returns:
-        float: zinner_diff the correction for the zinner position on the MCP for high (>ainner)
-        angles.
+        np.ndarray: zinner_diff the correction for the zinner position on the MCP for high
+        (>ainner) angles.
     """
 
     out = np.zeros(angle.shape, float)
@@ -341,8 +340,8 @@ def mcp_position_mm(
     dapolymatrix)
 
     Args:
-        kinetic_energy (float): kinetic energy
-        angle (float): photoemission angle
+        kinetic_energy (np.ndarray): kinetic energies
+        angle (np.ndarray): photoemission angles
         a_inner (float): inner angle parameter of the lens mode
         da_poly_matrix (np.ndarray): matrix with the polynomial correction coefficients for
             calculating the arrival position on the MCP
@@ -371,33 +370,40 @@ def mcp_position_mm(
 def calculate_matrix_correction(
     kinetic_energy: float,
     pass_energy: float,
-    nx_pixels,
-    ny_pixels,
-    pixel_size,
-    magnification,
-    e_shift,
-    de1,
-    e_range,
-    a_range,
-    a_inner,
-    da_matrix,
-    angle_offset_px,
-    energy_offset_px,
+    nx_pixels: int,
+    ny_pixels: int,
+    pixel_size: float,
+    magnification: float,
+    e_shift: np.ndarray,
+    de1: float,
+    e_range: np.ndarray,
+    a_range: np.ndarray,
+    a_inner: float,
+    da_matrix: np.ndarray,
+    angle_offset_px: int,
+    energy_offset_px: int,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    """Calculate the angular and energy interpolation matrices for the correction function
+    """Calculate the angular and energy interpolation matrices for the correction function.
 
     Args:
-        lens_mode (str): analyser lens mode
-        kinetic_energy (float): photoelectorn kinetic energy
+        kinetic_energy (float): analyser set kinetic energy
         pass_energy (float): analyser set pass energy
-        work_function (float): analyser set work function
-        binning (int): image binning
-        calib2d_dict (dict): dictionary containing the configuration parameters for angular
-            correction
-        ** kwds: Keyword parameters:
-
-            - eangle_offset_px: Angular offset in pixel
-            - energy_offset_px: Energy offset in pixel
+        nx_pixels (int): number of image pixels (after binning) along the energy dispersing
+            direction
+        ny_pixels (int): number of image pixels (after binning) along the angle/spatially
+            dispersing direction
+        pixel_size (float): pixel size in millimeter
+        magnification (float): magnification of the lens system used for imaging the detector
+        e_shift (np.ndarray): e shift parameter, defining the energy
+            range around the center for the polynomial fit of the da coefficients
+        de1 (float): energy dispersion factor (fraction of pass_energy)/mm_z)
+        e_range (np.ndarray): energy range (minimal/maximal energy, in units of pass_energy)
+        a_range (np.ndarray): angular/spatial range (minimal/maximal angle or distance, in deg
+            or mm)
+        a_inner (float): inner angle parameter of the lens mode
+        da_matrix (np.ndarray): the matrix of interpolated da coefficients
+        angle_offset_px (int): Angular offset in pixel
+        energy_offset_px (int): Energy offset in pixel
 
     Returns:
         tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
@@ -407,7 +413,6 @@ def calculate_matrix_correction(
             - e_correction: the matrix for energy interpolation
             - jacobian_determinant: the transformation jacobian for area preserving transformation
     """
-
     da_poly_matrix = calculate_polynomial_coef_da(da_matrix, kinetic_energy, pass_energy, e_shift)
 
     ek_low = kinetic_energy + e_range[0] * pass_energy
