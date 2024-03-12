@@ -348,7 +348,8 @@ def handle_meta(
     df_lut: pd.DataFrame,
     scan_info: dict,
     config: dict,
-    dim: str,
+    fast_axis: str,
+    slow_axis: str,
     metadata: dict = None,
     collect_metadata: bool = False,
 ) -> dict:
@@ -359,7 +360,8 @@ def handle_meta(
             from ``parse_lut_to_df()``
         scan_info (dict): scan_info class dict containing containing the contents of info.txt file
         config (dict): config dictionary containing the contents of config.yaml file
-        dim (str): The slow-axis dimension of the scan
+        fast_axis (str): The fast-axis dimension of the scan
+        slow_axis (str): The slow-axis dimension of the scan
         metadata (dict, optional): Metadata dictionary with additional metadata for the scan.
             Defaults to empty dictionary.
         collect_metadata (bool, optional): Option to collect further metadata e.g. from EPICS
@@ -468,21 +470,14 @@ def handle_meta(
 
     metadata["scan_info"]["energy_scan_mode"] = energy_scan_mode
 
-    lens_modes_all = {
-        "real": config["spa_params"]["calib2d_dict"]["supported_space_modes"],
-        "reciprocal": config["spa_params"]["calib2d_dict"]["supported_angle_modes"],
-    }
-    lens_mode = metadata["scan_info"]["LensMode"]
-    for projection, mode_list in lens_modes_all.items():
-        if lens_mode in mode_list:
-            metadata["scan_info"]["projection"] = projection
-            fast = "Angle" if projection == "reciprocal" else "Position"
-            metadata["scan_info"]["scheme"] = (
-                "angular dispersive" if projection == "reciprocal" else "spatial dispersive"
-            )
+    projection = "reciprocal" if fast_axis in {"Anlge", "angular0", "angular1"} else "real"
+    metadata["scan_info"]["projection"] = projection
+    metadata["scan_info"]["scheme"] = (
+        "angular dispersive" if projection == "reciprocal" else "spatial dispersive"
+    )
 
-    metadata["scan_info"]["slow_axes"] = dim
-    metadata["scan_info"]["fast_axes"] = ["Ekin", fast]
+    metadata["scan_info"]["slow_axes"] = slow_axis
+    metadata["scan_info"]["fast_axes"] = ["Ekin", fast_axis]
 
     print("Done!")
 

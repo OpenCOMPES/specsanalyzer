@@ -35,6 +35,9 @@ def test_save_and_load_tiff_array(_da):
         as_array = load_tiff(f"test_nd_{nd_array.ndim}.tiff")
         np.testing.assert_allclose(nd_array, as_array)
         os.remove(f"test_nd_{nd_array.ndim}.tiff")
+    else:
+        with pytest.raises(NotImplementedError):
+            to_tiff(nd_array, f"test_nd_{nd_array.ndim}")
 
 
 @pytest.mark.parametrize(

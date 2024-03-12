@@ -58,6 +58,12 @@ def test_fourier_filter_2d():
 
     np.testing.assert_allclose(ref, filtered, atol=3.5)
 
+    fft = fourier_filter_2d(tsv_data, peaks, ret="fft")
+    mask = fourier_filter_2d(tsv_data, peaks, ret="mask")
+    filtered_fft = fourier_filter_2d(tsv_data, peaks, ret="filtered_fft")
+
+    np.testing.assert_allclose(filtered_fft, fft * mask)
+
 
 def test_fourier_filter_2d_raises():
     """Test if the Fourier filter function raises an error if a key is not defined."""
