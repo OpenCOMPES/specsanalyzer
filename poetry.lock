@@ -1154,13 +1154,13 @@ files = [
 
 [[package]]
 name = "fsspec"
-version = "2024.3.0"
+version = "2024.3.1"
 description = "File-system specification"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "fsspec-2024.3.0-py3-none-any.whl", hash = "sha256:779001bd0122c9c4975cf03827d5e86c3afb914a3ae27040f15d341ab506a693"},
-    {file = "fsspec-2024.3.0.tar.gz", hash = "sha256:f13a130c0ed07e15c4e1aeb0472a823e9c426b0b5792a1f40d902b0a71972d43"},
+    {file = "fsspec-2024.3.1-py3-none-any.whl", hash = "sha256:918d18d41bf73f0e2b261824baeb1b124bcf771767e3a26425cd7dec3332f512"},
+    {file = "fsspec-2024.3.1.tar.gz", hash = "sha256:f39780e282d7d117ffb42bb96992f8a90795e4d0fb0f661a70ca39fe9c43ded9"},
 ]
 
 [package.extras]
@@ -1513,13 +1513,13 @@ files = [
 
 [[package]]
 name = "importlib-metadata"
-version = "7.0.2"
+version = "7.1.0"
 description = "Read metadata from Python packages"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "importlib_metadata-7.0.2-py3-none-any.whl", hash = "sha256:f4bc4c0c070c490abf4ce96d715f68e95923320370efb66143df00199bb6c100"},
-    {file = "importlib_metadata-7.0.2.tar.gz", hash = "sha256:198f568f3230878cb1b44fbd7975f87906c22336dba2e4a7f05278c281fbd792"},
+    {file = "importlib_metadata-7.1.0-py3-none-any.whl", hash = "sha256:30962b96c0c223483ed6cc7280e7f0199feb01a0e40cfae4d4450fc6fab1f570"},
+    {file = "importlib_metadata-7.1.0.tar.gz", hash = "sha256:b78938b926ee8d5f020fc4772d487045805a55ddbad2ecf21c6d60938dc7fcd2"},
 ]
 
 [package.dependencies]
@@ -1528,17 +1528,17 @@ zipp = ">=0.5"
 [package.extras]
 docs = ["furo", "jaraco.packaging (>=9.3)", "jaraco.tidelift (>=1.4)", "rst.linker (>=1.9)", "sphinx (>=3.5)", "sphinx-lint"]
 perf = ["ipython"]
-testing = ["flufl.flake8", "importlib-resources (>=1.3)", "packaging", "pyfakefs", "pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-cov", "pytest-enabler (>=2.2)", "pytest-mypy", "pytest-perf (>=0.9.2)", "pytest-ruff (>=0.2.1)"]
+testing = ["flufl.flake8", "importlib-resources (>=1.3)", "jaraco.test (>=5.4)", "packaging", "pyfakefs", "pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-cov", "pytest-enabler (>=2.2)", "pytest-mypy", "pytest-perf (>=0.9.2)", "pytest-ruff (>=0.2.1)"]
 
 [[package]]
 name = "importlib-resources"
-version = "6.3.1"
+version = "6.4.0"
 description = "Read resources from Python packages"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "importlib_resources-6.3.1-py3-none-any.whl", hash = "sha256:4811639ca7fa830abdb8e9ca0a104dc6ad13de691d9fe0d3173a71304f068159"},
-    {file = "importlib_resources-6.3.1.tar.gz", hash = "sha256:29a3d16556e330c3c8fb8202118c5ff41241cc34cbfb25989bbad226d99b7995"},
+    {file = "importlib_resources-6.4.0-py3-none-any.whl", hash = "sha256:50d10f043df931902d4194ea07ec57960f66a80449ff867bfe782b4c486ba78c"},
+    {file = "importlib_resources-6.4.0.tar.gz", hash = "sha256:cdb2b453b8046ca4e3798eb1d84f3cce1446a0e8e7b5ef4efb600f19fc398145"},
 ]
 
 [package.dependencies]
@@ -1546,7 +1546,7 @@ zipp = {version = ">=3.1.0", markers = "python_version < \"3.10\""}
 
 [package.extras]
 docs = ["furo", "jaraco.packaging (>=9.3)", "jaraco.tidelift (>=1.4)", "rst.linker (>=1.9)", "sphinx (<7.2.5)", "sphinx (>=3.5)", "sphinx-lint"]
-testing = ["jaraco.collections", "pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-cov", "pytest-enabler (>=2.2)", "pytest-mypy", "pytest-ruff (>=0.2.1)", "zipp (>=3.17)"]
+testing = ["jaraco.test (>=5.4)", "pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-cov", "pytest-enabler (>=2.2)", "pytest-mypy", "pytest-ruff (>=0.2.1)", "zipp (>=3.17)"]
 
 [[package]]
 name = "imutils"
@@ -1946,13 +1946,13 @@ test = ["ipykernel", "pre-commit", "pytest (<8)", "pytest-cov", "pytest-timeout"
 
 [[package]]
 name = "jupyter-events"
-version = "0.9.1"
+version = "0.10.0"
 description = "Jupyter Event System library"
 optional = true
 python-versions = ">=3.8"
 files = [
-    {file = "jupyter_events-0.9.1-py3-none-any.whl", hash = "sha256:e51f43d2c25c2ddf02d7f7a5045f71fc1d5cb5ad04ef6db20da961c077654b9b"},
-    {file = "jupyter_events-0.9.1.tar.gz", hash = "sha256:a52e86f59eb317ee71ff2d7500c94b963b8a24f0b7a1517e2e653e24258e15c7"},
+    {file = "jupyter_events-0.10.0-py3-none-any.whl", hash = "sha256:4b72130875e59d57716d327ea70d3ebc3af1944d3717e5a498b8a06c6c159960"},
+    {file = "jupyter_events-0.10.0.tar.gz", hash = "sha256:670b8229d3cc882ec782144ed22e0d29e1c2d639263f92ca8383e66682845e22"},
 ]
 
 [package.dependencies]
@@ -2909,13 +2909,13 @@ test = ["flaky", "ipykernel (>=6.19.3)", "ipython", "ipywidgets", "nbconvert (>=
 
 [[package]]
 name = "nbconvert"
-version = "7.16.2"
+version = "7.16.3"
 description = "Converting Jupyter Notebooks (.ipynb files) to other formats.  Output formats include asciidoc, html, latex, markdown, pdf, py, rst, script.  nbconvert can be used both as a Python library (`import nbconvert`) or as a command line tool (invoked as `jupyter nbconvert ...`)."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "nbconvert-7.16.2-py3-none-any.whl", hash = "sha256:0c01c23981a8de0220255706822c40b751438e32467d6a686e26be08ba784382"},
-    {file = "nbconvert-7.16.2.tar.gz", hash = "sha256:8310edd41e1c43947e4ecf16614c61469ebc024898eb808cce0999860fc9fb16"},
+    {file = "nbconvert-7.16.3-py3-none-any.whl", hash = "sha256:ddeff14beeeedf3dd0bc506623e41e4507e551736de59df69a91f86700292b3b"},
+    {file = "nbconvert-7.16.3.tar.gz", hash = "sha256:a6733b78ce3d47c3f85e504998495b07e6ea9cf9bf6ec1c98dda63ec6ad19142"},
 ]
 
 [package.dependencies]
@@ -2942,7 +2942,7 @@ docs = ["ipykernel", "ipython", "myst-parser", "nbsphinx (>=0.2.12)", "pydata-sp
 qtpdf = ["nbconvert[qtpng]"]
 qtpng = ["pyqtwebengine (>=5.15)"]
 serve = ["tornado (>=6.1)"]
-test = ["flaky", "ipykernel", "ipywidgets (>=7.5)", "pytest"]
+test = ["flaky", "ipykernel", "ipywidgets (>=7.5)", "pytest (>=7)"]
 webpdf = ["playwright"]
 
 [[package]]
@@ -4144,13 +4144,13 @@ rich = ">=8.0.0"
 
 [[package]]
 name = "pytest-cov"
-version = "4.1.0"
+version = "5.0.0"
 description = "Pytest plugin for measuring coverage."
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 files = [
-    {file = "pytest-cov-4.1.0.tar.gz", hash = "sha256:3904b13dfbfec47f003b8e77fd5b589cd11904a21ddf1ab38a64f204d6a10ef6"},
-    {file = "pytest_cov-4.1.0-py3-none-any.whl", hash = "sha256:6ba70b9e97e69fcc3fb45bfeab2d0a138fb65c4d0d6a41ef33983ad114be8c3a"},
+    {file = "pytest-cov-5.0.0.tar.gz", hash = "sha256:5837b58e9f6ebd335b0f8060eecce69b662415b16dc503883a02f45dfeb14857"},
+    {file = "pytest_cov-5.0.0-py3-none-any.whl", hash = "sha256:4f0764a1219df53214206bf1feea4633c3b558a2925c8b59f144f682861ce652"},
 ]
 
 [package.dependencies]
@@ -4158,7 +4158,7 @@ coverage = {version = ">=5.2.1", extras = ["toml"]}
 pytest = ">=4.6"
 
 [package.extras]
-testing = ["fields", "hunter", "process-tests", "pytest-xdist", "six", "virtualenv"]
+testing = ["fields", "hunter", "process-tests", "pytest-xdist", "virtualenv"]
 
 [[package]]
 name = "pytest-xdist"
@@ -4950,47 +4950,39 @@ testing-integration = ["build[virtualenv] (>=1.0.3)", "filelock (>=3.4.0)", "jar
 
 [[package]]
 name = "silx"
-version = "2.0.0"
+version = "2.0.1"
 description = "Software library for X-ray data analysis"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "silx-2.0.0-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:91f228ccedea44c3f4dda0fc11b3a379a6862b259110cd1606679c0239cef7a7"},
-    {file = "silx-2.0.0-cp310-cp310-manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:345a43b893216e22027a4189d06bf8877621f0f07626bb635adad47786ab4fc2"},
-    {file = "silx-2.0.0-cp310-cp310-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:9bfbd888ba00334c38630f61a6223e13974273146b425116e50f116176cd0497"},
-    {file = "silx-2.0.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:259cde889902cf5e7e1684a9dc3d0da91315c210a99510f9cd7be8e4891353ff"},
-    {file = "silx-2.0.0-cp310-cp310-win_amd64.whl", hash = "sha256:784e73d1f0f71cd02717373b38009bfd16d53bb359fb4a528fa600d776ea00ac"},
-    {file = "silx-2.0.0-cp311-cp311-macosx_10_9_universal2.whl", hash = "sha256:f808d6835699a43446ab6e36c915f268c3090d32f559fc1341eaf8400800fc56"},
-    {file = "silx-2.0.0-cp311-cp311-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:3d69dc7456988b770b1de97e9b7af800af0a5c0cb266853e81e1798d08a300d9"},
-    {file = "silx-2.0.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:fd5b815cc8f95d48c8730c5f255ce8ced08764235ef6603dddb9b9bf421b80fa"},
-    {file = "silx-2.0.0-cp311-cp311-win_amd64.whl", hash = "sha256:faa0c33587a88fdb9497c82f6816a0b414f0dce3861a809b4663b4b4b8ba802e"},
-    {file = "silx-2.0.0-cp312-cp312-macosx_10_9_universal2.whl", hash = "sha256:f016fb298d2ffcdd482b4691f7c8fc104ff710d57842741ad99f9ad22a06abc1"},
-    {file = "silx-2.0.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:22cd053f8a47c23c39f68c234f2a7a6c829806c773645873ee51f404f73d039f"},
-    {file = "silx-2.0.0-cp312-cp312-win_amd64.whl", hash = "sha256:0bc604ef6e16bd689bd7438ecc0dcfa7f2f76f535479de7b325fc145b533aab7"},
-    {file = "silx-2.0.0-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:452f2ec33e4bafb225da32d864d30dd54cf421c4cf6fa7e2e774d8db58915fc1"},
-    {file = "silx-2.0.0-cp37-cp37m-manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:1cfff6127d4fcb48e8a7254c1c068fbcb06eddc38057abbf262aeeaed9044393"},
-    {file = "silx-2.0.0-cp37-cp37m-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:9a7811844e3318b7c4ae61172d2247726cae041f1b1b5f4e08b94de015b1c55b"},
-    {file = "silx-2.0.0-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:c85292bf23bf4897daae37061e44225a11e4a51f85bd9e0e4d2dbb31c72a4e94"},
-    {file = "silx-2.0.0-cp37-cp37m-win_amd64.whl", hash = "sha256:548316eeea33e0635bc5f021d30701e309ca125400bc321efb3cfa1f6b8b4338"},
-    {file = "silx-2.0.0-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:5adbe80156c6ebb310a0c3028e0ea7f2b3e904c9d8ae6c3495681fab0d91f99b"},
-    {file = "silx-2.0.0-cp38-cp38-macosx_11_0_universal2.whl", hash = "sha256:cd3eacb6aa45956b550960e160743fdf6785095b16cd369b59a684c9ef49e433"},
-    {file = "silx-2.0.0-cp38-cp38-manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:30e8fc0fde2b7107cb5c3bd9da53a0fd6b380454015375388edb7dd94ad124d4"},
-    {file = "silx-2.0.0-cp38-cp38-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:9ea958faedeebc5dbed86017312ae3f8a6e4e3c6b85e7cd5bcf7774757d72b3e"},
-    {file = "silx-2.0.0-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:f06516b018ba21e1726d94a6502bb27601e2811ba858ff729956e396c9b1d118"},
-    {file = "silx-2.0.0-cp38-cp38-win_amd64.whl", hash = "sha256:061b0f6627cfb41fa68fc293478df7375149a822a3fe517f4cd095d50236dd1a"},
-    {file = "silx-2.0.0-cp39-cp39-macosx_10_9_universal2.whl", hash = "sha256:b8b3e9d4b48eedd8df86a9cdece304eebae209be5265336e3c8e0e34a954f141"},
-    {file = "silx-2.0.0-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:ac4b235eeb395bb70bc230fb2c29bf91e2483c82832dcc48db750946fe35465f"},
-    {file = "silx-2.0.0-cp39-cp39-manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:3a3fe2eb145fb0542b5e7a1b9292f1e66852944d51e35f8f2e4f21394d44e5f7"},
-    {file = "silx-2.0.0-cp39-cp39-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:05ecd36d8b9b93cdf0037236b0a78d8f16e9a8acc8e0797c78883ca988824c55"},
-    {file = "silx-2.0.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:fd0a24338ced17a7672fa663952207cb144fbd8b277675f30bab26ea36e33852"},
-    {file = "silx-2.0.0-cp39-cp39-win_amd64.whl", hash = "sha256:d6eaeb9e3844d1b028458eef5abbfcd73fe4265cfa5190f1a19cc5caba2f00d2"},
-    {file = "silx-2.0.0.tar.gz", hash = "sha256:ad3dd42f62b0727507894399c8708cbe42c19972d3b191f1ae99426fcc766970"},
+    {file = "silx-2.0.1-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:2f21a62239fe00a6af42fdbbc9f85929987d3782379fdabc394ea43d5c05b0a1"},
+    {file = "silx-2.0.1-cp310-cp310-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:e6c652632c2a91d6aed43ebd2f51b4fa0fba8b5da199ca4e8f0cdb7c4e14ae28"},
+    {file = "silx-2.0.1-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:0bc7df21227df235febe0d694edb85b350504b3ed0f51faa8d98dd3a63e8b6fe"},
+    {file = "silx-2.0.1-cp310-cp310-win_amd64.whl", hash = "sha256:6caa4b2be7ad1d4441b1d4761e02701de1e0e138578aa095b9c126a09527fa5f"},
+    {file = "silx-2.0.1-cp311-cp311-macosx_10_9_universal2.whl", hash = "sha256:f007fdf949c5ee4da1916c72198c93c0753c20b2d0147d2f76137f8a453a66a4"},
+    {file = "silx-2.0.1-cp311-cp311-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:e26b20060ec3c9fce640162cb1b77c398833cecd56890968d3f1afcf4511ca06"},
+    {file = "silx-2.0.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:f7e2ac841e2815550989fe80a778f0c605e9e138dfeca32831149b55a9364301"},
+    {file = "silx-2.0.1-cp311-cp311-win_amd64.whl", hash = "sha256:2c1d07372c77cae7de931bf33a5ee3d42cb94caac8234dc09c19cd634c9c2526"},
+    {file = "silx-2.0.1-cp312-cp312-macosx_10_9_universal2.whl", hash = "sha256:2b5455c2db07e6e8fc33eaebba53bef0b873141a321ccf22629b9972926e7f6f"},
+    {file = "silx-2.0.1-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:d26a43fbeaf76ffe951201268cb0b9168e0c6328acf04b5d8aa04b2b8bd9bc4f"},
+    {file = "silx-2.0.1-cp312-cp312-win_amd64.whl", hash = "sha256:0b3ec7a6db0c27f5c5835e2f7c66b33a32fae465409baa4680d1a475326428de"},
+    {file = "silx-2.0.1-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:30f21e8821f9ef2adbb7132dccc43294af3fce9bf34d98ab68f680920439dc0b"},
+    {file = "silx-2.0.1-cp38-cp38-macosx_11_0_universal2.whl", hash = "sha256:1ac68e8a3ece1d0140052e1de85bb356634ba14ff286d6d0d90a5a87ee17e2b1"},
+    {file = "silx-2.0.1-cp38-cp38-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:91a182e7ac1991cb928cb01f724281a296cc2055e6cd194f583f03d65874d169"},
+    {file = "silx-2.0.1-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:ecbac5e94dcf056040769220c06f4b373c20cc12898dcf80fa44716ab5ad2049"},
+    {file = "silx-2.0.1-cp38-cp38-win_amd64.whl", hash = "sha256:9be8049daf752e4a84ab697aaee06565d5857ae09b4bee9591e923e7308dd6bc"},
+    {file = "silx-2.0.1-cp39-cp39-macosx_10_9_universal2.whl", hash = "sha256:992365b89fe23f164291b46d867a456ce524ebf4bfe90386341b8a32db747890"},
+    {file = "silx-2.0.1-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:283b9023ab21b701a858d5f365e5eb575ebdfe08ff6b0441256b34b42e6d5892"},
+    {file = "silx-2.0.1-cp39-cp39-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:99c47e61e684f2891828e56c37c329299276b57c58835519d5a0466804569bc1"},
+    {file = "silx-2.0.1-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:32a6973ae46e5213c488f48475e44b6d97a7ee302290b93fe8ba671eee3693ee"},
+    {file = "silx-2.0.1-cp39-cp39-win_amd64.whl", hash = "sha256:8e81590a4189519ff32b99091f142b5657d896c3ec376a92816dd8c8b8f7ce21"},
+    {file = "silx-2.0.1.tar.gz", hash = "sha256:dcb7cfee6022fe851348b64bf51aa4d3c19d1a62f60f80507e8b5bb0b36cc1a7"},
 ]
 
 [package.dependencies]
 fabio = ">=0.9"
 h5py = "*"
-numpy = ">=1.21.6"
+numpy = ">=1.21.6,<2"
 packaging = "*"
 
 [package.extras]
@@ -5344,13 +5336,13 @@ typing = ["mypy (>=1.6,<2.0)", "traitlets (>=5.11.1)"]
 
 [[package]]
 name = "threadpoolctl"
-version = "3.3.0"
+version = "3.4.0"
 description = "threadpoolctl"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "threadpoolctl-3.3.0-py3-none-any.whl", hash = "sha256:6155be1f4a39f31a18ea70f94a77e0ccd57dced08122ea61109e7da89883781e"},
-    {file = "threadpoolctl-3.3.0.tar.gz", hash = "sha256:5dac632b4fa2d43f42130267929af3ba01399ef4bd1882918e92dbc30365d30c"},
+    {file = "threadpoolctl-3.4.0-py3-none-any.whl", hash = "sha256:8f4c689a65b23e5ed825c8436a92b818aac005e0f3715f6a1664d7c7ee29d262"},
+    {file = "threadpoolctl-3.4.0.tar.gz", hash = "sha256:f11b491a03661d6dd7ef692dd422ab34185d982466c49c8f98c8f716b5c93196"},
 ]
 
 [[package]]
