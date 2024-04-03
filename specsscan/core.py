@@ -312,6 +312,30 @@ class SpecsScan:
             **kwds,
         )
 
+
+    def fft_tool(self, scan: int = None, path: Path | str = "", **kwds):
+
+        matplotlib.use("module://ipympl.backend_nbagg")
+        if scan is not None:
+            scan_path = get_scan_path(path, scan, self._config["data_path"])
+
+            data = load_images(
+                scan_path=scan_path,
+                tqdm_enable_nested=self._config["enable_nested_progress_bar"],
+            )
+            image = data[0]
+        else:
+            try:
+                image = self.metadata["loader"]["raw_data"][0]
+            except KeyError as exc:
+                raise ValueError("No image loaded, load image first!") from exc
+
+        self.spa.fft_tool(
+            image,
+            **kwds,
+        )
+
+
     def check_scan(
         self,
         scan: int,
