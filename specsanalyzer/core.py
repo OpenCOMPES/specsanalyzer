@@ -605,7 +605,7 @@ class SpecsAnalyzer:
                 fft_tool_params['sigma_y'],
             )
         except KeyError:
-            (amp, pos_x, pos_y, sig_x, sig_y) = (0.95, 114, 50, 13, 22)
+            (amp, pos_x, pos_y, sig_x, sig_y) = (0.95, 86, 116, 13, 22)
 
         fft_filter_peaks = create_fft_params_dict(amp, pos_x, pos_y, sig_x, sig_y)
         try:
@@ -614,6 +614,11 @@ class SpecsAnalyzer:
                 peaks=fft_filter_peaks,
                 ret="fft"
             )
+            fft_filtered = fourier_filter_2d(
+                raw_image,
+                peaks=fft_filter_peaks,
+                ret="filtered_fft"
+                )
 
             mask = fourier_filter_2d(
                 raw_image,
@@ -631,33 +636,46 @@ class SpecsAnalyzer:
             raise
 
         fig = plt.figure()
-        ax = fig.add_subplot(1,2,1)
-        im = ax.imshow(np.abs(img), origin='lower')
-        fig.colorbar(im)
-        global cont  # makes the contour removal possible inside update()
-        cont = ax.contour(mask)
+        ax = fig.add_subplot(3,2,1)
+        im_fft = ax.imshow(np.abs(img).T, origin='lower', aspect='auto')
+        fig.colorbar(im_fft)
+
+        ax.set_title("FFT")
+        cont = ax.contour(mask.T)
 
         # Plot raw image
-        ax2 = fig.add_subplot(2,2,2)
-        ax2.imshow(raw_image, origin='lower')
+        ax2 = fig.add_subplot(3,2,2)
+        fft_filt = ax2.imshow(np.abs(fft_filtered).T, origin='lower', aspect='auto')
+        ax2.set_title("Filtered FFT")
+        fig.colorbar(fft_filt)
 
         # Plot fft filtered image
-        ax3 = fig.add_subplot(2,2,4)
-        filt = ax3.imshow(filtered, origin='lower')
-        plt.tight_layout()
+        ax3 = fig.add_subplot(2,2,3)
+        filt = ax3.imshow(filtered.T, origin='lower', aspect='auto')
+        ax3.set_title("Filtered Image")
+        fig.colorbar(filt)
+
+        ax4 = fig.add_subplot(3,2,4)
+        edc, = ax4.plot(np.sum(filtered, 0), label='EDC')
+        ax4.legend()
+
+        ax5 = fig.add_subplot(3,2,6)
+        mdc, = ax5.plot(np.sum(filtered, 1), label='MDC')
+        ax5.legend()
+        # plt.tight_layout()
 
         posx_slider = ipw.FloatSlider(
                     description="pos_x",
                     value=pos_x,
                     min=0,
-                    max=150,
+                    max=128,
                     step=1,
                 )
         posy_slider = ipw.FloatSlider(
             description="pos_y",
             value=pos_y,
             min=0,
-            max=128,
+            max=150,
             step=1,
         )
         sigx_slider = ipw.FloatSlider(
@@ -681,11 +699,12 @@ class SpecsAnalyzer:
             max=1,
             step=0.01,
         )
-        clim_slider = ipw.FloatRangeSlider(
+        clim_slider = ipw.FloatLogSlider(
             description="colorbar limits",
-            value=[raw_image.min(), raw_image.max()],
-            min=raw_image.min(),
-            max=raw_image.max(),
+            value=1e4,
+            base=10,
+            min=-1,
+            max=int(np.log10(np.abs(img).max())) + 1,
         )
 
         def update(v_vals, posx, posy, sigx, sigy, amp):
@@ -700,12 +719,26 @@ class SpecsAnalyzer:
                 peaks=fft_filter_peaks,
                 ret='filtered'
             )
-            im.set_clim(vmin=v_vals[0], vmax=v_vals[1])
-            filt.set_data(filtered_new)
-            global cont
+
+            fft_filtered_new = fourier_filter_2d(
+                raw_image,
+                peaks=fft_filter_peaks,
+                ret='filtered_fft'
+            )
+
+            im_fft.set_clim(vmax=v_vals)
+            fft_filt.set_clim(vmax=v_vals)
+
+            filt.set_data(filtered_new.T)
+            fft_filt.set_data(np.abs(fft_filtered_new.T))
+
+            nonlocal cont
             for i in range(len(cont.collections)):
                 cont.collections[i].remove()
-            cont = ax.contour(msk)
+            cont = ax.contour(msk.T)
+
+            edc.set_ydata(np.sum(filtered_new, 0))
+            mdc.set_ydata(np.sum(filtered_new, 1))
 
             fig.canvas.draw_idle()
 
@@ -762,34 +795,35 @@ def create_fft_params_dict(amp, posx, posy, sigx, sigy):
 
     fft_filter_peaks = [
         {'amplitude': amp,
-        'pos_x': 128-posy,
+        'pos_x': 1*posx,
         'pos_y': 0,
         'sigma_x': sigx,
         'sigma_y': sigy},
         {'amplitude': amp,
-        'pos_x': 128+posy,
+        'pos_x': 2*posx,
         'pos_y': 0,
         'sigma_x': sigx,
         'sigma_y': sigy},
         {'amplitude': amp,
         'pos_x': 0,
-        'pos_y': posx,
+        'pos_y': posy,
         'sigma_x': sigx,
         'sigma_y': sigy},
         {'amplitude': amp,
-        'pos_x': 128-posy,
-        'pos_y': posx,
+        'pos_x': 1*posx,
+        'pos_y': posy,
         'sigma_x': sigx,
         'sigma_y': sigy},
         {'amplitude': amp,
-        'pos_x': 128+posy,
-        'pos_y': posx,
+        'pos_x': 2*posx,
+        'pos_y': posy,
         'sigma_x': sigx,
         'sigma_y': sigy},
         {'amplitude': amp,
-        'pos_x': 256,
-        'pos_y': posx,
+        'pos_x': 3*posx,
+        'pos_y': posy,
         'sigma_x': sigx,
         'sigma_y': sigy},
     ]
+
     return fft_filter_peaks
