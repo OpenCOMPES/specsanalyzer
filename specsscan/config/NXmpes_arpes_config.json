@@ -294,7 +294,7 @@
       "sample_tilt/@transformation_type": "rotation",
       "sample_tilt/@vector": [1, 0, 0],
       "offset_polar/@depends_on": "sample_polar",
-      "offset_polar": -321,
+      "offset_polar": -9,
       "offset_polar/@units": "degrees",
       "offset_polar/@transformation_type": "rotation",
       "offset_polar/@vector": [0, 1, 0],
