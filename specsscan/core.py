@@ -312,9 +312,7 @@ class SpecsScan:
             **kwds,
         )
 
-
     def fft_tool(self, scan: int = None, path: Path | str = "", **kwds):
-
         matplotlib.use("module://ipympl.backend_nbagg")
         if scan is not None:
             scan_path = get_scan_path(path, scan, self._config["data_path"])
@@ -334,7 +332,6 @@ class SpecsScan:
             image,
             **kwds,
         )
-
 
     def check_scan(
         self,
