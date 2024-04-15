@@ -75,7 +75,7 @@ def fourier_filter_2d(
             mask -= peak["amplitude"] * gauss2d(
                 xgrid,
                 ygrid,
-                peak["pos_x"],
+                image_fft.shape[0] / 2 + peak["pos_x"],
                 peak["pos_y"],
                 peak["sigma_x"],
                 peak["sigma_y"],

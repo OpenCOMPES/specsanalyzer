@@ -137,11 +137,11 @@ class SpecsAnalyzer:
             try:
                 fft_filter_params: dict = self._correction_matrix_dict["fft_tool_params"]
                 (amp, pos_x, pos_y, sig_x, sig_y) = (
-                    fft_filter_params['amplitude'],
-                    fft_filter_params['pos_x'],
-                    fft_filter_params['pos_y'],
-                    fft_filter_params['sigma_x'],
-                    fft_filter_params['sigma_y'],
+                    fft_filter_params["amplitude"],
+                    fft_filter_params["pos_x"],
+                    fft_filter_params["pos_y"],
+                    fft_filter_params["sigma_x"],
+                    fft_filter_params["sigma_y"],
                 )
                 fft_filter_peaks = create_fft_params_dict(amp, pos_x, pos_y, sig_x, sig_y)
                 img = fourier_filter_2d(raw_img, fft_filter_peaks)
@@ -579,7 +579,6 @@ class SpecsAnalyzer:
         if apply:
             cropit("")
 
-
     def fft_tool(
         self,
         raw_image: np.ndarray,
@@ -594,83 +593,68 @@ class SpecsAnalyzer:
         matplotlib.use("module://ipympl.backend_nbagg")
         try:
             fft_tool_params = (
-                kwds["fft_tool_params"] if "fft_tool_params" in kwds
+                kwds["fft_tool_params"]
+                if "fft_tool_params" in kwds
                 else self._correction_matrix_dict["fft_tool_params"]
             )
             (amp, pos_x, pos_y, sig_x, sig_y) = (
-                fft_tool_params['amplitude'],
-                fft_tool_params['pos_x'],
-                fft_tool_params['pos_y'],
-                fft_tool_params['sigma_x'],
-                fft_tool_params['sigma_y'],
+                fft_tool_params["amplitude"],
+                fft_tool_params["pos_x"],
+                fft_tool_params["pos_y"],
+                fft_tool_params["sigma_x"],
+                fft_tool_params["sigma_y"],
             )
         except KeyError:
             (amp, pos_x, pos_y, sig_x, sig_y) = (0.95, 86, 116, 13, 22)
 
         fft_filter_peaks = create_fft_params_dict(amp, pos_x, pos_y, sig_x, sig_y)
         try:
-            img = fourier_filter_2d(
-                raw_image,
-                peaks=fft_filter_peaks,
-                ret="fft"
-            )
-            fft_filtered = fourier_filter_2d(
-                raw_image,
-                peaks=fft_filter_peaks,
-                ret="filtered_fft"
-                )
+            img = fourier_filter_2d(raw_image, peaks=fft_filter_peaks, ret="fft")
+            fft_filtered = fourier_filter_2d(raw_image, peaks=fft_filter_peaks, ret="filtered_fft")
 
-            mask = fourier_filter_2d(
-                raw_image,
-                peaks=fft_filter_peaks,
-                ret="mask"
-                )
+            mask = fourier_filter_2d(raw_image, peaks=fft_filter_peaks, ret="mask")
 
-            filtered = fourier_filter_2d(
-                raw_image,
-                peaks=fft_filter_peaks,
-                ret="filtered"
-                )
+            filtered = fourier_filter_2d(raw_image, peaks=fft_filter_peaks, ret="filtered")
         except IndexError:
             print("Load the scan first!")
             raise
 
         fig = plt.figure()
-        ax = fig.add_subplot(3,2,1)
-        im_fft = ax.imshow(np.abs(img).T, origin='lower', aspect='auto')
+        ax = fig.add_subplot(3, 2, 1)
+        im_fft = ax.imshow(np.abs(img).T, origin="lower", aspect="auto")
         fig.colorbar(im_fft)
 
         ax.set_title("FFT")
         cont = ax.contour(mask.T)
 
         # Plot raw image
-        ax2 = fig.add_subplot(3,2,2)
-        fft_filt = ax2.imshow(np.abs(fft_filtered).T, origin='lower', aspect='auto')
+        ax2 = fig.add_subplot(3, 2, 2)
+        fft_filt = ax2.imshow(np.abs(fft_filtered).T, origin="lower", aspect="auto")
         ax2.set_title("Filtered FFT")
         fig.colorbar(fft_filt)
 
         # Plot fft filtered image
-        ax3 = fig.add_subplot(2,2,3)
-        filt = ax3.imshow(filtered.T, origin='lower', aspect='auto')
+        ax3 = fig.add_subplot(2, 2, 3)
+        filt = ax3.imshow(filtered.T, origin="lower", aspect="auto")
         ax3.set_title("Filtered Image")
         fig.colorbar(filt)
 
-        ax4 = fig.add_subplot(3,2,4)
-        edc, = ax4.plot(np.sum(filtered, 0), label='EDC')
+        ax4 = fig.add_subplot(3, 2, 4)
+        (edc,) = ax4.plot(np.sum(filtered, 0), label="EDC")
         ax4.legend()
 
-        ax5 = fig.add_subplot(3,2,6)
-        mdc, = ax5.plot(np.sum(filtered, 1), label='MDC')
+        ax5 = fig.add_subplot(3, 2, 6)
+        (mdc,) = ax5.plot(np.sum(filtered, 1), label="MDC")
         ax5.legend()
         # plt.tight_layout()
 
         posx_slider = ipw.FloatSlider(
-                    description="pos_x",
-                    value=pos_x,
-                    min=0,
-                    max=128,
-                    step=1,
-                )
+            description="pos_x",
+            value=pos_x,
+            min=0,
+            max=128,
+            step=1,
+        )
         posy_slider = ipw.FloatSlider(
             description="pos_y",
             value=pos_y,
@@ -707,23 +691,15 @@ class SpecsAnalyzer:
             max=int(np.log10(np.abs(img).max())) + 1,
         )
 
-        def update(v_vals, posx, posy, sigx, sigy, amp):
-            fft_filter_peaks = create_fft_params_dict(amp, posx, posy, sigx, sigy)
-            msk = fourier_filter_2d(
-                raw_image,
-                peaks=fft_filter_peaks,
-                ret='mask'
-            )
-            filtered_new = fourier_filter_2d(
-                raw_image,
-                peaks=fft_filter_peaks,
-                ret='filtered'
-            )
+        def update(v_vals, pos_x, pos_y, sig_x, sig_y, amp):
+            fft_filter_peaks = create_fft_params_dict(amp, pos_x, pos_y, sig_x, sig_y)
+            msk = fourier_filter_2d(raw_image, peaks=fft_filter_peaks, ret="mask")
+            filtered_new = fourier_filter_2d(raw_image, peaks=fft_filter_peaks, ret="filtered")
 
             fft_filtered_new = fourier_filter_2d(
                 raw_image,
                 peaks=fft_filter_peaks,
-                ret='filtered_fft'
+                ret="filtered_fft",
             )
 
             im_fft.set_clim(vmax=v_vals)
@@ -745,25 +721,33 @@ class SpecsAnalyzer:
         ipw.interact(
             update,
             amp=amp_slider,
-            posx=posx_slider,
-            posy=posy_slider,
-            sigx=sigx_slider,
-            sigy=sigy_slider,
+            pos_x=posx_slider,
+            pos_y=posy_slider,
+            sig_x=sigx_slider,
+            sig_y=sigy_slider,
             v_vals=clim_slider,
         )
+
         def apply_fft(apply: bool):  # pylint: disable=unused-argument
             amp = amp_slider.value
             pos_x = posx_slider.value
             pos_y = posy_slider.value
             sig_x = sigx_slider.value
             sig_y = sigy_slider.value
-            self._correction_matrix_dict['fft_tool_params'] = {
+            self._correction_matrix_dict["fft_tool_params"] = {
                 "amplitude": amp,
                 "pos_x": pos_x,
                 "pos_y": pos_y,
                 "sigma_x": sig_x,
                 "sigma_y": sig_y,
             }
+            self.config["fft_filter_peaks"] = create_fft_params_dict(
+                amp,
+                pos_x,
+                pos_y,
+                sig_x,
+                sig_y,
+            )
             amp_slider.close()
             posx_slider.close()
             posy_slider.close()
@@ -794,36 +778,11 @@ def create_fft_params_dict(amp, posx, posy, sigx, sigy):
     """
 
     fft_filter_peaks = [
-        {'amplitude': amp,
-        'pos_x': 1*posx,
-        'pos_y': 0,
-        'sigma_x': sigx,
-        'sigma_y': sigy},
-        {'amplitude': amp,
-        'pos_x': 2*posx,
-        'pos_y': 0,
-        'sigma_x': sigx,
-        'sigma_y': sigy},
-        {'amplitude': amp,
-        'pos_x': 0,
-        'pos_y': posy,
-        'sigma_x': sigx,
-        'sigma_y': sigy},
-        {'amplitude': amp,
-        'pos_x': 1*posx,
-        'pos_y': posy,
-        'sigma_x': sigx,
-        'sigma_y': sigy},
-        {'amplitude': amp,
-        'pos_x': 2*posx,
-        'pos_y': posy,
-        'sigma_x': sigx,
-        'sigma_y': sigy},
-        {'amplitude': amp,
-        'pos_x': 3*posx,
-        'pos_y': posy,
-        'sigma_x': sigx,
-        'sigma_y': sigy},
+        {"amplitude": amp, "pos_x": -posx, "pos_y": 0, "sigma_x": sigx, "sigma_y": sigy},
+        {"amplitude": amp, "pos_x": posx, "pos_y": 0, "sigma_x": sigx, "sigma_y": sigy},
+        {"amplitude": amp, "pos_x": 0, "pos_y": posy, "sigma_x": sigx, "sigma_y": sigy},
+        {"amplitude": amp, "pos_x": -posx, "pos_y": posy, "sigma_x": sigx, "sigma_y": sigy},
+        {"amplitude": amp, "pos_x": posx, "pos_y": posy, "sigma_x": sigx, "sigma_y": sigy},
     ]
 
     return fft_filter_peaks
