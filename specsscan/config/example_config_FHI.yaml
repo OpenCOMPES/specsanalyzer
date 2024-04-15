@@ -86,12 +86,12 @@ spa_params:
   #   sigma_x/sigma_y: the peak width (standard deviation) along each direction
   fft_filter_peaks:
     - amplitude: 1
-      pos_x: 79
+      pos_x: 208
       pos_y: 0
       sigma_x: 8
       sigma_y: 8
     - amplitude: 1
-      pos_x: 176
+      pos_x: 48
       pos_y: 0
       sigma_x: 8
       sigma_y: 8
@@ -101,17 +101,12 @@ spa_params:
       sigma_x: 5
       sigma_y: 8
     - amplitude: 1
-      pos_x: 78
+      pos_x: 208
       pos_y: 109
       sigma_x: 5
       sigma_y: 5
     - amplitude: 1
-      pos_x: 175
+      pos_x: 48
       pos_y: 108
       sigma_x: 5
       sigma_y: 5
-    - amplitude: 1
-      pos_x: 254
-      pos_y: 109
-      sigma_x: 5
-      sigma_y: 8
