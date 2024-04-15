@@ -61,6 +61,8 @@ def fourier_filter_2d(
 
     # Do Fourier Transform of the (real-valued) image
     image_fft = np.fft.rfft2(image)
+    # shift fft axis to have 0 in the center
+    image_fft = np.fft.fftshift(image_fft, axes=0)
     mask = np.ones(image_fft.shape)
     xgrid, ygrid = np.meshgrid(
         range(image_fft.shape[0]),
@@ -85,7 +87,7 @@ def fourier_filter_2d(
             ) from exc
 
     # apply mask to the FFT, and transform back
-    filtered = np.fft.irfft2(image_fft * mask)
+    filtered = np.fft.irfft2(np.fft.ifftshift(image_fft * mask, axes=0))
     # strip negative values
     filtered = filtered.clip(min=0)
     if ret == "filtered":
