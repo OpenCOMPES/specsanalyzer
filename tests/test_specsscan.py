@@ -65,16 +65,19 @@ def test_conversion_3d():
         path=test_dir,
         iterations=[0],
     )
-    assert abs(res_xarray.values.sum(axis=(0, 1, 2)) - res_xarray2.values.sum(axis=(0, 1, 2))) > 1
+    np.testing.assert_raises(
+        AssertionError,
+        np.testing.assert_allclose,
+        res_xarray.values,
+        res_xarray2.values,
+    )
 
     res_xarray2 = sps.load_scan(
         scan=4450,
         path=test_dir,
         iterations=np.s_[0:2],
     )
-    assert (
-        abs(res_xarray.values.sum(axis=(0, 1, 2)) - res_xarray2.values.sum(axis=(0, 1, 2))) < 1e-4
-    )
+    np.testing.assert_allclose(res_xarray, res_xarray2)
 
     with pytest.raises(IndexError):
         sps.load_scan(
