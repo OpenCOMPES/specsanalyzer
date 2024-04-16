@@ -65,14 +65,16 @@ def test_conversion_3d():
         path=test_dir,
         iterations=[0],
     )
-    assert res_xarray.sum(axis=(0, 1, 2)) != res_xarray2.sum(axis=(0, 1, 2))
+    assert abs(res_xarray.values.sum(axis=(0, 1, 2)) - res_xarray2.values.sum(axis=(0, 1, 2))) > 1
 
     res_xarray2 = sps.load_scan(
         scan=4450,
         path=test_dir,
         iterations=np.s_[0:2],
     )
-    assert res_xarray.sum(axis=(0, 1, 2)) == res_xarray2.sum(axis=(0, 1, 2))
+    assert (
+        abs(res_xarray.values.sum(axis=(0, 1, 2)) - res_xarray2.values.sum(axis=(0, 1, 2))) < 1e-4
+    )
 
     with pytest.raises(IndexError):
         sps.load_scan(
