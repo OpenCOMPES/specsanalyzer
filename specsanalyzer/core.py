@@ -135,28 +135,15 @@ class SpecsAnalyzer:
 
         if conversion_parameters["apply_fft_filter"]:
             try:
-                fft_filter_params: dict = self._correction_matrix_dict["fft_tool_params"]
-                (amp, pos_x, pos_y, sig_x, sig_y) = (
-                    fft_filter_params["amplitude"],
-                    fft_filter_params["pos_x"],
-                    fft_filter_params["pos_y"],
-                    fft_filter_params["sigma_x"],
-                    fft_filter_params["sigma_y"],
-                )
-                fft_filter_peaks = create_fft_params_dict(amp, pos_x, pos_y, sig_x, sig_y)
-                img = fourier_filter_2d(raw_img, fft_filter_peaks)
-                conversion_parameters["fft_filter_peaks"] = fft_filter_peaks
+                if "fft_filter_peaks" not in conversion_parameters.keys():
+                    conversion_parameters["fft_filter_peaks"] = kwds.pop(
+                        "fft_filter_peaks",
+                        self._config["fft_filter_peaks"],
+                    )
+                img = fourier_filter_2d(raw_img, conversion_parameters["fft_filter_peaks"])
             except KeyError:
-                try:
-                    if "fft_filter_peaks" not in conversion_parameters.keys():
-                        conversion_parameters["fft_filter_peaks"] = kwds.pop(
-                            "fft_filter_peaks",
-                            self._config["fft_filter_peaks"],
-                        )
-                    img = fourier_filter_2d(raw_img, conversion_parameters["fft_filter_peaks"])
-                except KeyError:
-                    img = raw_img
-                    conversion_parameters["apply_fft_filter"] = False
+                img = raw_img
+                conversion_parameters["apply_fft_filter"] = False
         else:
             img = raw_img
 
