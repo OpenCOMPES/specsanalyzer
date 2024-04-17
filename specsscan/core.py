@@ -272,7 +272,7 @@ class SpecsScan:
                 df_lut,
                 self._scan_info,
                 self.config,
-                fast_axes=list(fast_axes),
+                fast_axes=list(fast_axes),  # type: ignore
                 slow_axes=list(slow_axes),
                 projection=projection,
                 metadata=copy.deepcopy(metadata),
@@ -452,7 +452,7 @@ class SpecsScan:
                 df_lut,
                 self._scan_info,
                 self.config,
-                fast_axes=list(fast_axes),
+                fast_axes=list(fast_axes),  # type: ignore
                 slow_axes=list(slow_axes),
                 projection=projection,
                 metadata=metadata,
