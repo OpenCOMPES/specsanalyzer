@@ -224,6 +224,9 @@ class SpecsScan:
             else:
                 res_xarray = res_xarray.transpose("Angle", "Ekin", dim)
 
+        slow_axes = {dim} if dim else set()
+        fast_axes = set(res_xarray.dims) - slow_axes
+        projection = "reciprocal" if "Angle" in fast_axes else "real"
         conversion_metadata = res_xarray.attrs.pop("conversion_parameters")
 
         # rename coords and store mapping information, if available
@@ -238,6 +241,13 @@ class SpecsScan:
             if k in res_xarray.dims
         }
         res_xarray = res_xarray.rename(rename_dict)
+        for k, v in coordinate_mapping.items():
+            if k in fast_axes:
+                fast_axes.remove(k)
+                fast_axes.add(v)
+            if k in slow_axes:
+                slow_axes.remove(k)
+                slow_axes.add(v)
         self._scan_info["coordinate_depends"] = depends_dict
 
         axis_dict = {
@@ -262,8 +272,9 @@ class SpecsScan:
                 df_lut,
                 self._scan_info,
                 self.config,
-                fast_axis="Angle" if "Angle" in res_xarray.dims else "Position",
-                slow_axis=dim,
+                fast_axes=list(fast_axes),
+                slow_axes=list(slow_axes),
+                projection=projection,
                 metadata=copy.deepcopy(metadata),
                 collect_metadata=collect_metadata,
             ),
@@ -432,13 +443,18 @@ class SpecsScan:
             except KeyError:
                 pass
 
+        slow_axes = {"Iteration"}
+        fast_axes = set(res_xarray.dims) - slow_axes
+        projection = "reciprocal" if "Angle" in fast_axes else "real"
+
         self.metadata.update(
             **handle_meta(
                 df_lut,
                 self._scan_info,
                 self.config,
-                fast_axis="Angle" if "Angle" in res_xarray.dims else "Position",
-                slow_axis=dims[1],
+                fast_axes=list(fast_axes),
+                slow_axes=list(slow_axes),
+                projection=projection,
                 metadata=metadata,
                 collect_metadata=collect_metadata,
             ),
