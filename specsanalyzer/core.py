@@ -382,6 +382,8 @@ class SpecsAnalyzer:
                 - ek_range_max
                 - ang_range_min
                 - ang_range_max
+
+                Other parameters are passed to ``convert_image()``.
         """
         data_array = self.convert_image(
             raw_img=raw_img,
@@ -390,6 +392,7 @@ class SpecsAnalyzer:
             pass_energy=pass_energy,
             work_function=work_function,
             crop=False,
+            **kwds,
         )
 
         matplotlib.use("module://ipympl.backend_nbagg")
