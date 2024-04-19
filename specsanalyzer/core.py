@@ -572,12 +572,21 @@ class SpecsAnalyzer:
         apply: bool = False,
         **kwds,
     ):
-        """FFT tool to play around with the peak parameters in the Fourier plane.
-        Built to filter out the meshgrid appearing in the raw data images. The
-        optimized parameters are stored in the class config dict under
-        fft_filter_peaks.
+        """FFT tool to play around with the peak parameters in the Fourier plane. Built to filter
+        out the meshgrid appearing in the raw data images. The optimized parameters are stored in
+        the class config dict under fft_filter_peaks.
+
         Args:
-            raw_image: A single 2-D data set.
+            raw_image (np.ndarray): The source image
+            apply (bool, optional): Option to directly apply the settings. Defaults to False.
+            **kwds: Keyword arguments:
+
+                - fft_tool_params (dict): Dictionary of parameters for fft_tool, containing keys
+                  `amplitude`: Normalized amplitude of subtraction
+                  `pos_x`: horzontal spatial frequency of th mesh
+                  `pos_y`: vertical spatial frequency of the mesh
+                  `sigma_x`: horizontal frequency width
+                  `sigma_y`: vertical frequency width
         """
         matplotlib.use("module://ipympl.backend_nbagg")
         try:
@@ -655,14 +664,14 @@ class SpecsAnalyzer:
             description="sig_x",
             value=sig_x,
             min=0,
-            max=200,
+            max=50,
             step=1,
         )
         sigy_slider = ipw.FloatSlider(
             description="sig_y",
             value=sig_y,
             min=0,
-            max=200,
+            max=50,
             step=1,
         )
         amp_slider = ipw.FloatSlider(
@@ -674,7 +683,7 @@ class SpecsAnalyzer:
         )
         clim_slider = ipw.FloatLogSlider(
             description="colorbar limits",
-            value=1e4,
+            value=int(np.abs(img).max() / 500),
             base=10,
             min=-1,
             max=int(np.log10(np.abs(img).max())) + 1,
