@@ -324,6 +324,22 @@ class SpecsScan:
         )
 
     def fft_tool(self, scan: int = None, path: Path | str = "", **kwds):
+        """FFT tool to play around with the peak parameters in the Fourier plane. Built to filter
+        out the meshgrid appearing in the raw data images. The optimized parameters are stored in
+        the class config dict under fft_filter_peaks.
+
+        Args:
+            scan (int, optional): Scan number to load. Defaults to the previously loaded scan.
+            path (Path | str): Path from where to load the data. Defaults to config value.
+            **kwds: Keyword arguments passed to ``SpecsAnalyzer.fft_tool()``:
+
+                - `apply`: Option to directly apply the settings.
+                - `amplitude`: Normalized amplitude of subtraction
+                - `pos_x`: horzontal spatial frequency of th mesh
+                - `pos_y`: vertical spatial frequency of the mesh
+                - `sigma_x`: horizontal frequency width
+                - `sigma_y`: vertical frequency width
+        """
         matplotlib.use("module://ipympl.backend_nbagg")
         if scan is not None:
             scan_path = get_scan_path(path, scan, self._config["data_path"])

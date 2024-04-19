@@ -12,7 +12,7 @@ from specsscan import SpecsScan
 
 package_dir = os.path.dirname(specsscan.__file__)
 test_dir = package_dir + "/../tests/data/"
-fft_filter_peaks = create_fft_params(amp=1, pos_x=82, pos_y=116, sig_x=15, sig_y=23)
+fft_filter_peaks = create_fft_params(amplitude=1, pos_x=82, pos_y=116, sigma_x=15, sigma_y=23)
 
 
 def test_version():
@@ -289,7 +289,11 @@ def test_fft_tool():
     np.testing.assert_almost_equal(res_xarray.data.sum(), 62197237155.50347, decimal=3)
 
     sps.fft_tool(
-        fft_tool_params={"amplitude": 1, "pos_x": 82, "pos_y": 116, "sigma_x": 15, "sigma_y": 23},
+        amplitude=1,
+        pos_x=82,
+        pos_y=116,
+        sigma_x=15,
+        sigma_y=23,
         apply=True,
     )
     assert sps.config["spa_params"]["fft_filter_peaks"] == fft_filter_peaks
