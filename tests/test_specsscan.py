@@ -275,9 +275,10 @@ def test_fft_tool():
     res_xarray = sps.load_scan(
         scan=3610,
         path=test_dir,
+        apply_fft_filter=False,
     )
 
-    np.testing.assert_almost_equal(res_xarray.data.sum(), 62232679364.331406, decimal=3)
+    np.testing.assert_almost_equal(res_xarray.data.sum(), 62145561928.15108, decimal=3)
 
     res_xarray = sps.load_scan(
         scan=3610,
@@ -291,6 +292,8 @@ def test_fft_tool():
         fft_tool_params={"amplitude": 1, "pos_x": 82, "pos_y": 116, "sigma_x": 15, "sigma_y": 23},
         apply=True,
     )
+    assert sps.config["spa_params"]["fft_filter_peaks"] == fft_filter_peaks
+    assert sps.spa.config["fft_filter_peaks"] == fft_filter_peaks
     res_xarray = sps.load_scan(scan=3610, path=test_dir, apply_fft_filter=True)
     np.testing.assert_almost_equal(res_xarray.data.sum(), 62197237155.50347, decimal=3)
 
