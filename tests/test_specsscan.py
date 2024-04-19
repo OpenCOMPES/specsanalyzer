@@ -8,10 +8,17 @@ import pytest
 import specsscan
 from specsscan import __version__
 from specsscan import SpecsScan
+from specsanalyzer.core import create_fft_params
 
 package_dir = os.path.dirname(specsscan.__file__)
 test_dir = package_dir + "/../tests/data/"
-
+fft_filter_peaks = create_fft_params(
+    amp=1,
+    pos_x=82,
+    pos_y=116,
+    sig_x=15,
+    sig_y=23
+)
 
 def test_version():
     """Test if the package has the correct version string."""
@@ -260,6 +267,47 @@ def test_crop_tool():
     # assert res_xarray.Angle[-1] == 11.8359375
     assert res_xarray.Ekin[0] == 19.160058139534886
     assert res_xarray.Ekin[-1] == 22.826511627906974
+
+
+def test_fft_tool():
+    """Test the fft tool"""
+
+    sps = SpecsScan(
+        config=test_dir + "config.yaml",
+        user_config={},
+        system_config={},
+    )
+    res_xarray = sps.load_scan(
+        scan=3610,
+        path=test_dir,
+    )
+
+    assert(res_xarray.data.sum() == 62232679364.331406)
+
+    res_xarray = sps.load_scan(
+        scan=3610,
+        path=test_dir,
+        fft_filter_peaks=fft_filter_peaks,
+        apply_fft_filter=True,
+    )
+    assert(res_xarray.data.sum() == 62197237155.50347)
+
+    sps.fft_tool(
+        fft_tool_params={
+            "amplitude": 1,
+            "pos_x": 82,
+            "pos_y": 116,
+            "sigma_x": 15,
+            "sigma_y": 23
+        },
+        apply=True
+    )
+    res_xarray = sps.load_scan(
+        scan=3610,
+        path=test_dir,
+        apply_fft_filter=True
+    )
+    assert(res_xarray.data.sum() == 62197237155.50347)
 
 
 def test_conversion_and_save_to_nexus():
