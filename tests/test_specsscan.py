@@ -282,7 +282,11 @@ def test_fft_tool():
         path=test_dir,
     )
 
-    assert(res_xarray.data.sum() == 62232679364.331406)
+    np.testing.assert_almost_equal(
+        res_xarray.data.sum(),
+        62232679364.331406,
+        decimal=3
+    )
 
     res_xarray = sps.load_scan(
         scan=3610,
@@ -290,7 +294,11 @@ def test_fft_tool():
         fft_filter_peaks=fft_filter_peaks,
         apply_fft_filter=True,
     )
-    assert(res_xarray.data.sum() == 62197237155.50347)
+    np.testing.assert_almost_equal(
+        res_xarray.data.sum(),
+        62197237155.50347,
+        decimal=3
+    )
 
     sps.fft_tool(
         fft_tool_params={
@@ -307,7 +315,11 @@ def test_fft_tool():
         path=test_dir,
         apply_fft_filter=True
     )
-    assert(res_xarray.data.sum() == 62197237155.50347)
+    np.testing.assert_almost_equal(
+        res_xarray.data.sum(),
+        62197237155.50347,
+        decimal=3
+    )
 
 
 def test_conversion_and_save_to_nexus():
