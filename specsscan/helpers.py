@@ -348,8 +348,9 @@ def handle_meta(
     df_lut: pd.DataFrame,
     scan_info: dict,
     config: dict,
-    fast_axis: str,
-    slow_axis: str,
+    fast_axes: list[str],
+    slow_axes: list[str],
+    projection: str,
     metadata: dict = None,
     collect_metadata: bool = False,
 ) -> dict:
@@ -360,8 +361,8 @@ def handle_meta(
             from ``parse_lut_to_df()``
         scan_info (dict): scan_info class dict containing containing the contents of info.txt file
         config (dict): config dictionary containing the contents of config.yaml file
-        fast_axis (str): The fast-axis dimension of the scan
-        slow_axis (str): The slow-axis dimension of the scan
+        fast_axes (list[str]): The fast-axis dimensions of the scan
+        slow_axes (list[str]): The slow-axis dimensions of the scan
         metadata (dict, optional): Metadata dictionary with additional metadata for the scan.
             Defaults to empty dictionary.
         collect_metadata (bool, optional): Option to collect further metadata e.g. from EPICS
@@ -470,14 +471,13 @@ def handle_meta(
 
     metadata["scan_info"]["energy_scan_mode"] = energy_scan_mode
 
-    projection = "reciprocal" if fast_axis in {"Anlge", "angular0", "angular1"} else "real"
     metadata["scan_info"]["projection"] = projection
     metadata["scan_info"]["scheme"] = (
         "angular dispersive" if projection == "reciprocal" else "spatial dispersive"
     )
 
-    metadata["scan_info"]["slow_axes"] = slow_axis
-    metadata["scan_info"]["fast_axes"] = ["Ekin", fast_axis]
+    metadata["scan_info"]["slow_axes"] = slow_axes
+    metadata["scan_info"]["fast_axes"] = fast_axes
 
     print("Done!")
 

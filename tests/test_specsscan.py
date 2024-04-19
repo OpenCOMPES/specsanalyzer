@@ -6,11 +6,13 @@ import numpy as np
 import pytest
 
 import specsscan
+from specsanalyzer.core import create_fft_params
 from specsscan import __version__
 from specsscan import SpecsScan
 
 package_dir = os.path.dirname(specsscan.__file__)
 test_dir = package_dir + "/../tests/data/"
+fft_filter_peaks = create_fft_params(amp=1, pos_x=82, pos_y=116, sig_x=15, sig_y=23)
 
 
 def test_version():
@@ -65,14 +67,19 @@ def test_conversion_3d():
         path=test_dir,
         iterations=[0],
     )
-    assert res_xarray.sum(axis=(0, 1, 2)) != res_xarray2.sum(axis=(0, 1, 2))
+    np.testing.assert_raises(
+        AssertionError,
+        np.testing.assert_allclose,
+        res_xarray.values,
+        res_xarray2.values,
+    )
 
     res_xarray2 = sps.load_scan(
         scan=4450,
         path=test_dir,
         iterations=np.s_[0:2],
     )
-    assert res_xarray.sum(axis=(0, 1, 2)) == res_xarray2.sum(axis=(0, 1, 2))
+    np.testing.assert_allclose(res_xarray, res_xarray2)
 
     with pytest.raises(IndexError):
         sps.load_scan(
@@ -255,6 +262,40 @@ def test_crop_tool():
     # assert res_xarray.Angle[-1] == 11.8359375
     assert res_xarray.Ekin[0] == 19.160058139534886
     assert res_xarray.Ekin[-1] == 22.826511627906974
+
+
+def test_fft_tool():
+    """Test the fft tool"""
+
+    sps = SpecsScan(
+        config=test_dir + "config.yaml",
+        user_config={},
+        system_config={},
+    )
+    res_xarray = sps.load_scan(
+        scan=3610,
+        path=test_dir,
+        apply_fft_filter=False,
+    )
+
+    np.testing.assert_almost_equal(res_xarray.data.sum(), 62145561928.15108, decimal=3)
+
+    res_xarray = sps.load_scan(
+        scan=3610,
+        path=test_dir,
+        fft_filter_peaks=fft_filter_peaks,
+        apply_fft_filter=True,
+    )
+    np.testing.assert_almost_equal(res_xarray.data.sum(), 62197237155.50347, decimal=3)
+
+    sps.fft_tool(
+        fft_tool_params={"amplitude": 1, "pos_x": 82, "pos_y": 116, "sigma_x": 15, "sigma_y": 23},
+        apply=True,
+    )
+    assert sps.config["spa_params"]["fft_filter_peaks"] == fft_filter_peaks
+    assert sps.spa.config["fft_filter_peaks"] == fft_filter_peaks
+    res_xarray = sps.load_scan(scan=3610, path=test_dir, apply_fft_filter=True)
+    np.testing.assert_almost_equal(res_xarray.data.sum(), 62197237155.50347, decimal=3)
 
 
 def test_conversion_and_save_to_nexus():
