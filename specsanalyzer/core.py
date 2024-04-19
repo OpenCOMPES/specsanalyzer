@@ -573,7 +573,9 @@ class SpecsAnalyzer:
         **kwds,
     ):
         """FFT tool to play around with the peak parameters in the Fourier plane.
-        Built to filter out the meshgrid appearing in the raw data images.
+        Built to filter out the meshgrid appearing in the raw data images. The
+        optimized parameters are stored in the class config dict under
+        fft_filter_peaks.
         Args:
             raw_image: A single 2-D data set.
         """
@@ -594,7 +596,7 @@ class SpecsAnalyzer:
         except KeyError:
             (amp, pos_x, pos_y, sig_x, sig_y) = (0.95, 86, 116, 13, 22)
 
-        fft_filter_peaks = create_fft_params_dict(amp, pos_x, pos_y, sig_x, sig_y)
+        fft_filter_peaks = create_fft_params(amp, pos_x, pos_y, sig_x, sig_y)
         try:
             img = fourier_filter_2d(raw_image, peaks=fft_filter_peaks, ret="fft")
             fft_filtered = fourier_filter_2d(raw_image, peaks=fft_filter_peaks, ret="filtered_fft")
@@ -679,7 +681,7 @@ class SpecsAnalyzer:
         )
 
         def update(v_vals, pos_x, pos_y, sig_x, sig_y, amp):
-            fft_filter_peaks = create_fft_params_dict(amp, pos_x, pos_y, sig_x, sig_y)
+            fft_filter_peaks = create_fft_params(amp, pos_x, pos_y, sig_x, sig_y)
             msk = fourier_filter_2d(raw_image, peaks=fft_filter_peaks, ret="mask")
             filtered_new = fourier_filter_2d(raw_image, peaks=fft_filter_peaks, ret="filtered")
 
@@ -728,7 +730,7 @@ class SpecsAnalyzer:
                 "sigma_x": sig_x,
                 "sigma_y": sig_y,
             }
-            self.config["fft_filter_peaks"] = create_fft_params_dict(
+            self.config["fft_filter_peaks"] = create_fft_params(
                 amp,
                 pos_x,
                 pos_y,
@@ -751,25 +753,25 @@ class SpecsAnalyzer:
             apply_fft(True)
 
 
-def create_fft_params_dict(amp, posx, posy, sigx, sigy):
-    """Function to create fft filter peaks dict using the
+def create_fft_params(amp, pos_x, pos_y, sig_x, sig_y) -> list[dict]:
+    """Function to create fft filter peaks list using the
     provided Gaussian peak parameters. The peaks are defined
     relative to each other such that they are periodically
     aranged in a 256 x 150 Fourier space.
     Args:
         amp: Gaussian peak amplitude
-        posx: x-position
-        posy: y-position
-        sigx: FWHM in x-axis
-        sigy: FWHM in y-axis
+        pos_x: x-position
+        pos_y: y-position
+        sig_x: FWHM in x-axis
+        sig_y: FWHM in y-axis
     """
 
     fft_filter_peaks = [
-        {"amplitude": amp, "pos_x": -posx, "pos_y": 0, "sigma_x": sigx, "sigma_y": sigy},
-        {"amplitude": amp, "pos_x": posx, "pos_y": 0, "sigma_x": sigx, "sigma_y": sigy},
-        {"amplitude": amp, "pos_x": 0, "pos_y": posy, "sigma_x": sigx, "sigma_y": sigy},
-        {"amplitude": amp, "pos_x": -posx, "pos_y": posy, "sigma_x": sigx, "sigma_y": sigy},
-        {"amplitude": amp, "pos_x": posx, "pos_y": posy, "sigma_x": sigx, "sigma_y": sigy},
+        {"amplitude": amp, "pos_x": -pos_x, "pos_y": 0, "sigma_x": sig_x, "sigma_y": sig_y},
+        {"amplitude": amp, "pos_x": pos_x, "pos_y": 0, "sigma_x": sig_x, "sigma_y": sig_y},
+        {"amplitude": amp, "pos_x": 0, "pos_y": pos_y, "sigma_x": sig_x, "sigma_y": sig_y},
+        {"amplitude": amp, "pos_x": -pos_x, "pos_y": pos_y, "sigma_x": sig_x, "sigma_y": sig_y},
+        {"amplitude": amp, "pos_x": pos_x, "pos_y": pos_y, "sigma_x": sig_x, "sigma_y": sig_y},
     ]
 
     return fft_filter_peaks
