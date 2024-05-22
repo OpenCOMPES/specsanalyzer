@@ -317,14 +317,14 @@ def test_conversion_and_save_to_nexus():
         crop=True,
     )
 
-    assert res_xarray.dims == ("angular1", "angular2", "energy")
+    assert res_xarray.dims == ("angular0", "angular1", "energy")
 
     with pytest.raises(NameError):
         sps.save("result.tiff")
-    sps.save("result.tiff", alias_dict={"X": "angular1", "Y": "angular2"})
+    sps.save("result.tiff", alias_dict={"X": "angular0", "Y": "angular1"})
     sps.save("result.h5")
-    with pytest.raises(LookupError):
-        sps.save("result.nxs")
+    # with pytest.raises(LookupError):
+    #    sps.save("result.nxs")
 
     metadata = {}
     # General

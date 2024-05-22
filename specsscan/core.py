@@ -158,7 +158,7 @@ class SpecsScan:
 
         loader_dict = {
             "iterations": iterations,
-            "scan_path": scan_path,
+            "scan_path": str(scan_path),
             "raw_data": data,
         }
 
@@ -404,7 +404,7 @@ class SpecsScan:
 
         loader_dict = {
             "delays": delays,
-            "scan_path": scan_path,
+            "scan_path": str(scan_path),
             "raw_data": data,
             "check_scan": True,
         }
