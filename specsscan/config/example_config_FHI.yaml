@@ -6,13 +6,13 @@ enable_nested_progress_bar: false
 # dictionary containing renaming rules for axis names (to change the name in the xarrays)
 coordinate_mapping:
   Ekin: "energy"
-  Angle: "angular1"
-  polar: "angular2"
-  tilt: "angular2"
-  azimuth: "angular2"
-  X: "spatial1"
-  Y: "spatial1"
-  Z: "spatial1"
+  Angle: "angular0"
+  polar: "angular1"
+  tilt: "angular1"
+  azimuth: "angular1"
+  X: "spatial0"
+  Y: "spatial0"
+  Z: "spatial0"
 
 # dictionary of corresponding NeXus paths for the different axes
 coordinate_depends:
@@ -27,15 +27,13 @@ coordinate_depends:
 
 # dictionary containing units for the respective axes
 units:
+  angular0: "degree"
   angular1: "degree"
-  angular2: "degree"
   energy: "eV"
   delay: "fs"
   mirrorX: "steps"
   mirrorY: "steps"
-  X: "mm"
-  Y: "mm"
-  Z: "mm"
+  spatial0: "mm"
   voltage: "V"
 
 # URL of the epics archiver request engine

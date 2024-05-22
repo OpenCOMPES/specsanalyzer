@@ -379,7 +379,7 @@ def handle_meta(
     print("Gathering metadata from different locations")
     # get metadata from LUT dataframe
     lut_meta = {}
-    energy_scan_mode = "fixed"
+    energy_scan_mode = "snapshot"
     if df_lut is not None:
         for col in df_lut.columns:
             col_array = df_lut[f"{col}"].to_numpy()
@@ -390,7 +390,7 @@ def handle_meta(
 
         kinetic_energy = df_lut["KineticEnergy"].to_numpy()
         if len(set(kinetic_energy)) > 1 and scan_info["ScanType"] == "voltage":
-            energy_scan_mode = "sweep"
+            energy_scan_mode = "fixed_analyser_transmission"
 
     metadata["scan_info"] = complete_dictionary(
         metadata.get("scan_info", {}),

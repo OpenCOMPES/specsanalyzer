@@ -90,7 +90,7 @@
 
 
     "depends_on": "/entry/instrument/electronanalyser/transformations/trans_z",
-    "transformations": {
+    "TRANSFORMATIONS[transformations]": {
       "AXISNAME[trans_z]/@depends_on": "analyzer_elevation",
       "AXISNAME[trans_z]": 40.0,
       "AXISNAME[trans_z]/@transformation_type": "translation",
@@ -116,7 +116,6 @@
       "AXISNAME[rot_y]/@transformation_type": "rotation",
       "AXISNAME[rot_y]/@units": "degrees",
       "AXISNAME[rot_y]/@vector": [0, 1, 0]
-
     }
   },
   "/ENTRY[entry]/INSTRUMENT[instrument]/ELECTRONANALYSER[electronanalyser]/COLLECTIONCOLUMN[collectioncolumn]": {
@@ -130,8 +129,8 @@
     "energy_scan_mode": "@attrs:metadata/scan_info/energy_scan_mode",
     "pass_energy": "@attrs:metadata/scan_info/PassEnergy",
     "pass_energy/@units": "eV",
-    "kinetic_energy": "@attrs:metadata/scan_info/KineticEnergy",
-    "kinetic_energy/@units": "eV",
+    "center_energy": "@attrs:metadata/scan_info/KineticEnergy",
+    "center_energy/@units": "eV",
     "scheme": "hemispherical",
     "diameter": 300.0,
     "diameter/@units": "mm",
@@ -158,7 +157,7 @@
     "detector_voltage": "@attrs:metadata/scan_info/ScreenVoltage",
     "detector_voltage/@units": "V"
   },
-  "/ENTRY[entry]/INSTRUMENT[instrument]/source_TYPE[source_probe]": {
+  "/ENTRY[entry]/INSTRUMENT[instrument]/sourceTYPE[source_probe]": {
     "name": "HHG @ TR-ARPES @ FHI",
     "probe": "photon",
     "type": "HHG laser",
@@ -167,7 +166,7 @@
     "frequency/@units": "kHz",
     "associated_beam": "/entry/instrument/beam_probe"
   },
-  "/ENTRY[entry]/INSTRUMENT[instrument]/beam_TYPE[beam_probe]": {
+  "/ENTRY[entry]/INSTRUMENT[instrument]/beamTYPE[beam_probe]": {
     "distance": 0.0,
     "distance/@units": "mm",
     "incident_energy": "@attrs:metadata/instrument/beam/probe/incident_energy",
@@ -182,7 +181,7 @@
     "extent/@units": "µm",
     "associated_source": "/entry/instrument/source_probe"
   },
-  "/ENTRY[entry]/INSTRUMENT[instrument]/source_TYPE[source_pump]": {
+  "/ENTRY[entry]/INSTRUMENT[instrument]/sourceTYPE[source_pump]": {
     "name": "OPCPA @ TR-ARPES @ FHI",
     "probe": "visible light",
     "type": "Optical Laser",
@@ -191,7 +190,7 @@
     "frequency/@units": "kHz",
     "associated_beam": "/entry/instrument/beam_pump"
   },
-  "/ENTRY[entry]/INSTRUMENT[instrument]/beam_TYPE[beam_pump]": {
+  "/ENTRY[entry]/INSTRUMENT[instrument]/beamTYPE[beam_pump]": {
     "distance": 0.0,
     "distance/@units": "mm",
     "incident_energy": "@attrs:metadata/instrument/beam/pump/incident_energy",
@@ -254,7 +253,7 @@
   },
   "/ENTRY[entry]/SAMPLE[sample]": {
     "preparation_date": "@attrs:metadata/sample/preparation_date",
-    "sample_history/notes": "@attrs:metadata/sample/sample_history",
+    "history/notes/description": "@attrs:metadata/sample/sample_history",
     "description": "@attrs:metadata/sample/chemical_formula",
     "name": "@attrs:metadata/sample/name",
     "situation": "vacuum",
@@ -272,7 +271,7 @@
       "amperemeter": "@link:/entry/instrument/manipulator/drain_current_amperemeter"
     },
     "depends_on": "/entry/sample/transformations/offset_azimuth",
-    "transformations": {
+    "TRANSFORMATIONS[transformations]": {
       "offset_azimuth/@depends_on": "sample_azimuth",
       "offset_azimuth": 0,
       "offset_azimuth/@units": "degrees",
@@ -330,11 +329,11 @@
       "AXISNAME[trans_x]/@vector": [0, 1, 0]
     }
   },
-  "/ENTRY[entry]/PROCESS[process]/energy_calibration":{
+  "/ENTRY[entry]/PROCESS[process]/CALIBRATION[energy_calibration]":{
     "calibrated_axis": "@link:/entry/data/energy"
   },
-  "/ENTRY[entry]/PROCESS[process]/CALIBRATION[angular1_calibration]":{
-    "calibrated_axis": "@link:/entry/data/angular1"
+  "/ENTRY[entry]/PROCESS[process]/CALIBRATION[angular0_calibration]":{
+    "calibrated_axis": "@link:/entry/data/angular0"
   },
   "/ENTRY[entry]/data": {
     "@axes": "@data:dims",
