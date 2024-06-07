@@ -55,7 +55,7 @@ nexus:
   # the reader to use
   reader: "mpes"
   # the NeXus definition to use
-  definition: "NXmpes"
+  definition: "NXmpes_arpes"
   # additional input files, e.g. config and ELN files
   input_files: ["../specsscan/config/NXmpes_arpes_config.json"]
 
