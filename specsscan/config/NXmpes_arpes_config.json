@@ -1,7 +1,7 @@
 {
   "/@default": "entry",
   "/ENTRY[entry]/@default": "data",
-  "/ENTRY[entry]/definition": "NXmpes",
+  "/ENTRY[entry]/definition": "NXmpes_arpes",
   "/ENTRY[entry]/definition/@version": "None",
   "/ENTRY[entry]/title": "@attrs:metadata/entry_title",
   "/ENTRY[entry]/start_time": "@attrs:metadata/timing/acquisition_start",
@@ -135,7 +135,7 @@
     "diameter": 300.0,
     "diameter/@units": "mm",
     "entrance_slit": {
-      "shape": "curved",
+      "shape": "curved slit",
       "size": 1.0,
       "size/@units": "mm"
     },
@@ -337,13 +337,13 @@
   },
   "/ENTRY[entry]/data": {
     "@axes": "@data:dims",
-    "AXISNAME_indices[@*_indices]": "@data:*.index",
+    "@*_indices": "@data:*.index",
     "@signal": "data",
     "data": "@data:data",
     "data/@units": "counts",
-    "AXISNAME[*]": "@data:*.data",
-    "AXISNAME[*]/@units": "@data:*.unit",
-    "AXISNAME_depends[@*_depends]": "@attrs:metadata/scan_info/coordinate_depends/*",
+    "*": "@data:*.data",
+    "*/@units": "@data:*.unit",
+    "@*_depends": "@attrs:metadata/scan_info/coordinate_depends/*",
     "energy/@type": "kinetic"
   }
 }
