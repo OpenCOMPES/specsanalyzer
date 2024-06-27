@@ -90,7 +90,7 @@ def test_conversion_3d():
 
 
 def test_conversion_from_convert_dict():
-    """Test the conversion without calib2d file, using passen conversion dictionary parameters"""
+    """Test the conversion without calib2d file, using passed conversion dictionary parameters"""
     sps = SpecsScan(
         config={},
         user_config={},

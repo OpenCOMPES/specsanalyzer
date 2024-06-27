@@ -76,7 +76,7 @@ def recursive_write_metadata(h5group: h5py.Group, node: dict):
                 print(f"Saved {key} as string.")
             except BaseException as exc:
                 raise ValueError(
-                    f"Unknown error occured, cannot save {item} of type {type(item)}.",
+                    f"Unknown error occurred, cannot save {item} of type {type(item)}.",
                 ) from exc
 
 
@@ -165,7 +165,7 @@ def load_h5(faddr: str, mode: str = "r") -> xr.DataArray:
         mode (str, optional): hdf5 read/write mode. Defaults to "r"
 
     Returns:
-        xr.DataArray: output xarra data
+        xr.DataArray: output xarray data
     """
     with h5py.File(faddr, mode) as h5_file:
         # Reading data array
@@ -413,9 +413,9 @@ def to_nexus(
             data._attrs["metadata"].
         faddr (str): The file path to save to.
         reader (str): The name of the NeXus reader to use.
-        definition (str): The NeXus definiton to use.
+        definition (str): The NeXus definition to use.
         input_files (str | Sequence[str]): The file path to the configuration file to use.
-        **kwds: Keyword arguments for ``nexusutils.dataconverter.convert``.
+        **kwds: Keyword arguments for ``pynxtools.dataconverter.convert``.
     """
 
     if isinstance(input_files, str):

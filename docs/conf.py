@@ -50,8 +50,6 @@ extensions = [
     "sphinx.ext.autosummary",
     "sphinx.ext.coverage",
     "sphinx_autodoc_typehints",
-    # "bokeh.sphinxext.bokeh_autodoc",
-    # "bokeh.sphinxext.bokeh_plot",
     "nbsphinx",
     "myst_parser",
 ]

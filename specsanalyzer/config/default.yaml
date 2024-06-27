@@ -14,5 +14,5 @@ magnification: 4.54
 angle_offset_px: 0
 # offset in pixels along the energy dispersing axis
 energy_offset_px: 0
-# flag controlling the application of a Fourier filter to remove grid artefacts
+# flag controlling the application of a Fourier filter to remove grid artifacts
 apply_fft_filter: false
