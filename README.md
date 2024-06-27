@@ -12,7 +12,7 @@ This is the package `specsanalyzer` for conversion and handling of SPECS Phoibos
 
 This package contains two modules:
 `specsanalyzer` is a package to import and convert MCP analyzer images from SPECS Phoibos analyzers into energy and emission angle/physical coordinates.
-`specsscan` is a Python package for loading Specs Phoibos scans accquired with the labview software developed at FHI/EPFL
+`specsscan` is a Python package for loading Specs Phoibos scans acquired with the labview software developed at FHI/EPFL
 
 Tutorials for usage and the API documentation can be found in the [Documentation](https://opencompes.github.io/specsanalyzer/)
 
@@ -47,9 +47,9 @@ python -m ipykernel install --user --name=specs_kernel
 ```
 
 #### Configuration and calib2d file
-The conversion procedures require to set up several configuration parameters in a config file. An example config file is provided as part of the package (see documentation). Configuration files can either be passed to the class constructures, or are read from system-wide or user-defined locations (see documentation).
+The conversion procedures require to set up several configuration parameters in a config file. An example config file is provided as part of the package (see documentation). Configuration files can either be passed to the class constructors, or are read from system-wide or user-defined locations (see documentation).
 
-Most importantly, conversion of analyzer data to energy/angular coordinates requires detector calibration data provided by the manufacturer. The corresponding *.calib2d file (e.g. phoibos150.calbid2d) are provided together with the spectrometer software, and need to be set in the config file.
+Most importantly, conversion of analyzer data to energy/angular coordinates requires detector calibration data provided by the manufacturer. The corresponding *.calib2d file (e.g. phoibos150.calib2d) are provided together with the spectrometer software, and need to be set in the config file.
 
 ### For Contributors
 

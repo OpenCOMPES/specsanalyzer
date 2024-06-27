@@ -8,7 +8,7 @@ import specsanalyzer
 from specsanalyzer import SpecsAnalyzer
 from specsanalyzer.convert import calculate_matrix_correction
 from specsanalyzer.convert import calculate_polynomial_coef_da
-from specsanalyzer.convert import get_damatrix_fromcalib2d
+from specsanalyzer.convert import get_damatrix_from_calib2d
 
 package_dir = os.path.dirname(specsanalyzer.__file__)
 test_dir = package_dir + "/../tests/data/"
@@ -52,14 +52,14 @@ def test_da_matrix():  # pylint: disable=too-many-locals
 
     # get the matrix_correction
     e_shift = np.array(calib2d_dict["eShift"])
-    _, da_matrix, _, _, _ = get_damatrix_fromcalib2d(
+    _, da_matrix, _, _, _ = get_damatrix_from_calib2d(
         lens_mode,
         kinetic_energy,
         pass_energy,
         work_function,
         calib2d_dict,
     )
-    # get the polynomial coefficent matrix
+    # get the polynomial coefficient matrix
     da_poly_matrix = calculate_polynomial_coef_da(
         da_matrix,
         kinetic_energy,
@@ -86,7 +86,7 @@ def test_conversion_matrix():
     binning = 4
     nx_pixels = 344
     ny_pixels = 256
-    a_inner, da_matrix, retardation_ratio, source, dims = get_damatrix_fromcalib2d(
+    a_inner, da_matrix, retardation_ratio, source, dims = get_damatrix_from_calib2d(
         lens_mode=lens_mode,
         kinetic_energy=kinetic_energy,
         pass_energy=pass_energy,
@@ -345,7 +345,7 @@ def test_recycling():
 
 
 def test_cropping():
-    """Test function for checking that cropping parameters are correctly appield"""
+    """Test function for checking that cropping parameters are correctly applied"""
     # get the raw data
     raw_image_name = os.fspath(
         f"{test_dir}/dataEPFL/R9132/Data9132_RAWDATA.tsv",

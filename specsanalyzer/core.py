@@ -17,7 +17,7 @@ from specsanalyzer import io
 from specsanalyzer.config import complete_dictionary
 from specsanalyzer.config import parse_config
 from specsanalyzer.convert import calculate_matrix_correction
-from specsanalyzer.convert import get_damatrix_fromcalib2d
+from specsanalyzer.convert import get_damatrix_from_calib2d
 from specsanalyzer.convert import physical_unit_data
 from specsanalyzer.img_tools import crop_xarray
 from specsanalyzer.img_tools import fourier_filter_2d
@@ -100,11 +100,11 @@ class SpecsAnalyzer:
         conversion_parameters: dict = None,
         **kwds,
     ) -> xr.DataArray:
-        """Converts an imagin in physical unit data, angle vs energy
+        """Converts an image in physical unit data, angle vs energy
 
         Args:
             raw_img (np.ndarray): Raw image data, numpy 2d matrix
-            lens_mode (str): analzser lens mode, check calib2d for a list of modes CamelCase naming
+            lens_mode (str): analyzer lens mode, check calib2d for a list of modes CamelCase naming
                 convention e.g. "WideAngleMode"
             kinetic_energy (float): set analyser kinetic energy
             pass_energy (float): set analyser pass energy
@@ -113,7 +113,7 @@ class SpecsAnalyzer:
                 overwriting determination from calib2d file. Defaults to None.
 
         Returns:
-            xr.DataArray: xarray containg the corrected data and kinetic and angle axis
+            xr.DataArray: xarray containing the corrected data and kinetic and angle axis
         """
         if conversion_parameters is None:
             conversion_parameters = {}
@@ -163,7 +163,7 @@ class SpecsAnalyzer:
                 conversion_parameters["retardation_ratio"],
                 conversion_parameters["source"],
                 conversion_parameters["dims"],
-            ) = get_damatrix_fromcalib2d(
+            ) = get_damatrix_from_calib2d(
                 lens_mode=lens_mode,
                 kinetic_energy=kinetic_energy,
                 pass_energy=pass_energy,
@@ -369,7 +369,7 @@ class SpecsAnalyzer:
 
         Args:
             raw_img (np.ndarray): Raw image data, numpy 2d matrix
-            lens_mode (str): analzser lens mode, check calib2d for a list
+            lens_mode (str): analyzer lens mode, check calib2d for a list
                 of modes CamelCase naming convention e.g. "WideAngleMode"
             kinetic_energy (float): set analyser kinetic energy
             pass_energy (float): set analyser pass energy
@@ -585,7 +585,7 @@ class SpecsAnalyzer:
             **kwds: Keyword arguments:
 
                 - `amplitude`: Normalized amplitude of subtraction
-                - `pos_x`: horzontal spatial frequency of th mesh
+                - `pos_x`: horizontal spatial frequency of th mesh
                 - `pos_y`: vertical spatial frequency of the mesh
                 - `sigma_x`: horizontal frequency width
                 - `sigma_y`: vertical frequency width
