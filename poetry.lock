@@ -4216,7 +4216,7 @@ reference = "pypi-public"
 name = "setuptools"
 version = "70.3.0"
 description = "Easily download, build, install, upgrade, and uninstall Python packages"
-optional = false
+optional = true
 python-versions = ">=3.8"
 files = [
     {file = "setuptools-70.3.0-py3-none-any.whl", hash = "sha256:fe384da74336c398e0d956d1cae0669bc02eed936cdb1d49b57de1990dc11ffc"},
@@ -4987,4 +4987,4 @@ notebook = ["ipykernel", "jupyter", "jupyterlab-h5web"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8, <3.12"
-content-hash = "6533dbb2ce13fa6c8d45fc6517c2c799eb1d8fe9da413710be978d65440be087"
+content-hash = "4de9d8529f3da3a8d52ee4741f04643752ed5c91f1ee5a53aa08185115fd8299"
