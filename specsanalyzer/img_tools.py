@@ -40,7 +40,7 @@ def fourier_filter_2d(
     peaks: Sequence[dict],
     ret: str = "filtered",
 ) -> np.ndarray:
-    """Function to Fourier filter an image for removal of regular pattern artefacts,
+    """Function to Fourier filter an image for removal of regular pattern artifacts,
        e.g. grid lines.
 
     Args:

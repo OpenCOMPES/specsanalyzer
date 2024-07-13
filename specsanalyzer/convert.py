@@ -5,21 +5,21 @@ import numpy as np
 from scipy.ndimage import map_coordinates
 
 
-def get_damatrix_fromcalib2d(
+def get_damatrix_from_calib2d(
     lens_mode: str,
     kinetic_energy: float,
     pass_energy: float,
     work_function: float,
     calib2d_dict: dict,
 ) -> tuple[float, np.ndarray, float, str, list[str]]:
-    """This function estimates the best angular conversion coefficients for the current analyser
+    """This function estimates the best angular conversion coefficients for the current analyzer
     mode, starting from a dictionary containing the specs .calib2d database. A linear interpolation
-    is performed from the tabulated coefficients based on the retardatio ratio value.
+    is performed from the tabulated coefficients based on the retardation ratio value.
 
     Args:
         lens_mode (str): the lens mode string description
         kinetic_energy (float): kinetic energy of the photoelectron
-        pass_energy (float): analyser pass energy
+        pass_energy (float): analyzer pass energy
         work_function (float): work function settings
         calib2d_dict (dict): dictionary containing the configuration parameters for angular
             correction
@@ -104,7 +104,7 @@ def bisection(array: np.ndarray, value: float) -> int:
     Given an ``array`` , and given a ``value`` , returns an index j such that ``value`` is between
     array[j] and array[j+1]. ``array`` must be monotonic increasing. j=-1 or j=len(array) is
     returned to indicate that ``value`` is out of range below and above respectively.
-    This should mimick the function BinarySearch in igor pro 6
+    This should mimic the function BinarySearch in igor pro 6
 
     Args:
         array (np.ndarray): ordered array
@@ -148,7 +148,7 @@ def second_closest_rr(rrvec: np.ndarray, closest_rr_index: int) -> int:
         int: nearest rr index to calculate the best da coefficients
     """
     if closest_rr_index == (rrvec.size - 1):
-        # we are the edge: the behaviour is to not change the index
+        # we are the edge: the behavior is to not change the index
         second_closest_rr_index = closest_rr_index
     else:
         second_closest_rr_index = closest_rr_index + 1
@@ -160,7 +160,7 @@ def get_rr_da(
     lens_mode: str,
     calib2d_dict: dict,
 ) -> tuple[np.ndarray, np.ndarray]:
-    """Get the retardatio ratios and the da for a certain lens mode from the confugaration
+    """Get the retardation ratios and the da for a certain lens mode from the configuration
     dictionary
 
     Args:
@@ -173,7 +173,7 @@ def get_rr_da(
         ValueError: Raised if no da values are found for the given mode
 
     Returns:
-        tuple[np.ndarray, np.ndarray]: rr vector, matrix of da coeffients
+        tuple[np.ndarray, np.ndarray]: rr vector, matrix of da coefficients
         per row row0 : da1, row1: da3, .. up to da7.
         Non angle resolved lens modes do only posses da1.
     """
@@ -236,26 +236,26 @@ def calculate_polynomial_coef_da(
     pass_energy: float,
     e_shift: np.ndarray,
 ) -> np.ndarray:
-    """Given the da coeffiecients contained in the scanpareters, the program calculates the energy
+    """Given the da coefficients contained in the scan parameters, the program calculates the energy
     range based on the eshift parameter and fits a second order polynomial to the tabulated values.
     The polynomial coefficients are packed in the dapolymatrix array (row0 da1, row1 da3, ..)
-    The function returns a matrix of the fit coeffiecients, given the physical energy scale
+    The function returns a matrix of the fit coefficients, given the physical energy scale
     Each line of the matrix is a set of coefficients for each of the da[i] corrections
 
     Args:
         da_matrix (np.ndarray): the matrix of interpolated da coefficients
-        kinetic_energy (float): photoelectorn kinetic energy
-        pass_energy (float): analyser pass energy
+        kinetic_energy (float): photoelectron kinetic energy
+        pass_energy (float): analyzer pass energy
         e_shift (np.ndarray): e shift parameter, defining the energy
             range around the center for the polynomial fit of the da coefficients
 
     Returns:
-        np.ndarray: dapolymatrix containg the fit results (row0 da1, row1 da3, ..)
+        np.ndarray: dapolymatrix containing the fit results (row0 da1, row1 da3, ..)
     """
-    # calcualte the energy values for each da, given the eshift
+    # calculate the energy values for each da, given the eshift
     da_energy = e_shift * pass_energy + kinetic_energy * np.ones(e_shift.shape)
 
-    # create the polynomial coeffiecient matrix, each is a second order polynomial
+    # create the polynomial coefficient matrix, each is a second order polynomial
     da_poly_matrix = np.zeros(da_matrix.shape)
 
     for i in range(0, da_matrix.shape[0]):
@@ -279,12 +279,12 @@ def zinner(
     mcp withing the a_inner boundaries
 
     Args:
-        kinetic_energy (flonp.ndarrayat): kinetic energies
+        kinetic_energy (np.ndarray): kinetic energies
         angle (np.ndarray): angles
         da_poly_matrix (np.ndarray): matrix with polynomial coefficients
 
     Returns:
-        np.ndarray: returns the calcualted positions on the mcp, valid for low angles  (< ainner)
+        np.ndarray: returns the calculated positions on the mcp, valid for low angles  (< a_inner)
     """
     out = np.zeros(angle.shape, float)
 
@@ -303,7 +303,7 @@ def zinner_diff(
     da_poly_matrix: np.ndarray,
 ) -> np.ndarray:
     """Auxiliary function for mcp_position_mm, uses kinetic energy and angle starting from the
-    dapolymatrix, to get the zinner_diff coefficient to coorect the electron arrival position on
+    dapolymatrix, to get the zinner_diff coefficient to correct the electron arrival position on
     the mcp outside the a_inner boundaries
 
     Args:
@@ -313,7 +313,7 @@ def zinner_diff(
 
     Returns:
         np.ndarray: zinner_diff the correction for the zinner position on the MCP for high
-        (>ainner) angles.
+        (>a_inner) angles.
     """
 
     out = np.zeros(angle.shape, float)
@@ -349,7 +349,7 @@ def mcp_position_mm(
         np.ndarray: lateral position of photoelectron on the mcp (angular dispersing axis)
     """
 
-    # define two angular regions: within and outsied the a_inner boundaries
+    # define two angular regions: within and outside the a_inner boundaries
     mask = np.less_equal(np.abs(angle), a_inner)
 
     a_inner_vec = np.ones(angle.shape) * a_inner
@@ -386,8 +386,8 @@ def calculate_matrix_correction(
     """Calculate the angular and energy interpolation matrices for the correction function.
 
     Args:
-        kinetic_energy (float): analyser set kinetic energy
-        pass_energy (float): analyser set pass energy
+        kinetic_energy (float): analyzer set kinetic energy
+        pass_energy (float): analyzer set pass energy
         nx_pixels (int): number of image pixels (after binning) along the energy dispersing
             direction
         ny_pixels (int): number of image pixels (after binning) along the angle/spatially
@@ -513,7 +513,7 @@ def physical_unit_data(
     e_correction_matrix = np.ones(angular_correction_matrix.shape) * e_correction
 
     # flatten the x and y to a 2 x N coordinates array
-    # N = Nxpix x Nypixels
+    # N = Nxpixels x Nypixels
     coords = np.array([angular_correction_matrix.flatten(), e_correction_matrix.flatten()])
 
     # the image is expressed as intensity vs pixels,

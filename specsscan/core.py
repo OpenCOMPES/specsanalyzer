@@ -32,7 +32,7 @@ package_dir = os.path.dirname(find_spec("specsscan").origin)
 
 
 class SpecsScan:
-    """SpecsAnalyzer class for loading scans and data from SPECS phoibos electron analyzers,
+    """SpecsAnalyzer class for loading scans and data from SPECS Phoibos electron analyzers,
     generated with the ARPESControl software at Fritz Haber Institute, Berlin, and EPFL, Lausanne.
 
     Args:
@@ -288,7 +288,7 @@ class SpecsScan:
         return res_xarray
 
     def crop_tool(self, scan: int = None, path: Path | str = "", **kwds):
-        """Croping tool interface to crop_tool method of the SpecsAnalyzer class.
+        """Cropping tool interface to crop_tool method of the SpecsAnalyzer class.
 
         Args:
             scan (int, optional): Scan number to load data from. Defaults to None.
@@ -335,7 +335,7 @@ class SpecsScan:
 
                 - `apply`: Option to directly apply the settings.
                 - `amplitude`: Normalized amplitude of subtraction
-                - `pos_x`: horzontal spatial frequency of th mesh
+                - `pos_x`: horizontal spatial frequency of th mesh
                 - `pos_y`: vertical spatial frequency of the mesh
                 - `sigma_x`: horizontal frequency width
                 - `sigma_y`: vertical frequency width
@@ -501,7 +501,7 @@ class SpecsScan:
                 - "*.h5", "*.hdf5": Saves an HDF5 file.
                 - "*.nxs", "*.nexus": Saves a NeXus file.
 
-            **kwds: Keyword argumens, which are passed to the writer functions:
+            **kwds: Keyword arguments, which are passed to the writer functions:
                 For TIFF writing:
 
                 - **alias_dict**: Dictionary of dimension aliases to use.
@@ -512,9 +512,9 @@ class SpecsScan:
 
                 For NeXus:
 
-                - **reader**: Name of the nexustools reader to use.
+                - **reader**: Name of the pynxtools reader to use.
                   Defaults to config["nexus"]["reader"]
-                - **definiton**: NeXus application definition to use for saving.
+                - **definition**: NeXus application definition to use for saving.
                   Must be supported by the used ``reader``. Defaults to
                   config["nexus"]["definition"]
                 - **input_files**: A list of input files to pass to the reader.
@@ -584,10 +584,10 @@ class SpecsScan:
         Args:
             raw_data (list[np.ndarray]): List of raw data images
             kinetic_energy (np.ndarray): Array of analyzer set kinetic energy values
-            pass_energy (float): set analyser pass energy
-            lens_mode (str): analzser lens mode, check calib2d for a list of modes CamelCase naming
+            pass_energy (float): set analyzer pass energy
+            lens_mode (str): analyzer lens mode, check calib2d for a list of modes CamelCase naming
                 convention e.g. "WideAngleMode"
-            work_function (float): set analyser work function
+            work_function (float): set analyzer work function
 
         Returns:
             xr.DataArray: Converted sweep scan

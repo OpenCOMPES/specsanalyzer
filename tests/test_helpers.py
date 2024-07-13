@@ -54,7 +54,7 @@ def test_averaging_with_delays():
 
 @pytest.mark.parametrize("scan", [0, 1, 2])
 def test_load_averages(scan):
-    """Tests loading of 3-D array with default paramteres"""
+    """Tests loading of 3-D array with default parameters"""
     data = load_images(scan_path_mirror)
     with open(
         scan_path_mirror.joinpath(f"AVG/00{scan}.tsv"),
