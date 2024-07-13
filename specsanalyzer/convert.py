@@ -12,14 +12,14 @@ def get_damatrix_from_calib2d(
     work_function: float,
     calib2d_dict: dict,
 ) -> tuple[float, np.ndarray, float, str, list[str]]:
-    """This function estimates the best angular conversion coefficients for the current analyser
+    """This function estimates the best angular conversion coefficients for the current analyzer
     mode, starting from a dictionary containing the specs .calib2d database. A linear interpolation
     is performed from the tabulated coefficients based on the retardation ratio value.
 
     Args:
         lens_mode (str): the lens mode string description
         kinetic_energy (float): kinetic energy of the photoelectron
-        pass_energy (float): analyser pass energy
+        pass_energy (float): analyzer pass energy
         work_function (float): work function settings
         calib2d_dict (dict): dictionary containing the configuration parameters for angular
             correction
@@ -245,7 +245,7 @@ def calculate_polynomial_coef_da(
     Args:
         da_matrix (np.ndarray): the matrix of interpolated da coefficients
         kinetic_energy (float): photoelectron kinetic energy
-        pass_energy (float): analyser pass energy
+        pass_energy (float): analyzer pass energy
         e_shift (np.ndarray): e shift parameter, defining the energy
             range around the center for the polynomial fit of the da coefficients
 
@@ -386,8 +386,8 @@ def calculate_matrix_correction(
     """Calculate the angular and energy interpolation matrices for the correction function.
 
     Args:
-        kinetic_energy (float): analyser set kinetic energy
-        pass_energy (float): analyser set pass energy
+        kinetic_energy (float): analyzer set kinetic energy
+        pass_energy (float): analyzer set pass energy
         nx_pixels (int): number of image pixels (after binning) along the energy dispersing
             direction
         ny_pixels (int): number of image pixels (after binning) along the angle/spatially

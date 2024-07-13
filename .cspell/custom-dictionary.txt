@@ -2,7 +2,6 @@
 allclose
 ALLUSERSPROFILE
 amperemeter
-analyser
 arange
 archiver
 argwhere
@@ -27,7 +26,6 @@ COLLECTIONCOLUMN
 colorbar
 COMPES
 configpath
-Croping
 cropit
 damatrix
 dapolymatrix

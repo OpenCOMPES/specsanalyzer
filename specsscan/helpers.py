@@ -390,7 +390,7 @@ def handle_meta(
 
         kinetic_energy = df_lut["KineticEnergy"].to_numpy()
         if len(set(kinetic_energy)) > 1 and scan_info["ScanType"] == "voltage":
-            energy_scan_mode = "fixed_analyser_transmission"
+            energy_scan_mode = "fixed_analyser_transmission"  # spell-checker: word: analyser
 
     metadata["scan_info"] = complete_dictionary(
         metadata.get("scan_info", {}),

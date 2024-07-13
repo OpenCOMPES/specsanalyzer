@@ -288,7 +288,7 @@ class SpecsScan:
         return res_xarray
 
     def crop_tool(self, scan: int = None, path: Path | str = "", **kwds):
-        """Croping tool interface to crop_tool method of the SpecsAnalyzer class.
+        """Cropping tool interface to crop_tool method of the SpecsAnalyzer class.
 
         Args:
             scan (int, optional): Scan number to load data from. Defaults to None.

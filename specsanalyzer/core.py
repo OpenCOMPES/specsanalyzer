@@ -106,9 +106,9 @@ class SpecsAnalyzer:
             raw_img (np.ndarray): Raw image data, numpy 2d matrix
             lens_mode (str): analyzer lens mode, check calib2d for a list of modes CamelCase naming
                 convention e.g. "WideAngleMode"
-            kinetic_energy (float): set analyser kinetic energy
-            pass_energy (float): set analyser pass energy
-            work_function (float): set analyser work function
+            kinetic_energy (float): set analyzer kinetic energy
+            pass_energy (float): set analyzer pass energy
+            work_function (float): set analyzer work function
             conversion_parameters (dict, optional): dictionary of conversion parameters,
                 overwriting determination from calib2d file. Defaults to None.
 
@@ -371,9 +371,9 @@ class SpecsAnalyzer:
             raw_img (np.ndarray): Raw image data, numpy 2d matrix
             lens_mode (str): analyzer lens mode, check calib2d for a list
                 of modes CamelCase naming convention e.g. "WideAngleMode"
-            kinetic_energy (float): set analyser kinetic energy
-            pass_energy (float): set analyser pass energy
-            work_function (float): set analyser work function
+            kinetic_energy (float): set analyzer kinetic energy
+            pass_energy (float): set analyzer pass energy
+            work_function (float): set analyzer work function
             apply (bool, optional): Option to directly apply the pre-selected cropping parameters.
                 Defaults to False.
             **kwds: Keyword parameters for the crop tool:
