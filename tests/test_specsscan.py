@@ -4,6 +4,7 @@ import os
 
 import numpy as np
 import pytest
+from pynxtools.dataconverter.convert import ValidationFailed
 
 import specsscan
 from specsanalyzer.core import create_fft_params
@@ -323,8 +324,8 @@ def test_conversion_and_save_to_nexus():
         sps.save("result.tiff")
     sps.save("result.tiff", alias_dict={"X": "angular0", "Y": "angular1"})
     sps.save("result.h5")
-    # with pytest.raises(LookupError):
-    #    sps.save("result.nxs")
+    with pytest.raises(ValidationFailed):
+        sps.save("result.nxs", fail=True)
 
     metadata = {}
     # General
@@ -345,6 +346,10 @@ def test_conversion_and_save_to_nexus():
     metadata["instrument"]["beam"]["probe"] = {}
     metadata["instrument"]["beam"]["probe"]["incident_energy"] = 21.7
 
+    # sample
+    metadata["sample"] = {}
+    metadata["sample"]["name"] = "Name"
+
     metadata["scan_info"] = {}
     metadata["scan_info"]["trARPES:XGS600:PressureAC:P_RD"] = 2.5e-11
     metadata["scan_info"]["trARPES:Carving:TEMP_RBV"] = 70
@@ -357,4 +362,4 @@ def test_conversion_and_save_to_nexus():
         collect_metadata=True,
     )
 
-    sps.save("result.nxs")
+    sps.save("result.nxs", fail=True)

@@ -2,7 +2,6 @@
   "/@default": "entry",
   "/ENTRY[entry]/@default": "data",
   "/ENTRY[entry]/definition": "NXmpes_arpes",
-  "/ENTRY[entry]/definition/@version": "None",
   "/ENTRY[entry]/title": "@attrs:metadata/entry_title",
   "/ENTRY[entry]/start_time": "@attrs:metadata/timing/acquisition_start",
   "/ENTRY[entry]/experiment_institution": "Fritz Haber Institute - Max Planck Society",
@@ -15,9 +14,9 @@
   "/ENTRY[entry]/collection_time": "@attrs:metadata/timing/collection_time",
   "/ENTRY[entry]/collection_time/@units": "s",
   "/ENTRY[entry]/USER[user]": {
-    "name": "@attrs:metadata/user0/name",
+    "name": "!@attrs:metadata/user0/name",
     "role": "@attrs:metadata/user0/role",
-    "affiliation": "@attrs:metadata/user0/affiliation",
+    "affiliation": "!@attrs:metadata/user0/affiliation",
     "address": "@attrs:metadata/user0/address",
     "email": "@attrs:metadata/user0/email"
   },
@@ -70,19 +69,19 @@
     "fast_axes": "@attrs:metadata/scan_info/fast_axes",
     "slow_axes": "@attrs:metadata/scan_info/slow_axes",
     "energy_resolution": {
-      "resolution": "@attrs:metadata/instrument/electronanalyser/energy_resolution",
+      "resolution": "!@attrs:metadata/instrument/electronanalyser/energy_resolution",
       "resolution/@units": "meV",
       "physical_quantity": "energy",
       "type": "derived"
     },
     "angular_resolution": {
-      "resolution": "@attrs:metadata/instrument/electronanalyser/angular_resolution",
+      "resolution": "!@attrs:metadata/instrument/electronanalyser/angular_resolution",
       "resolution/@units": "deg",
       "physical_quantity": "angle",
       "type": "derived"
     },
     "spatial_resolution": {
-      "resolution": "@attrs:metadata/instrument/electronanalyser/spatial_resolution",
+      "resolution": "!@attrs:metadata/instrument/electronanalyser/spatial_resolution",
       "resolution/@units": "µm",
       "physical_quantity": "length",
       "type": "estimated"
@@ -169,7 +168,7 @@
   "/ENTRY[entry]/INSTRUMENT[instrument]/beamTYPE[beam_probe]": {
     "distance": 0.0,
     "distance/@units": "mm",
-    "incident_energy": "@attrs:metadata/instrument/beam/probe/incident_energy",
+    "incident_energy": "!@attrs:metadata/instrument/beam/probe/incident_energy",
     "incident_energy/@units": "eV",
     "incident_energy_spread": "@attrs:metadata/instrument/beam/probe/incident_energy_spread",
     "incident_energy_spread/@units": "eV",
@@ -193,7 +192,7 @@
   "/ENTRY[entry]/INSTRUMENT[instrument]/beamTYPE[beam_pump]": {
     "distance": 0.0,
     "distance/@units": "mm",
-    "incident_energy": "@attrs:metadata/instrument/beam/pump/incident_energy",
+    "incident_energy": "!@attrs:metadata/instrument/beam/pump/incident_energy",
     "incident_energy/@units": "eV",
     "incident_energy_spread": "@attrs:metadata/instrument/beam/pump/incident_energy_spread",
     "incident_energy_spread/@units": "eV",
@@ -217,7 +216,7 @@
     "temperature_sensor": {
       "name": "sample_temperature",
       "measurement": "temperature",
-      "value": "@attrs:metadata/scan_info/trARPES:Carving:TEMP_RBV",
+      "value": "!@attrs:metadata/scan_info/trARPES:Carving:TEMP_RBV",
       "value/@units": "K"
     },
     "sample_bias_voltmeter": {
@@ -229,7 +228,7 @@
     "drain_current_amperemeter": {
       "name": "drain_current",
       "measurement": "current",
-      "value": "@attrs:metadata/scan_info/trARPES:Sample:Measure",
+      "value": "!@attrs:metadata/scan_info/trARPES:Sample:Measure",
       "value/@units": "A"
     },
     "depends_on": "/entry/instrument/manipulator/transformations/trans_z",
