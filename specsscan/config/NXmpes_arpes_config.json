@@ -257,16 +257,16 @@
     "name": "@attrs:metadata/sample/name",
     "situation": "vacuum",
     "SUBSTANCE[substance]/molecular_formula_hill": "@attrs:metadata/sample/chemical_formula",
-    "temperature": {
+    "temperature_env": {
       "temperature_sensor": "@link:/entry/instrument/manipulator/temperature_sensor"
     },
-    "gas_pressure": {
+    "gas_pressure_env": {
       "pressure_gauge": "@link:/entry/instrument/pressure_gauge"
     },
-    "bias": {
+    "bias_env": {
       "voltmeter": "@link:/entry/instrument/manipulator/sample_bias_voltmeter"
     },
-    "drain_current": {
+    "drain_current_env": {
       "amperemeter": "@link:/entry/instrument/manipulator/drain_current_amperemeter"
     },
     "depends_on": "/entry/sample/transformations/offset_azimuth",
@@ -342,7 +342,7 @@
     "data/@units": "counts",
     "*": "@data:*.data",
     "*/@units": "@data:*.unit",
-    "@*_depends": "@attrs:metadata/scan_info/coordinate_depends/*",
+    "*/@reference": "@attrs:metadata/scan_info/coordinate_depends/*",
     "energy/@type": "kinetic"
   }
 }
