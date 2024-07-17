@@ -1888,13 +1888,13 @@ reference = "pypi-public"
 
 [[package]]
 name = "jupyterlab-server"
-version = "2.27.2"
+version = "2.27.3"
 description = "A set of server components for JupyterLab and JupyterLab like applications."
 optional = true
 python-versions = ">=3.8"
 files = [
-    {file = "jupyterlab_server-2.27.2-py3-none-any.whl", hash = "sha256:54aa2d64fd86383b5438d9f0c032f043c4d8c0264b8af9f60bd061157466ea43"},
-    {file = "jupyterlab_server-2.27.2.tar.gz", hash = "sha256:15cbb349dc45e954e09bacf81b9f9bcb10815ff660fb2034ecd7417db3a7ea27"},
+    {file = "jupyterlab_server-2.27.3-py3-none-any.whl", hash = "sha256:e697488f66c3db49df675158a77b3b017520d772c6e1548c7d9bcc5df7944ee4"},
+    {file = "jupyterlab_server-2.27.3.tar.gz", hash = "sha256:eb36caca59e74471988f0ae25c77945610b887f777255aa21f8065def9e51ed4"},
 ]
 
 [package.dependencies]
@@ -3398,13 +3398,13 @@ reference = "pypi-public"
 
 [[package]]
 name = "pynxtools"
-version = "0.5.0"
+version = "0.5.1"
 description = "Extend NeXus for experiments and characterization in Materials Science and Materials Engineering and serve as a NOMAD parser implementation for NeXus."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "pynxtools-0.5.0-py3-none-any.whl", hash = "sha256:4deb5d5f5608d468669182ca5cceb417efa8a6a3c9e40eb3d280bf00a1d6c6a3"},
-    {file = "pynxtools-0.5.0.tar.gz", hash = "sha256:0ed009f40f14642a14f6783cf00874d803fa2508c2748e380493cbd875921e59"},
+    {file = "pynxtools-0.5.1-py3-none-any.whl", hash = "sha256:041768cce2052c25e2c5e2074e41124ee1672c1870844e5e291687a67adc88d4"},
+    {file = "pynxtools-0.5.1.tar.gz", hash = "sha256:e6b0453351dd40670353ee07cf4cb8b7a02c9e2f2e5981401682fa6c8b736e31"},
 ]
 
 [package.dependencies]
