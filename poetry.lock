@@ -2991,7 +2991,7 @@ xrd = ["pynxtools-xrd"]
 type = "git"
 url = "https://github.com/FAIRmat-NFDI/pynxtools"
 reference = "multi-format-reader"
-resolved_reference = "1bd3e2d277119e8e10947b622cda6a2bbff5ec52"
+resolved_reference = "2e61d8e2858c7067edd6f7c60f955080077c76bc"
 
 [[package]]
 name = "pynxtools-mpes"
@@ -3014,7 +3014,7 @@ dev = ["mypy", "pip-tools", "pytest", "ruff (==0.5.5)", "types-pyyaml"]
 type = "git"
 url = "https://github.com/FAIRmat-NFDI/pynxtools-mpes.git"
 reference = "updates-for-multiformat-reader"
-resolved_reference = "ba416bc5dcdbaa83eab3c28c9f0c4f88969cb77b"
+resolved_reference = "dee73d2c5f83f5f9148e1bdc218fac8170145432"
 
 [[package]]
 name = "pyparsing"
