@@ -2964,7 +2964,7 @@ files = [
 anytree = "*"
 ase = ">=3.19.0"
 click = ">=7.1.2"
-click-default-group = "*"
+click_default_group = "*"
 h5py = ">=3.6.0"
 importlib-metadata = "*"
 lxml = ">=4.9.1"
@@ -2987,25 +2987,34 @@ stm = ["pynxtools-stm"]
 xps = ["pynxtools-xps"]
 xrd = ["pynxtools-xrd"]
 
+[package.source]
+type = "git"
+url = "https://github.com/FAIRmat-NFDI/pynxtools"
+reference = "multi-format-reader"
+resolved_reference = "1bd3e2d277119e8e10947b622cda6a2bbff5ec52"
+
 [[package]]
 name = "pynxtools-mpes"
-version = "0.1.1"
+version = "0.1.2.dev33+gba416bc"
 description = ""
 optional = false
 python-versions = ">=3.8"
-files = [
-    {file = "pynxtools_mpes-0.1.1-py3-none-any.whl", hash = "sha256:44e5d1881d9e36cd5977831e4edf7cc96ef1dc595e0725119f255986cc5f658b"},
-    {file = "pynxtools_mpes-0.1.1.tar.gz", hash = "sha256:e8f2eed853ebc7e28d24ba077994f6a3dd1848a3a3dcc7cbd1e115ff76ee7e46"},
-]
+files = []
+develop = false
 
 [package.dependencies]
 h5py = ">=3.6.0"
-pynxtools = ">=0.4.0"
-PyYAML = ">=6.0"
+pynxtools = {git = "https://github.com/FAIRmat-NFDI/pynxtools", rev = "multi-format-reader"}
 xarray = ">=0.20.2"
 
 [package.extras]
-dev = ["mypy", "pip-tools", "pytest", "ruff (==0.3.4)", "types-pyyaml"]
+dev = ["mypy", "pip-tools", "pytest", "ruff (==0.5.5)", "types-pyyaml"]
+
+[package.source]
+type = "git"
+url = "https://github.com/FAIRmat-NFDI/pynxtools-mpes.git"
+reference = "updates-for-multiformat-reader"
+resolved_reference = "ba416bc5dcdbaa83eab3c28c9f0c4f88969cb77b"
 
 [[package]]
 name = "pyparsing"
@@ -4273,4 +4282,4 @@ notebook = ["ipykernel", "jupyter", "jupyterlab-h5web"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8, <3.12"
-content-hash = "6e2d6c6053c922d083f666a97534f43428aa46c8cdc413774277c2f20a8e4ef3"
+content-hash = "378aeb12541715c9b575902e3b7b041e681ecb36ea0501bdaa97b1a8de2b6efa"
