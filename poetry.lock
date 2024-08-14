@@ -2326,13 +2326,13 @@ test = ["pep440", "pre-commit", "pytest", "testpath"]
 
 [[package]]
 name = "nbsphinx"
-version = "0.9.4"
+version = "0.9.5"
 description = "Jupyter Notebook Tools for Sphinx"
 optional = false
 python-versions = ">=3.6"
 files = [
-    {file = "nbsphinx-0.9.4-py3-none-any.whl", hash = "sha256:22cb1d974a8300e8118ca71aea1f649553743c0c5830a54129dcd446e6a8ba17"},
-    {file = "nbsphinx-0.9.4.tar.gz", hash = "sha256:042a60806fc23d519bc5bef59d95570713913fe442fda759d53e3aaf62104794"},
+    {file = "nbsphinx-0.9.5-py3-none-any.whl", hash = "sha256:d82f71084425db1f48e72515f15c25b4de8652ceaab513ee462ac05f1b8eae0a"},
+    {file = "nbsphinx-0.9.5.tar.gz", hash = "sha256:736916e7b0dab28fc904f4a9ae3b53a9a50c29fccc6329c052fcc7485abcf2b7"},
 ]
 
 [package.dependencies]
@@ -2951,20 +2951,20 @@ windows-terminal = ["colorama (>=0.4.6)"]
 
 [[package]]
 name = "pynxtools"
-version = "0.5.2"
+version = "0.6.0"
 description = "Extend NeXus for experiments and characterization in Materials Science and Materials Engineering and serve as a NOMAD parser implementation for NeXus."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "pynxtools-0.5.2-py3-none-any.whl", hash = "sha256:4d9abb366cf05a7fc85e1789de523b4836dac1c02031e94ac6de82d64c7d72f3"},
-    {file = "pynxtools-0.5.2.tar.gz", hash = "sha256:717d11d0ff0e3ad07bce26fe4d2014fe48725fee3b0f77cf98ebc5e83acbfbb7"},
+    {file = "pynxtools-0.6.0-py3-none-any.whl", hash = "sha256:75ee95196244ae3234480a16d7e9248049b23548ade69a6658d7fbb128529e6f"},
+    {file = "pynxtools-0.6.0.tar.gz", hash = "sha256:ebb394507d0580aeb447767f295027921a4336476cce359a5afa5a604a3d91c2"},
 ]
 
 [package.dependencies]
 anytree = "*"
 ase = ">=3.19.0"
 click = ">=7.1.2"
-click_default_group = "*"
+click-default-group = "*"
 h5py = ">=3.6.0"
 importlib-metadata = "*"
 lxml = ">=4.9.1"
@@ -2987,34 +2987,24 @@ stm = ["pynxtools-stm"]
 xps = ["pynxtools-xps"]
 xrd = ["pynxtools-xrd"]
 
-[package.source]
-type = "git"
-url = "https://github.com/FAIRmat-NFDI/pynxtools"
-reference = "multi-format-reader"
-resolved_reference = "2e61d8e2858c7067edd6f7c60f955080077c76bc"
-
 [[package]]
 name = "pynxtools-mpes"
-version = "0.1.2.dev33+gba416bc"
+version = "0.2.0"
 description = ""
 optional = false
 python-versions = ">=3.8"
-files = []
-develop = false
+files = [
+    {file = "pynxtools_mpes-0.2.0-py3-none-any.whl", hash = "sha256:eca6182d08e66236fcb56d23efaf0e6a689f6480f3d44997f67193b01e9a6ccb"},
+    {file = "pynxtools_mpes-0.2.0.tar.gz", hash = "sha256:3dddc3c71949baab4d836573a51cfb08fbc6401c696d2bb770131542c5c6a9a7"},
+]
 
 [package.dependencies]
 h5py = ">=3.6.0"
-pynxtools = {git = "https://github.com/FAIRmat-NFDI/pynxtools", rev = "multi-format-reader"}
+pynxtools = ">=0.6.0"
 xarray = ">=0.20.2"
 
 [package.extras]
 dev = ["mypy", "pip-tools", "pytest", "ruff (==0.5.5)", "types-pyyaml"]
-
-[package.source]
-type = "git"
-url = "https://github.com/FAIRmat-NFDI/pynxtools-mpes.git"
-reference = "updates-for-multiformat-reader"
-resolved_reference = "dee73d2c5f83f5f9148e1bdc218fac8170145432"
 
 [[package]]
 name = "pyparsing"
@@ -3678,18 +3668,18 @@ win32 = ["pywin32"]
 
 [[package]]
 name = "setuptools"
-version = "72.1.0"
+version = "72.2.0"
 description = "Easily download, build, install, upgrade, and uninstall Python packages"
 optional = true
 python-versions = ">=3.8"
 files = [
-    {file = "setuptools-72.1.0-py3-none-any.whl", hash = "sha256:5a03e1860cf56bb6ef48ce186b0e557fdba433237481a9a625176c2831be15d1"},
-    {file = "setuptools-72.1.0.tar.gz", hash = "sha256:8d243eff56d095e5817f796ede6ae32941278f542e0f941867cc05ae52b162ec"},
+    {file = "setuptools-72.2.0-py3-none-any.whl", hash = "sha256:f11dd94b7bae3a156a95ec151f24e4637fb4fa19c878e4d191bfb8b2d82728c4"},
+    {file = "setuptools-72.2.0.tar.gz", hash = "sha256:80aacbf633704e9c8bfa1d99fa5dd4dc59573efcf9e4042c13d3bcef91ac2ef9"},
 ]
 
 [package.extras]
 core = ["importlib-metadata (>=6)", "importlib-resources (>=5.10.2)", "jaraco.text (>=3.7)", "more-itertools (>=8.8)", "ordered-set (>=3.1.1)", "packaging (>=24)", "platformdirs (>=2.6.2)", "tomli (>=2.0.1)", "wheel (>=0.43.0)"]
-doc = ["furo", "jaraco.packaging (>=9.3)", "jaraco.tidelift (>=1.4)", "pygments-github-lexers (==0.0.5)", "pyproject-hooks (!=1.1)", "rst.linker (>=1.9)", "sphinx (>=3.5)", "sphinx-favicon", "sphinx-inline-tabs", "sphinx-lint", "sphinx-notfound-page (>=1,<2)", "sphinx-reredirects", "sphinxcontrib-towncrier"]
+doc = ["furo", "jaraco.packaging (>=9.3)", "jaraco.tidelift (>=1.4)", "pygments-github-lexers (==0.0.5)", "pyproject-hooks (!=1.1)", "rst.linker (>=1.9)", "sphinx (>=3.5)", "sphinx-favicon", "sphinx-inline-tabs", "sphinx-lint", "sphinx-notfound-page (>=1,<2)", "sphinx-reredirects", "sphinxcontrib-towncrier", "towncrier (<24.7)"]
 test = ["build[virtualenv] (>=1.0.3)", "filelock (>=3.4.0)", "importlib-metadata", "ini2toml[lite] (>=0.14)", "jaraco.develop (>=7.21)", "jaraco.envs (>=2.2)", "jaraco.path (>=3.2.0)", "jaraco.test", "mypy (==1.11.*)", "packaging (>=23.2)", "pip (>=19.1)", "pyproject-hooks (!=1.1)", "pytest (>=6,!=8.1.*)", "pytest-checkdocs (>=2.4)", "pytest-cov", "pytest-enabler (>=2.2)", "pytest-home (>=0.5)", "pytest-mypy", "pytest-perf", "pytest-ruff (<0.4)", "pytest-ruff (>=0.2.1)", "pytest-ruff (>=0.3.2)", "pytest-subprocess", "pytest-timeout", "pytest-xdist (>=3)", "tomli", "tomli-w (>=1.0.0)", "virtualenv (>=13.0.0)", "wheel"]
 
 [[package]]
@@ -3727,13 +3717,13 @@ files = [
 
 [[package]]
 name = "soupsieve"
-version = "2.5"
+version = "2.6"
 description = "A modern CSS selector implementation for Beautiful Soup."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "soupsieve-2.5-py3-none-any.whl", hash = "sha256:eaa337ff55a1579b6549dc679565eac1e3d000563bcb1c8ab0d0fefbc0c2cdc7"},
-    {file = "soupsieve-2.5.tar.gz", hash = "sha256:5663d5a7b3bfaeee0bc4372e7fc48f9cff4940b3eec54a6451cc5299f1097690"},
+    {file = "soupsieve-2.6-py3-none-any.whl", hash = "sha256:e72c4ff06e4fb6e4b5a9f0f55fe6e81514581fca1515028625d0f299c602ccc9"},
+    {file = "soupsieve-2.6.tar.gz", hash = "sha256:e2e68417777af359ec65daac1057404a3c8a5455bb8abc36f1a9866ab1a51abb"},
 ]
 
 [[package]]
@@ -4000,13 +3990,13 @@ files = [
 
 [[package]]
 name = "tomlkit"
-version = "0.13.0"
+version = "0.13.2"
 description = "Style preserving TOML library"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "tomlkit-0.13.0-py3-none-any.whl", hash = "sha256:7075d3042d03b80f603482d69bf0c8f345c2b30e41699fd8883227f89972b264"},
-    {file = "tomlkit-0.13.0.tar.gz", hash = "sha256:08ad192699734149f5b97b45f1f18dad7eb1b6d16bc72ad0c2335772650d7b72"},
+    {file = "tomlkit-0.13.2-py3-none-any.whl", hash = "sha256:7a974427f6e119197f670fbbbeae7bef749a6c14e793db934baefc1b5f03efde"},
+    {file = "tomlkit-0.13.2.tar.gz", hash = "sha256:fff5fe59a87295b278abd31bec92c15d9bc4a06885ab12bcea52c71119392e79"},
 ]
 
 [[package]]
@@ -4282,4 +4272,4 @@ notebook = ["ipykernel", "jupyter", "jupyterlab-h5web"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8, <3.12"
-content-hash = "378aeb12541715c9b575902e3b7b041e681ecb36ea0501bdaa97b1a8de2b6efa"
+content-hash = "4b8e575739c922aa344ea4946ab363e07b4c266a211630420f68d50a751bb2d7"
