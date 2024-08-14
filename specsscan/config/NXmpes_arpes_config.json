@@ -1,26 +1,25 @@
 {
   "/@default": "entry",
-  "/ENTRY[entry]/@default": "data",
-  "/ENTRY[entry]/definition": "NXmpes_arpes",
-  "/ENTRY[entry]/title": "@attrs:metadata/entry_title",
-  "/ENTRY[entry]/start_time": "@attrs:metadata/timing/acquisition_start",
-  "/ENTRY[entry]/experiment_institution": "Fritz Haber Institute - Max Planck Society",
-  "/ENTRY[entry]/experiment_facility": "Time Resolved ARPES",
-  "/ENTRY[entry]/experiment_laboratory": "Clean Room 4",
-  "/ENTRY[entry]/entry_identifier": "@attrs:metadata/loader/scan_path",
-  "/ENTRY[entry]/end_time": "@attrs:metadata/timing/acquisition_stop",
-  "/ENTRY[entry]/duration": "@attrs:metadata/timing/acquisition_duration",
-  "/ENTRY[entry]/duration/@units": "s",
-  "/ENTRY[entry]/collection_time": "@attrs:metadata/timing/collection_time",
-  "/ENTRY[entry]/collection_time/@units": "s",
-  "/ENTRY[entry]/USER[user]": {
-    "name": "!@attrs:metadata/user0/name",
-    "role": "@attrs:metadata/user0/role",
-    "affiliation": "!@attrs:metadata/user0/affiliation",
-    "address": "@attrs:metadata/user0/address",
-    "email": "@attrs:metadata/user0/email"
+  "/ENTRY/@default": "data",
+  "/ENTRY/title": "['@eln:/ENTRY/title', '@attrs:metadata/entry_title']",
+  "/ENTRY/start_time": "@attrs:metadata/timing/acquisition_start",
+  "/ENTRY/experiment_institution": "Fritz Haber Institute - Max Planck Society",
+  "/ENTRY/experiment_facility": "Time Resolved ARPES",
+  "/ENTRY/experiment_laboratory": "Clean Room 4",
+  "/ENTRY/entry_identifier": "@attrs:metadata/loader/scan_path",
+  "/ENTRY/end_time": "@attrs:metadata/timing/acquisition_stop",
+  "/ENTRY/duration": "@attrs:metadata/timing/acquisition_duration",
+  "/ENTRY/duration/@units": "s",
+  "/ENTRY/collection_time": "@attrs:metadata/timing/collection_time",
+  "/ENTRY/collection_time/@units": "s",
+  "/ENTRY/USER[user]": {
+    "name": "!['@eln:/ENTRY/User/name', '@attrs:metadata/user0/name']",
+    "role": "['@eln:/ENTRY/User/role', '@attrs:metadata/user0/role']",
+    "affiliation": "!['@eln:/ENTRY/User/affiliation', '@attrs:metadata/user0/affiliation']",
+    "address": "['@eln:/ENTRY/User/address', '@attrs:metadata/user0/address']",
+    "email": "['@eln:/ENTRY/User/email', '@attrs:metadata/user0/email']"
   },
-  "/ENTRY[entry]/geometries/arpes_geometry": {
+  "/ENTRY/geometries/arpes_geometry": {
     "depends_on": "/entry/geometries/arpes_geometry/transformations/rot_y",
     "TRANSFORMATIONS[transformations]": {
       "AXISNAME[rot_y]/@depends_on": ".",
@@ -30,11 +29,11 @@
       "AXISNAME[rot_y]/@vector": [0, 1, 0]
     }
   },
-  "/ENTRY[entry]/INSTRUMENT[instrument]": {
+  "/ENTRY/INSTRUMENT[instrument]": {
     "name": "Phoibos detector, at the endstation of the high rep-rate HHG source at FHI",
     "name/@short_name": "TR-ARPES @ FHI",
     "energy_resolution": {
-      "resolution": "@attrs:metadata/instrument/energy_resolution",
+      "resolution": "!['@eln:/ENTRY/Instrument/Analyzer/energy_resolution', '@attrs:metadata/instrument/energy_resolution']",
       "resolution/@units": "meV",
       "physical_quantity": "energy",
       "type": "estimated"
@@ -54,11 +53,11 @@
     "pressure_gauge": {
       "name": "sample_chamber_pressure",
       "measurement": "pressure",
-      "value": "@attrs:metadata/scan_info/trARPES:XGS600:PressureAC:P_RD",
+      "value": "!['@eln:/ENTRY/Sample/gas_pressure', '@attrs:metadata/scan_info/trARPES:XGS600:PressureAC:P_RD']",
       "value/@units": "mbar"
     }
   },
-  "/ENTRY[entry]/INSTRUMENT[instrument]/ELECTRONANALYSER[electronanalyser]": {
+  "/ENTRY/INSTRUMENT[instrument]/ELECTRONANALYSER[electronanalyser]": {
     "description": "SPECS Phoibos 150 Hemispherical Energy Analyzer",
     "device_information": {
       "vendor": "SPECS GmbH",
@@ -69,19 +68,19 @@
     "fast_axes": "@attrs:metadata/scan_info/fast_axes",
     "slow_axes": "@attrs:metadata/scan_info/slow_axes",
     "energy_resolution": {
-      "resolution": "!@attrs:metadata/instrument/electronanalyser/energy_resolution",
+      "resolution": "!['@eln:/ENTRY/Instrument/Analyzer/energy_resolution', '@attrs:metadata/instrument/electronanalyser/energy_resolution']",
       "resolution/@units": "meV",
       "physical_quantity": "energy",
       "type": "derived"
     },
     "angular_resolution": {
-      "resolution": "!@attrs:metadata/instrument/electronanalyser/angular_resolution",
+      "resolution": "!['@eln:/ENTRY/Instrument/Analyzer/angular_resolution', '@attrs:metadata/instrument/electronanalyser/angular_resolution']",
       "resolution/@units": "deg",
       "physical_quantity": "angle",
       "type": "derived"
     },
     "spatial_resolution": {
-      "resolution": "!@attrs:metadata/instrument/electronanalyser/spatial_resolution",
+      "resolution": "!['@eln:/ENTRY/Instrument/Analyzer/spatial_resolution', '@attrs:metadata/instrument/electronanalyser/spatial_resolution']",
       "resolution/@units": "µm",
       "physical_quantity": "length",
       "type": "estimated"
@@ -117,14 +116,14 @@
       "AXISNAME[rot_y]/@vector": [0, 1, 0]
     }
   },
-  "/ENTRY[entry]/INSTRUMENT[instrument]/ELECTRONANALYSER[electronanalyser]/COLLECTIONCOLUMN[collectioncolumn]": {
+  "/ENTRY/INSTRUMENT[instrument]/ELECTRONANALYSER[electronanalyser]/COLLECTIONCOLUMN[collectioncolumn]": {
     "projection": "@attrs:metadata/scan_info/projection",
     "scheme": "@attrs:metadata/scan_info/scheme",
     "lens_mode": "@attrs:metadata/scan_info/LensMode",
     "working_distance": 40.0,
     "working_distance/@units": "mm"
   },
-  "/ENTRY[entry]/INSTRUMENT[instrument]/ELECTRONANALYSER[electronanalyser]/ENERGYDISPERSION[energydispersion]": {
+  "/ENTRY/INSTRUMENT[instrument]/ELECTRONANALYSER[electronanalyser]/ENERGYDISPERSION[energydispersion]": {
     "energy_scan_mode": "@attrs:metadata/scan_info/energy_scan_mode",
     "pass_energy": "@attrs:metadata/scan_info/PassEnergy",
     "pass_energy/@units": "eV",
@@ -142,7 +141,7 @@
       "shape": "grid"
     }
   },
-  "/ENTRY[entry]/INSTRUMENT[instrument]/ELECTRONANALYSER[electronanalyser]/DETECTOR[detector]": {
+  "/ENTRY/INSTRUMENT[instrument]/ELECTRONANALYSER[electronanalyser]/DETECTOR[detector]": {
     "amplifier_type": "MCP",
     "detector_type": "Phosphor+CCD",
     "sensor_pixels": [
@@ -156,67 +155,67 @@
     "detector_voltage": "@attrs:metadata/scan_info/ScreenVoltage",
     "detector_voltage/@units": "V"
   },
-  "/ENTRY[entry]/INSTRUMENT[instrument]/sourceTYPE[source_probe]": {
+  "/ENTRY/INSTRUMENT[instrument]/sourceTYPE[source_probe]": {
     "name": "HHG @ TR-ARPES @ FHI",
     "probe": "photon",
     "type": "HHG laser",
     "mode": "Single Bunch",
-    "frequency": "@attrs:metadata/instrument/beam/probe/frequency",
+    "frequency": "['@eln:/ENTRY/Instrument/Source/Probe/frequency', '@attrs:metadata/instrument/beam/probe/frequency']",
     "frequency/@units": "kHz",
     "associated_beam": "/entry/instrument/beam_probe"
   },
-  "/ENTRY[entry]/INSTRUMENT[instrument]/beamTYPE[beam_probe]": {
+  "/ENTRY/INSTRUMENT[instrument]/beamTYPE[beam_probe]": {
     "distance": 0.0,
     "distance/@units": "mm",
-    "incident_energy": "!@attrs:metadata/instrument/beam/probe/incident_energy",
+    "incident_energy": "!['@eln:/ENTRY/Instrument/Beam/Probe/incident_energy', '@attrs:metadata/instrument/beam/probe/incident_energy']",
     "incident_energy/@units": "eV",
-    "incident_energy_spread": "@attrs:metadata/instrument/beam/probe/incident_energy_spread",
+    "incident_energy_spread": "['@eln:/ENTRY/Instrument/Beam/Probe/incident_energy_spread', '@attrs:metadata/instrument/beam/probe/incident_energy_spread']",
     "incident_energy_spread/@units": "eV",
-    "pulse_duration": "@attrs:metadata/instrument/beam/probe/pulse_duration",
+    "pulse_duration": "['@eln:/ENTRY/Instrument/Beam/Probe/pulse_duration', '@attrs:metadata/instrument/beam/probe/pulse_duration']",
     "pulse_duration/@units": "fs",
-    "incident_polarization": "@attrs:metadata/instrument/beam/probe/incident_polarization",
+    "incident_polarization": "['@eln:/ENTRY/Instrument/Beam/Probe/incident_polarization', '@attrs:metadata/instrument/beam/probe/incident_polarization']",
     "incident_polarization/@units": "V^2/mm^2",
-    "extent": "@attrs:metadata/instrument/beam/probe/extent",
+    "extent": "['@eln:/ENTRY/Instrument/Beam/Probe/extent', '@attrs:metadata/instrument/beam/probe/extent']",
     "extent/@units": "µm",
     "associated_source": "/entry/instrument/source_probe"
   },
-  "/ENTRY[entry]/INSTRUMENT[instrument]/sourceTYPE[source_pump]": {
+  "/ENTRY/INSTRUMENT[instrument]/sourceTYPE[source_pump]": {
     "name": "OPCPA @ TR-ARPES @ FHI",
     "probe": "visible light",
     "type": "Optical Laser",
     "mode": "Single Bunch",
-    "frequency": "@attrs:metadata/instrument/beam/pump/frequency",
+    "frequency": "['@eln:/ENTRY/Instrument/Source/Pump/frequency', '@attrs:metadata/instrument/beam/pump/frequency']",
     "frequency/@units": "kHz",
     "associated_beam": "/entry/instrument/beam_pump"
   },
-  "/ENTRY[entry]/INSTRUMENT[instrument]/beamTYPE[beam_pump]": {
+  "/ENTRY/INSTRUMENT[instrument]/beamTYPE[beam_pump]": {
     "distance": 0.0,
     "distance/@units": "mm",
-    "incident_energy": "!@attrs:metadata/instrument/beam/pump/incident_energy",
+    "incident_energy": "!['@eln:/ENTRY/Instrument/Beam/Pump/incident_energy', '@attrs:metadata/instrument/beam/pump/incident_energy']",
     "incident_energy/@units": "eV",
-    "incident_energy_spread": "@attrs:metadata/instrument/beam/pump/incident_energy_spread",
+    "incident_energy_spread": "['@eln:/ENTRY/Instrument/Beam/Pump/incident_energy_spread', '@attrs:metadata/instrument/beam/pump/incident_energy_spread']",
     "incident_energy_spread/@units": "eV",
-    "incident_wavelength": "@attrs:metadata/instrument/beam/pump/incident_wavelength",
+    "incident_wavelength": "['@eln:/ENTRY/Instrument/Beam/Pump/incident_wavelength', '@attrs:metadata/instrument/beam/pump/incident_wavelength']",
     "incident_wavelength/@units": "nm",
-    "pulse_duration": "@attrs:metadata/instrument/beam/pump/pulse_duration",
+    "pulse_duration": "['@eln:/ENTRY/Instrument/Beam/Pump/pulse_duration', '@attrs:metadata/instrument/beam/pump/pulse_duration']",
     "pulse_duration/@units": "fs",
-    "incident_polarization": "@attrs:metadata/instrument/beam/pump/incident_polarization",
+    "incident_polarization": "['@eln:/ENTRY/Instrument/Beam/Pump/incident_polarization', '@attrs:metadata/instrument/beam/pump/incident_polarization']",
     "incident_polarization/@units": "V^2/mm^2",
-    "pulse_energy": "@attrs:metadata/instrument/beam/pump/pulse_energy",
+    "pulse_energy": "['@eln:/ENTRY/Instrument/Beam/Pump/pulse_energy', '@attrs:metadata/instrument/beam/pump/pulse_energy']",
     "pulse_energy/@units": "µJ",
-    "average_power": "@attrs:metadata/instrument/beam/pump/average_power",
+    "average_power": "['@eln:/ENTRY/Instrument/Beam/Pump/average_power', '@attrs:metadata/instrument/beam/pump/average_power']",
     "average_power/@units": "mW",
-    "extent": "@attrs:metadata/instrument/beam/pump/extent",
+    "extent": "['@eln:/ENTRY/Instrument/Beam/Pump/extent', '@attrs:metadata/instrument/beam/pump/extent']",
     "extent/@units": "µm",
-    "fluence": "@attrs:metadata/instrument/beam/pump/fluence",
+    "fluence": "['@eln:/ENTRY/Instrument/Beam/Pump/fluence', '@attrs:metadata/instrument/beam/pump/fluence']",
     "fluence/@units": "mJ/cm^2",
     "associated_source": "/entry/instrument/source_pump"
   },
-  "/ENTRY[entry]/INSTRUMENT[instrument]/MANIPULATOR[manipulator]": {
+  "/ENTRY/INSTRUMENT[instrument]/MANIPULATOR[manipulator]": {
     "temperature_sensor": {
       "name": "sample_temperature",
       "measurement": "temperature",
-      "value": "!@attrs:metadata/scan_info/trARPES:Carving:TEMP_RBV",
+      "value": "!['@eln:/ENTRY/Instrument/Manipulator/sample_temperature', '@attrs:metadata/scan_info/trARPES:Carving:TEMP_RBV']",
       "value/@units": "K"
     },
     "sample_bias_voltmeter": {
@@ -228,7 +227,7 @@
     "drain_current_amperemeter": {
       "name": "drain_current",
       "measurement": "current",
-      "value": "!@attrs:metadata/scan_info/trARPES:Sample:Measure",
+      "value": "!['@eln:/ENTRY/Instrument/Manipulator/drain_current', '@attrs:metadata/scan_info/trARPES:Sample:Measure']",
       "value/@units": "A"
     },
     "depends_on": "/entry/instrument/manipulator/transformations/trans_z",
@@ -250,13 +249,13 @@
       "AXISNAME[rot_x]/@vector": [1, 0, 0]
     }
   },
-  "/ENTRY[entry]/SAMPLE[sample]": {
-    "preparation_date": "@attrs:metadata/sample/preparation_date",
-    "history/notes/description": "@attrs:metadata/sample/sample_history",
-    "description": "@attrs:metadata/sample/chemical_formula",
-    "name": "@attrs:metadata/sample/name",
+  "/ENTRY/SAMPLE[sample]": {
+    "preparation_date": "['@eln:/ENTRY/Sample/preparation_date', '@attrs:metadata/sample/preparation_date']",
+    "history/notes/description": "['@eln:/ENTRY/Sample/sample_history', '@attrs:metadata/sample/sample_history']",
+    "description": "['@eln:/ENTRY/Sample/description', '@attrs:metadata/sample/chemical_formula']",
+    "name": "!['@eln:/ENTRY/Sample/name', '@attrs:metadata/sample/name']",
     "situation": "vacuum",
-    "SUBSTANCE[substance]/molecular_formula_hill": "@attrs:metadata/sample/chemical_formula",
+    "SUBSTANCE[substance]/molecular_formula_hill": "['@eln:/ENTRY/Sample/chemical_formula', '@attrs:metadata/sample/chemical_formula']",
     "temperature_env": {
       "temperature_sensor": "@link:/entry/instrument/manipulator/temperature_sensor"
     },
@@ -328,13 +327,13 @@
       "AXISNAME[trans_x]/@vector": [0, 1, 0]
     }
   },
-  "/ENTRY[entry]/PROCESS[process]/CALIBRATION[energy_calibration]":{
+  "/ENTRY/PROCESS[process]/CALIBRATION[energy_calibration]":{
     "calibrated_axis": "@link:/entry/data/energy"
   },
-  "/ENTRY[entry]/PROCESS[process]/CALIBRATION[angular0_calibration]":{
+  "/ENTRY/PROCESS[process]/CALIBRATION[angular0_calibration]":{
     "calibrated_axis": "@link:/entry/data/angular0"
   },
-  "/ENTRY[entry]/data": {
+  "/ENTRY/data": {
     "@axes": "@data:dims",
     "@*_indices": "@data:*.index",
     "@signal": "data",
