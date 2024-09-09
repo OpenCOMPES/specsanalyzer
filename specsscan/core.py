@@ -256,10 +256,10 @@ class SpecsScan:
             "/entry/sample/transformations/sample_azimuth": "Azimuth",
         }
 
-        # store link information for resolved axis coordinates
+        # store data for resolved axis coordinates
         for k, v in depends_dict.items():
             if v in axis_dict:
-                self._scan_info[axis_dict[v]] = "@link:/entry/data/" + k
+                self._scan_info[axis_dict[v]] = res_xarray.coords[k].data
 
         for name in res_xarray.dims:
             try:
