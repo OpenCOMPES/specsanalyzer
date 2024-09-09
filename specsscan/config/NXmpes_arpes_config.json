@@ -19,7 +19,7 @@
     "address": "['@eln:/ENTRY/User/address', '@attrs:metadata/user0/address']",
     "email": "['@eln:/ENTRY/User/email', '@attrs:metadata/user0/email']"
   },
-  "/ENTRY/geometries/arpes_geometry": {
+  "/ENTRY/geometries/COORDINATE_SYSTEM[arpes_geometry]": {
     "depends_on": "/entry/geometries/arpes_geometry/transformations/rot_y",
     "TRANSFORMATIONS[transformations]": {
       "AXISNAME[rot_y]/@depends_on": ".",
@@ -95,7 +95,7 @@
       "AXISNAME[trans_z]/@units": "mm",
       "AXISNAME[trans_z]/@vector": [0, 0, 1],
       "analyzer_dispersion/@depends_on": "analyzer_rotation",
-      "analyzer_dispersion": "@link:/entry/data/angular1",
+      "analyzer_dispersion": "@data:angular1.data",
       "analyzer_dispersion/@transformation_type": "rotation",
       "analyzer_dispersion/@units": "degrees",
       "analyzer_dispersion/@vector": [1, 0, 0],
@@ -328,10 +328,10 @@
     }
   },
   "/ENTRY/PROCESS[process]/CALIBRATION[energy_calibration]":{
-    "calibrated_axis": "@link:/entry/data/energy"
+    "calibrated_axis": "@data:energy.data"
   },
   "/ENTRY/PROCESS[process]/CALIBRATION[angular0_calibration]":{
-    "calibrated_axis": "@link:/entry/data/angular0"
+    "calibrated_axis": "@data:angular0.data"
   },
   "/ENTRY/data": {
     "@axes": "@data:dims",
