@@ -4,7 +4,7 @@ packages = [
     {include = "specsanalyzer"},
     {include = "specsscan"},
 ]
-version = "0.4.1a1"
+version = "0.4.1"
 description = "Python package for loading and converting SPECS Phoibos analyzer data."
 authors = [
     "Laurenz Rettig <rettig@fhi-berlin.mpg.de>",
