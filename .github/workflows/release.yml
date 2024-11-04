@@ -34,7 +34,7 @@ jobs:
         uses: packetcoders/action-setup-cache-python-poetry@main
         with:
           python-version: 3.8
-          poetry-version: 1.2.2
+          poetry-version: 1.8.4
 
       - name: bump pre-release version
         id: version
@@ -70,7 +70,7 @@ jobs:
         uses: packetcoders/action-setup-cache-python-poetry@main
         with:
           python-version: 3.8
-          poetry-version: 1.2.2
+          poetry-version: 1.8.4
 
       - name: Bump release version and build
         id: version

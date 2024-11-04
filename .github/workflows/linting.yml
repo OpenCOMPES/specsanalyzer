@@ -28,7 +28,7 @@ jobs:
         uses: packetcoders/action-setup-cache-python-poetry@main
         with:
           python-version: 3.8
-          poetry-version: 1.2.2
+          poetry-version: 1.8.4
 
       # Linting steps, execute all linters even if one fails
       - name: ruff
