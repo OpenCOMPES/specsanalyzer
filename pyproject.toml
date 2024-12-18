@@ -2,8 +2,12 @@
 requires = ["setuptools>=64.0.1", "setuptools-scm[toml]>=6.2"]
 build-backend = "setuptools.build_meta"
 
-[tool.setuptools]
-packages = ["specsanalyzer", "specsscan"]
+[tool.setuptools.packages.find]
+where = [
+    "src",
+]
+
+[tool.setuptools_scm]
 
 [project]
 name = "specsanalyzer"
