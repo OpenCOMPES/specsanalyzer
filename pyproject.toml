@@ -18,7 +18,7 @@ keywords=["specs", "phoibos", "arpes"]
 license = "MIT"
 
 [tool.poetry.dependencies]
-python = ">=3.9"
+python = ">=3.9, <3.13"
 docutils = "<0.21"
 h5py = ">=3.6.0"
 imutils = ">=0.5.4"
