@@ -12,7 +12,7 @@ from specsscan import __version__
 from specsscan import SpecsScan
 
 package_dir = os.path.dirname(specsscan.__file__)
-test_dir = package_dir + "/../tests/data/"
+test_dir = package_dir + "/../../tests/data/"
 fft_filter_peaks = create_fft_params(amplitude=1, pos_x=82, pos_y=116, sigma_x=15, sigma_y=23)
 
 
@@ -194,7 +194,7 @@ def test_process_sweep_scan():
     }
     sps = SpecsScan(
         config=config,
-        user_config=package_dir + "/config/example_config_FHI.yaml",
+        user_config=package_dir + "/../../config/example_config_FHI.yaml",
         system_config={},
     )
     res_xarray = sps.load_scan(
@@ -305,10 +305,10 @@ def test_fft_tool():
 
 def test_conversion_and_save_to_nexus():
     """Test the conversion of a tilt scan and saving as NeXus"""
-    config = {"nexus": {"input_files": [package_dir + "/config/NXmpes_arpes_config.json"]}}
+    config = {"nexus": {"input_files": [package_dir + "/../../config/NXmpes_arpes_config.json"]}}
     sps = SpecsScan(
         config=config,
-        user_config=package_dir + "/config/example_config_FHI.yaml",
+        user_config=package_dir + "/../../config/example_config_FHI.yaml",
         system_config={},
     )
 

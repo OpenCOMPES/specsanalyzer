@@ -56,7 +56,7 @@ class SpecsScan:
         """
         self._config = parse_config(
             config,
-            default_config=f"{package_dir}/config/default.yaml",
+            default_config=f"{package_dir}/../../config/specsscan.yaml",
             **kwds,
         )
 

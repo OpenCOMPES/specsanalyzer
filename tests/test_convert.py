@@ -11,7 +11,7 @@ from specsanalyzer.convert import calculate_polynomial_coef_da
 from specsanalyzer.convert import get_damatrix_from_calib2d
 
 package_dir = os.path.dirname(specsanalyzer.__file__)
-test_dir = package_dir + "/../tests/data/"
+test_dir = package_dir + "/../../tests/data/"
 
 # from specsanalyzer.convert import get_rr_da
 # from specsanalyzer.convert import mcp_position_mm
