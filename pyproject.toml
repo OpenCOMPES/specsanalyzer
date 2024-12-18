@@ -17,7 +17,7 @@ authors = [
 readme = "README.md"
 keywords = ["specs", "phoibos", "arpes"]
 license = {text = "MIT"}
-requires-python = ">=3.8,<3.12"
+requires-python = ">=3.8,<3.13"
 dependencies = [
     "docutils<0.21",
     "h5py>=3.6.0",
@@ -27,7 +27,7 @@ dependencies = [
     "matplotlib>=3.5.1",
     "numpy>=1.21.6",
     "opencv-python>=4.8.1.78",
-    "pynxtools-mpes>=0.2.2",
+    "pynxtools-mpes>=0.2.1",
     "pynxtools>=0.9.3",
     "python-dateutil>=2.8.2",
     "pyyaml>=6.0",
