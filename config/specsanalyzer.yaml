@@ -1,5 +1,5 @@
 # path to SPECS calib2d file (provided together with your analyzer)
-calib2d_file: "./config/phoibos150.calib2d"
+calib2d_file: "../../config/phoibos150.calib2d"
 # number of pixels along the energy dispersing direction
 nx_pixel: 1376
 # number of pixels along the angle/spatially dispersing direction

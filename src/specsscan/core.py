@@ -56,7 +56,7 @@ class SpecsScan:
         """
         self._config = parse_config(
             config,
-            default_config=f"{package_dir}/config/default.yaml",
+            default_config=f"{package_dir}/../../config/specsscan.yaml",
             **kwds,
         )
 
@@ -643,7 +643,7 @@ class SpecsScan:
             energy_indices = np.argwhere(energies.values).squeeze()
             # filling target array using "nearest" method
             target_energy = data.Ekin.sel(Ekin=converted.Ekin[energies > 0], method="nearest")
-            target_indices = np.argwhere(np.in1d(data.Ekin.values, target_energy.values)).squeeze()
+            target_indices = np.argwhere(np.isin(data.Ekin.values, target_energy.values)).squeeze()
             data[:, target_indices] += converted[:, energy_indices].values
 
         self.spa.print_msg = True

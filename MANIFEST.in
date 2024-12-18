@@ -1,2 +1,6 @@
-include specsanalyzer/config/*
-include specsscan/config/*
+prune *
+exclude *
+recursive-include src/specsanalyzer *.py
+recursive-include src/specsscan *.py
+include pyproject.toml README.md
+graft config/

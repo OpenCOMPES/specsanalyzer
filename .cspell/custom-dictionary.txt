@@ -65,6 +65,7 @@ ipympl
 ipython
 ipywidgets
 irfft
+isin
 kernelspec
 kwds
 labview

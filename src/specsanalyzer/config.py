@@ -17,7 +17,7 @@ def parse_config(
     folder_config: dict | str = None,
     user_config: dict | str = None,
     system_config: dict | str = None,
-    default_config: dict | str = f"{package_dir}/config/default.yaml",
+    default_config: dict | str = f"{package_dir}/../../config/specsanalyzer.yaml",
     verbose: bool = True,
 ) -> dict:
     """Load the config dictionary from a file, or pass the provided config dictionary.
@@ -44,7 +44,7 @@ def parse_config(
             and "%ALLUSERSPROFILE%/specsanalyzer/config.yaml" on windows.
         default_config (dict | str, optional): default config dictionary
             or file path. The loaded dictionary is completed with the default values.
-            Defaults to *package_dir*/config/default.yaml".
+            Defaults to *package_root*/config/specsanalyzer.yaml".
         verbose (bool, optional): Option to report loaded config files. Defaults to True.
     Raises:
         TypeError: Raised if the provided file is neither *json* nor *yaml*.

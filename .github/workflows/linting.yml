@@ -6,42 +6,49 @@ on:
     paths-ignore:
       pyproject.toml
 
+env:
+  UV_SYSTEM_PYTHON: true
+
 jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
       # Check out repo and set up Python
-      - uses: actions/checkout@v3
-        with:
-          lfs: true
+      - uses: actions/checkout@v4
 
 # see https://stackoverflow.com/questions/57612428/cloning-private-github-repository-within-organisation-in-actions and https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent#generating-a-new-ssh-key
-      - name: checkout test data
+      - name: Fetch test data
         run: |
           eval `ssh-agent -s`
           ssh-add - <<< '${{ secrets.TEST_DATA_ACCESS_KEY }}'
           git submodule sync --recursive
-          git submodule update --init --recursive
+          git submodule update --init --recursive --jobs=4
 
-      # Use cached python and dependencies, install poetry
-      - name: "Setup Python, Poetry and Dependencies"
-        uses: packetcoders/action-setup-cache-python-poetry@main
+      # Setup python
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
         with:
-          python-version: 3.8
-          poetry-version: 1.8.5
+          python-version: "3.10"
 
+      - name: Install dependencies
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+
+      - name: Install package
+        run: |
+          uv pip install ".[dev]"
       # Linting steps, execute all linters even if one fails
       - name: ruff
         run:
-          poetry run ruff specsanalyzer specsscan tests
+          ruff check src/specsanalyzer src/specsscan tests
       - name: ruff formatting
         if: ${{ always() }}
         run:
-          poetry run ruff format --check specsanalyzer specsscan tests
+          ruff format --check src/specsanalyzer src/specsscan tests
       - name: mypy
         if: ${{ always() }}
         run:
-          poetry run mypy specsanalyzer specsscan tests
+          mypy src/specsanalyzer src/specsscan tests
       - name: spellcheck
         if: ${{ always() }}
         uses: streetsidesoftware/cspell-action@v6
