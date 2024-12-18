@@ -2423,6 +2423,7 @@ files = [
     {file = "notebook-7.3.1.tar.gz", hash = "sha256:84381c2a82d867517fd25b86e986dae1fe113a70b98f03edff9b94e499fec8fa"},
 ]
 
+
 [package.dependencies]
 jupyter-server = ">=2.4.0,<3"
 jupyterlab = ">=4.3.2,<4.4"
