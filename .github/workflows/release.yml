@@ -7,146 +7,37 @@ name: Publish to PyPI
   # Workflow does not trigger itself as it only changes pyproject.toml, which is not in paths for this workflow
 # The package is distributed as sed-processor
 on:
-  push:
-    branches:
-      - main
-    tags:
-      - v[0-9]+.[0-9]+.[0-9]+
-    paths:
-      - specsanalyzer/**/*
-      - specsscan/**/*
-      - .github/workflows/release.yml
+  release:
+    types: [published]
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
 jobs:
-  prerelease:
-    if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    outputs:
-      version: ${{ steps.version.outputs.version }}
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          lfs: true
-
-      - name: "Setup Python, Poetry and Dependencies"
-        uses: packetcoders/action-setup-cache-python-poetry@main
-        with:
-          python-version: 3.8
-          poetry-version: 1.8.5
-
-      - name: bump pre-release version
-        id: version
-        working-directory: specsanalyzer
-        run: |
-          VERSION=$(poetry version -s prerelease)
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          poetry build
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: dist
-          path: dist
-
-      - name: Upload pyproject.toml
-        uses: actions/upload-artifact@v4
-        with:
-          name: pyproject
-          path: pyproject.toml
-
   release:
-    if: startsWith(github.ref, 'refs/tags/')
+    name: Upload release to PyPI
     runs-on: ubuntu-latest
-    outputs:
-      version: ${{ steps.version.outputs.version }}
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          lfs: true
-
-      - name: "Setup Python, Poetry and Dependencies"
-        uses: packetcoders/action-setup-cache-python-poetry@main
-        with:
-          python-version: 3.8
-          poetry-version: 1.8.5
-
-      - name: Bump release version and build
-        id: version
-        working-directory: specsanalyzer
-        run: |
-          VERSION=$(echo ${GITHUB_REF#refs/tags/v} | sed 's/-.*//')
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          poetry version $VERSION
-          poetry build
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: dist
-          path: dist
-
-      - name: Upload pyproject.toml
-        uses: actions/upload-artifact@v4
-        with:
-          name: pyproject
-          path: pyproject.toml
-
-  publish:
-    needs: [prerelease, release]
-    if: always() && (needs.prerelease.result == 'success' || needs.release.result == 'success')
-    runs-on: ubuntu-latest
-    outputs:
-      version: ${{ needs.prerelease.outputs.version || needs.release.outputs.version }}
     environment:
-        name: pypi
-        url: https://pypi.org/p/specsanalyzer
+      name: pypi
+      url: https://pypi.org/p/specsanalyzer
     permissions:
-        id-token: write
+      id-token: write
 
     steps:
-      - name: Download a single artifact
-        uses: actions/download-artifact@v4
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          name: dist
+          python-version: "3.x"
+
+      - name: Install dependencies
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          uv pip install build
+
+      - name: Build package
+        run: |
+          git reset --hard HEAD
+          python -m build
 
       - name: Publish package distributions to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          packages-dir: .
-
-  bump-version:
-    needs: publish
-    if: always() && (needs.publish.result == 'success')
-    runs-on: ubuntu-latest
-    steps:
-      - name: Generate a token
-        id: generate_token
-        uses: actions/create-github-app-token@v1
-        with:
-          app-id: ${{ secrets.APP_ID }}
-          private-key: ${{ secrets.APP_PRIVATE_KEY }}
-
-      - uses: actions/checkout@v3
-        with:
-          lfs: true
-          token: ${{ steps.generate_token.outputs.token }}
-
-      - name: Download pyproject.toml
-        uses: actions/download-artifact@v4
-        with:
-          name: pyproject
-
-      - name: Commit files
-        run: |
-          git config --local user.email "bump[bot]@users.noreply.github.com"
-          git config --local user.name "bump[bot]"
-          git add $GITHUB_WORKSPACE/pyproject.toml
-          git commit -m "bump version to ${{ needs.publish.outputs.version  }}"
-
-      - name: Push changes
-        uses: ad-m/github-push-action@master
-        with:
-          github_token:  ${{ steps.generate_token.outputs.token }}
-          branch: main
