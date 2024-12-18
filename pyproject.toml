@@ -41,7 +41,7 @@ dependencies = [
 repository = "https://github.com/mpes-kit/specsanalyzer"
 documentation = "https://github.com/mpes-kit/specsanalyzer/docs"
 
-[dependency-groups]
+[project.optional-dependencies]
 dev = [
     "pytest>=7.0.1",
     "pytest-cov>=3.0.0",
