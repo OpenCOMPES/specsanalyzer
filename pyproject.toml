@@ -1,72 +1,72 @@
-[tool.poetry]
+[build-system]
+requires = ["setuptools>=64.0.1", "setuptools-scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+py-modules = ["specsanalyzer", "specsscan"]
+
+[project]
 name = "specsanalyzer"
-packages = [
-    {include = "specsanalyzer"},
-    {include = "specsscan"},
-]
 version = "0.4.2a0"
 description = "Python package for loading and converting SPECS Phoibos analyzer data."
 authors = [
-    "Laurenz Rettig <rettig@fhi-berlin.mpg.de>",
-    "Michele Puppin <michele.puppin@epfl.ch>",
-    "Abeer Arora <arora@fhi-berlin.mpg.de>",
+    {name = "Laurenz Rettig", email = "rettig@fhi-berlin.mpg.de"},
+    {name = "Michele Puppin", email = "michele.puppin@epfl.ch"},
+    {name = "Abeer Arora", email = "arora@fhi-berlin.mpg.de"},
 ]
 readme = "README.md"
+keywords = ["specs", "phoibos", "arpes"]
+license = {text = "MIT"}
+requires-python = ">=3.8,<3.12"
+dependencies = [
+    "docutils<0.21",
+    "h5py>=3.6.0",
+    "imutils>=0.5.4",
+    "ipympl>=0.9.1",
+    "ipywidgets>=7.7.1",
+    "matplotlib>=3.5.1",
+    "numpy>=1.21.6",
+    "opencv-python>=4.8.1.78",
+    "pynxtools-mpes>=0.2.0",
+    "pynxtools>=0.7.0",
+    "python-dateutil>=2.8.2",
+    "pyyaml>=6.0",
+    "xarray>=0.20.2",
+    "tifffile>=2022.5.4",
+    "tqdm>=4.62.3",
+    "scipy>=1.8.0",
+]
+
+[project.urls]
 repository = "https://github.com/mpes-kit/specsanalyzer"
 documentation = "https://github.com/mpes-kit/specsanalyzer/docs"
-keywords=["specs", "phoibos", "arpes"]
-license = "MIT"
 
-[tool.poetry.dependencies]
-python = ">=3.8, <3.12"
-docutils = "<0.21"
-h5py = ">=3.6.0"
-imutils = ">=0.5.4"
-ipympl = ">=0.9.1"
-ipywidgets = ">=7.7.1"
-matplotlib = ">=3.5.1"
-numpy = ">=1.21.6"
-opencv-python = ">=4.8.1.78"
-pynxtools-mpes = ">=0.2.0"
-pynxtools = ">=0.7.0"
-python-dateutil = ">=2.8.2"
-pyyaml = ">=6.0"
-xarray = ">=0.20.2"
-tifffile = ">=2022.5.4"
-tqdm = ">=4.62.3"
-scipy = ">=1.8.0"
-jupyter = {version = ">=1.0.0", extras = ["notebook"], optional = true}
-ipykernel = {version = ">=6.9.1", extras = ["notebook"], optional = true}
-jupyterlab-h5web = {version = ">=7.0.0", extras = ["notebook"], optional = true}
-
-[tool.poetry.extras]
-notebook = ["jupyter", "ipykernel", "jupyterlab-h5web"]
-
-[tool.poetry.group.dev.dependencies]
-pytest = ">=7.0.1"
-pytest-cov = ">=3.0.0"
-pytest-xdist = ">=2.5.0"
-pytest-clarity = ">=1.0.1"
-ruff = ">=0.1.7, <0.3.0"
-mypy = ">=1.6.0, <1.10.0"
-types-pyyaml = ">=6.0.12.12"
-types-requests = ">=2.31.0.9"
-pre-commit = ">=3.0.0"
-
-[tool.poetry.group.docs]
-optional = true
-
-[tool.poetry.group.docs.dependencies]
-sphinx = ">=7.1.2"
-sphinx-rtd-theme = ">=1.0.0"
-tomlkit = ">=0.12.0"
-sphinx-autodoc-typehints = ">=1.17.0"
-nbsphinx = ">=0.9.3"
-myst-parser = ">=2.0.0"
-
-[build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+[dependency-groups]
+dev = [
+    "pytest>=7.0.1",
+    "pytest-cov>=3.0.0",
+    "pytest-xdist>=2.5.0",
+    "pytest-clarity>=1.0.1",
+    "ruff<0.3.0,>=0.1.7",
+    "mypy<1.10.0,>=1.6.0",
+    "types-pyyaml>=6.0.12.12",
+    "types-requests>=2.31.0.9",
+    "pre-commit>=3.0.0",
+]
+docs = [
+    "sphinx>=7.1.2",
+    "sphinx-rtd-theme>=1.0.0",
+    "tomlkit>=0.12.0",
+    "sphinx-autodoc-typehints>=1.17.0",
+    "nbsphinx>=0.9.3",
+    "myst-parser>=2.0.0",
+]
+notebook = [
+    "jupyter>=1.0.0",
+    "ipykernel>=6.9.1",
+    "jupyterlab>=4.0",
+    "jupyterlab-h5web>=7.0.0",
+]
 
 [tool.coverage.report]
 omit = [
