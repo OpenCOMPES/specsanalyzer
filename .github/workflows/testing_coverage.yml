@@ -40,7 +40,7 @@ jobs:
 
       - name: Install package
         run: |
-          uv pip install ".[dev]"
+          uv pip install -e ".[dev]"
 
       # Run pytest with coverage report, saving to xml
       - name: Run tests on python 3.8

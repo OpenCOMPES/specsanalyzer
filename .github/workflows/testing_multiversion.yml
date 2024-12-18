@@ -44,7 +44,7 @@ jobs:
 
       - name: Install package
         run: |
-          uv pip install ".[dev]"
+          uv pip install -e ".[dev]"
 
       # Use cached python and dependencies, install poetry
       - name: Run tests on python ${{matrix.python-version}}
