@@ -12,7 +12,7 @@ from specsscan import __version__
 from specsscan import SpecsScan
 
 package_dir = os.path.dirname(specsscan.__file__)
-test_dir = package_dir + "/../tests/data/"
+test_dir = package_dir + "/../../tests/data/"
 fft_filter_peaks = create_fft_params(amplitude=1, pos_x=82, pos_y=116, sigma_x=15, sigma_y=23)
 
 
