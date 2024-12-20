@@ -495,10 +495,10 @@ class SpecsAnalyzer:
         )
 
         def update(hline, vline, v_vals):
-            lineh1.set_ydata(hline[0])
-            lineh2.set_ydata(hline[1])
-            linev1.set_xdata(vline[0])
-            linev2.set_xdata(vline[1])
+            lineh1.set_ydata([hline[0]])
+            lineh2.set_ydata([hline[1]])
+            linev1.set_xdata([vline[0]])
+            linev2.set_xdata([vline[1]])
             mesh_obj.set_clim(vmin=v_vals[0], vmax=v_vals[1])
             fig.canvas.draw_idle()
 

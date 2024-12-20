@@ -140,5 +140,5 @@ dmypy.json
 *.nxs
 *.pxp
 
-# poetry
-poetry.toml
+# installation
+specsanalyzer.egg-info
