@@ -23,17 +23,17 @@ API
 Default specsanalyzer configuration settings
 ***************************************************
 
-.. literalinclude:: ../../specsanalyzer/config/default.yaml
+.. literalinclude:: ../../src/specsanalyzer/config/default.yaml
    :language: yaml
 
 Default specsscan configuration settings
 ***************************************************
 
-.. literalinclude:: ../../specsscan/config/default.yaml
+.. literalinclude:: ../../src/specsscan/config/default.yaml
    :language: yaml
 
 Example configuration file for the trARPES setup at FHI-Berlin
 *********************************************************************************
 
-.. literalinclude:: ../../specsscan/config/example_config_FHI.yaml
+.. literalinclude:: ../../src/specsscan/config/example_config_FHI.yaml
    :language: yaml

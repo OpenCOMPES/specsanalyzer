@@ -49,7 +49,6 @@ jobs:
       - name: copy tutorial files to docs
         run: |
           cp -r $GITHUB_WORKSPACE/tutorial $GITHUB_WORKSPACE/docs/
-          cp -r $GITHUB_WORKSPACE/specsscan/config $GITHUB_WORKSPACE/docs/specsscan/
           mkdir $GITHUB_WORKSPACE/docs/tests
           cp -r $GITHUB_WORKSPACE/tests/data $GITHUB_WORKSPACE/docs/tests/
 
