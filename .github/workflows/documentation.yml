@@ -54,6 +54,8 @@ jobs:
           cp -r $GITHUB_WORKSPACE/tutorial $GITHUB_WORKSPACE/docs/
           mkdir $GITHUB_WORKSPACE/docs/tests
           cp -r $GITHUB_WORKSPACE/tests/data $GITHUB_WORKSPACE/docs/tests/
+          mkdir -p $GITHUB_WORKSPACE/docs/src/specsscan
+          cp -r $GITHUB_WORKSPACE/src/specsscan/config $GITHUB_WORKSPACE/docs/src/specsscan
 
       - name: Change version for develop build
         if: startsWith(github.ref, 'refs/heads/') && github.ref != 'refs/heads/main'
@@ -95,7 +97,7 @@ jobs:
       - name: Set up Python 3.10
         uses: actions/setup-python@v5
         with:
-          python-version: 3.10
+          python-version: "3.10"
 
       - name: Setup SSH
         uses: webfactory/ssh-agent@v0.9.0
@@ -124,7 +126,7 @@ jobs:
 
       - name: Update switcher.json
         run: |
-          VERSION=`grep "<title>Specsanalyzer documentation." sphinx-docs/index.html | sed -n 's/.*SED \(.*\) documentation.*/\1/p'`
+          VERSION=`grep "<title>" sphinx-docs/index.html | sed -n 's/.*specsanalyzer \(.*\) documentation.*/\1/p'`
           echo "python docs-repo/specsanalyzer/update_switcher.py docs-repo/specsanalyzer/switcher.json $GITHUB_REF $VERSION"
           python docs-repo/specsanalyzer/update_switcher.py docs-repo/specsanalyzer/switcher.json $GITHUB_REF $VERSION
 

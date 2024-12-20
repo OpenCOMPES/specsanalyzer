@@ -57,7 +57,7 @@ nexus:
   # the NeXus definition to use
   definition: "NXmpes_arpes"
   # additional input files, e.g. config and ELN files
-  input_files: ["../specsscan/config/NXmpes_arpes_config.json"]
+  input_files: ["../src/specsscan/config/NXmpes_arpes_config.json"]
 
 # parameters for the SpecsAnalyzer
 spa_params:

@@ -91,7 +91,7 @@ def get_damatrix_from_calib2d(
         dims = ["Position", "Ekin"]
 
     else:
-        raise ValueError(f"Unrecognized lens mode '{lens_mode}")
+        raise ValueError(f"Unrecognized lens mode '{lens_mode}'")
 
     return a_inner, da_matrix, retardation_ratio, source, dims
 
