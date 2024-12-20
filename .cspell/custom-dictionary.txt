@@ -62,6 +62,7 @@ imwrite
 Interp
 ipykernel
 ipympl
+ipynb
 ipython
 ipywidgets
 irfft
@@ -105,6 +106,7 @@ pcolormesh
 Phoibos
 polyfit
 polyval
+pydata
 pyenv
 pygments
 pynxtools
@@ -133,6 +135,7 @@ typehints
 TZCYXS
 undoc
 venv
+viewcode
 vline
 vmax
 vmin
