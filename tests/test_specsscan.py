@@ -1,5 +1,6 @@
 """This is a code that performs several tests for the SpecsScan core class functions
 """
+import importlib.metadata
 import os
 
 import numpy as np
@@ -20,7 +21,7 @@ fft_filter_peaks = create_fft_params(amplitude=1, pos_x=82, pos_y=116, sigma_x=1
 
 def test_version():
     """Test if the package has the correct version string."""
-    assert __version__ == "0.1.0"
+    assert __version__ == importlib.metadata.version("specsanalyzer")
 
 
 def test_default_config():

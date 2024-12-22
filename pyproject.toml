@@ -11,7 +11,7 @@ where = [
 
 [project]
 name = "specsanalyzer"
-version = "0.4.2a0"
+dynamic = ["version"]
 description = "Python package for loading and converting SPECS Phoibos analyzer data."
 authors = [
     {name = "Laurenz Rettig", email = "rettig@fhi-berlin.mpg.de"},
