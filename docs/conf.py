@@ -13,6 +13,8 @@ import sys
 
 import tomlkit
 
+from specsanalyzer import __version__
+
 
 sys.path.insert(0, os.path.abspath(".."))
 
@@ -32,7 +34,7 @@ copyright = "2024, OpenCOMPES team"
 author = "OpenCOMPES team"
 
 # The short X.Y version
-version = str(pkg_meta["version"])
+version = __version__
 # The full version, including alpha/beta/rc tags
 release = version
 
