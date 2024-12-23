@@ -42,8 +42,8 @@ dependencies = [
 ]
 
 [project.urls]
-repository = "https://github.com/mpes-kit/specsanalyzer"
-documentation = "https://github.com/mpes-kit/specsanalyzer/docs"
+repository = "https://github.com/OpenCOMPES/specsanalyzer"
+documentation = "https://opencompes.github.io/docs/specsanalyzer/latest/"
 
 [project.optional-dependencies]
 dev = [
