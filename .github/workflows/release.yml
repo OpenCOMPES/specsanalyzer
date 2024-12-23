@@ -12,6 +12,9 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
+env:
+  UV_SYSTEM_PYTHON: true
+
 jobs:
   release:
     name: Upload release to PyPI
