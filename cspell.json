@@ -5,7 +5,8 @@
         "*.toml",
         "Makefile",
         "*.bat",
-        "*.pxp"
+        "*.pxp",
+        "*.egg-info",
     ],
     "dictionaryDefinitions": [
         {

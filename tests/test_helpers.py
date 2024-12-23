@@ -11,11 +11,11 @@ import specsscan
 from specsscan.core import load_images
 from specsscan.core import parse_lut_to_df
 
-package_dir = os.path.dirname(specsscan.__file__)
+test_dir = os.path.dirname(__file__)
 # Path to a sample 3-D scan
-scan_path_mirror = Path(f"{package_dir}/../tests/data/4450")
+scan_path_mirror = Path(f"{test_dir}/data/4450")
 # Path to a sample 2-D scan
-scan_path_single = Path(f"{package_dir}/../tests/data/3610")
+scan_path_single = Path(f"{test_dir}/data/3610")
 
 df_lut = parse_lut_to_df(scan_path_mirror)
 

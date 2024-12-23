@@ -10,12 +10,7 @@ from specsanalyzer.convert import calculate_matrix_correction
 from specsanalyzer.convert import calculate_polynomial_coef_da
 from specsanalyzer.convert import get_damatrix_from_calib2d
 
-package_dir = os.path.dirname(specsanalyzer.__file__)
-test_dir = package_dir + "/../tests/data/"
-
-# from specsanalyzer.convert import get_rr_da
-# from specsanalyzer.convert import mcp_position_mm
-# let's get all the functions to be tested
+test_dir = os.path.dirname(__file__)
 
 
 def test_da_matrix():  # pylint: disable=too-many-locals
@@ -24,7 +19,7 @@ def test_da_matrix():  # pylint: disable=too-many-locals
 
     ########################################
     # Load the IGOR txt Di_coeff values for comparison
-    igor_data_path = os.fspath(f"{test_dir}/dataEPFL/R9132")
+    igor_data_path = os.fspath(f"{test_dir}/data/dataEPFL/R9132")
 
     # get the Da coefficients
     di_file_list = [f"{igor_data_path}/Da{i}_value.tsv" for i in np.arange(1, 8, 2)]
@@ -42,8 +37,9 @@ def test_da_matrix():  # pylint: disable=too-many-locals
             igor_d_coef_list.append(np.loadtxt(f_handle, delimiter="\t"))
     igor_d_coef_matrix = np.flip(np.vstack(igor_d_coef_list), axis=1)
 
-    config_path = os.fspath(f"{test_dir}/dataEPFL/config/config.yaml")
-    spa = SpecsAnalyzer(config=config_path)
+    config_path = os.fspath(f"{test_dir}/data/dataEPFL/config/config.yaml")
+    calib_config = {"calib2d_file": f"{test_dir}/data/phoibos150.calib2d"}
+    spa = SpecsAnalyzer(config=calib_config, user_config=config_path)
     calib2d_dict = spa.calib2d
     lens_mode = "WideAngleMode"
     kinetic_energy = 35.000000
@@ -75,9 +71,10 @@ def test_conversion_matrix():
     """Check the consistency of the conversion matrix with the
     Igor calculations.
     """
-    igor_data_path = os.fspath(f"{test_dir}/dataEPFL/R9132")
-    config_path = os.fspath(f"{test_dir}/dataEPFL/config/config.yaml")
-    spa = SpecsAnalyzer(config=config_path)
+    igor_data_path = os.fspath(f"{test_dir}/data/dataEPFL/R9132")
+    config_path = os.fspath(f"{test_dir}/data/dataEPFL/config/config.yaml")
+    calib_config = {"calib2d_file": f"{test_dir}/data/phoibos150.calib2d"}
+    spa = SpecsAnalyzer(config=calib_config, user_config=config_path)
     calib2d_dict = spa.calib2d
     lens_mode = "WideAngleMode"
     kinetic_energy = 35.000000
@@ -187,20 +184,21 @@ def test_conversion():
 
     # get the raw data
     raw_image_name = os.fspath(
-        f"{test_dir}/dataEPFL/R9132/Data9132_RAWDATA.tsv",
+        f"{test_dir}/data/dataEPFL/R9132/Data9132_RAWDATA.tsv",
     )
     with open(raw_image_name, encoding="utf-8") as file:
         tsv_data = np.loadtxt(file, delimiter="\t")
 
     # get the reference data
     reference_image_name = os.fspath(
-        f"{test_dir}/dataEPFL/R9132/Data9132_IGOR_corrected.tsv",
+        f"{test_dir}/data/dataEPFL/R9132/Data9132_IGOR_corrected.tsv",
     )
     with open(reference_image_name, encoding="utf-8") as file:
         reference = np.loadtxt(file, delimiter="\t")
 
-    config_path = os.fspath(f"{test_dir}/dataEPFL/config/config.yaml")
-    spa = SpecsAnalyzer(config=config_path)
+    config_path = os.fspath(f"{test_dir}/data/dataEPFL/config/config.yaml")
+    calib_config = {"calib2d_file": f"{test_dir}/data/phoibos150.calib2d"}
+    spa = SpecsAnalyzer(config=calib_config, user_config=config_path)
     lens_mode = "WideAngleMode"
     kinetic_energy = 35.000000
     pass_energy = 35.000000
@@ -229,14 +227,14 @@ def test_conversion_from_dict():
 
     # get the raw data
     raw_image_name = os.fspath(
-        f"{test_dir}/dataEPFL/R9132/Data9132_RAWDATA.tsv",
+        f"{test_dir}/data/dataEPFL/R9132/Data9132_RAWDATA.tsv",
     )
     with open(raw_image_name, encoding="utf-8") as file:
         tsv_data = np.loadtxt(file, delimiter="\t")
 
     # get the reference data
     reference_image_name = os.fspath(
-        f"{test_dir}/dataEPFL/R9132/Data9132_IGOR_corrected.tsv",
+        f"{test_dir}/data/dataEPFL/R9132/Data9132_IGOR_corrected.tsv",
     )
     with open(reference_image_name, encoding="utf-8") as file:
         reference = np.loadtxt(file, delimiter="\t")
@@ -309,13 +307,14 @@ def test_recycling():
     """
     # get the raw data
     raw_image_name = os.fspath(
-        f"{test_dir}/dataEPFL/R9132/Data9132_RAWDATA.tsv",
+        f"{test_dir}/data/dataEPFL/R9132/Data9132_RAWDATA.tsv",
     )
     with open(raw_image_name, encoding="utf-8") as file:
         tsv_data = np.loadtxt(file, delimiter="\t")
 
-    config_path = os.fspath(f"{test_dir}/dataEPFL/config/config.yaml")
-    spa = SpecsAnalyzer(config=config_path)
+    config_path = os.fspath(f"{test_dir}/data/dataEPFL/config/config.yaml")
+    calib_config = {"calib2d_file": f"{test_dir}/data/phoibos150.calib2d"}
+    spa = SpecsAnalyzer(config=calib_config, user_config=config_path)
     lens_mode = "WideAngleMode"
     kinetic_energy = 35.000000
     pass_energy = 35.000000
@@ -348,13 +347,14 @@ def test_cropping():
     """Test function for checking that cropping parameters are correctly applied"""
     # get the raw data
     raw_image_name = os.fspath(
-        f"{test_dir}/dataEPFL/R9132/Data9132_RAWDATA.tsv",
+        f"{test_dir}/data/dataEPFL/R9132/Data9132_RAWDATA.tsv",
     )
     with open(raw_image_name, encoding="utf-8") as file:
         tsv_data = np.loadtxt(file, delimiter="\t")
 
-    config_path = os.fspath(f"{test_dir}/dataEPFL/config/config.yaml")
-    spa = SpecsAnalyzer(config=config_path)
+    config_path = os.fspath(f"{test_dir}/data/dataEPFL/config/config.yaml")
+    calib_config = {"calib2d_file": f"{test_dir}/data/phoibos150.calib2d"}
+    spa = SpecsAnalyzer(config=calib_config, user_config=config_path)
     lens_mode = "WideAngleMode"
     kinetic_energy = 35.000000
     pass_energy = 35.000000

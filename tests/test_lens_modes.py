@@ -38,8 +38,9 @@ def test_lens_modes_angle(lens_mode):
     with open(raw_image_name, encoding="utf-8") as file:
         tsv_data = np.loadtxt(file, delimiter="\t")
 
-    configpath = os.fspath(f"{test_dir}/data/dataEPFL/config/config.yaml")
-    spa = SpecsAnalyzer(config=configpath)
+    config_path = os.fspath(f"{test_dir}/data/dataEPFL/config/config.yaml")
+    calib_config = {"calib2d_file": f"{test_dir}/data/phoibos150.calib2d"}
+    spa = SpecsAnalyzer(config=calib_config, user_config=config_path)
     kinetic_energy = np.random.uniform(20, 50)
     pass_energy = np.random.uniform(20, 50)
     work_function = 4.2
@@ -67,8 +68,9 @@ def test_lens_modes_space(lens_mode):
     with open(raw_image_name, encoding="utf-8") as file:
         tsv_data = np.loadtxt(file, delimiter="\t")
 
-    configpath = os.fspath(f"{test_dir}/data/dataEPFL/config/config.yaml")
-    spa = SpecsAnalyzer(config=configpath)
+    config_path = os.fspath(f"{test_dir}/data/dataEPFL/config/config.yaml")
+    calib_config = {"calib2d_file": f"{test_dir}/data/phoibos150.calib2d"}
+    spa = SpecsAnalyzer(config=calib_config, user_config=config_path)
     kinetic_energy = np.random.uniform(20, 50)
     pass_energy = np.random.uniform(20, 50)
     work_function = 4.2
@@ -95,8 +97,9 @@ def test_lens_raise():
     with open(raw_image_name, encoding="utf-8") as file:
         tsv_data = np.loadtxt(file, delimiter="\t")
 
-    configpath = os.fspath(f"{test_dir}/data/dataEPFL/config/config.yaml")
-    spa = SpecsAnalyzer(config=configpath)
+    config_path = os.fspath(f"{test_dir}/data/dataEPFL/config/config.yaml")
+    calib_config = {"calib2d_file": f"{test_dir}/data/phoibos150.calib2d"}
+    spa = SpecsAnalyzer(config=calib_config, user_config=config_path)
     kinetic_energy = 35.000000
     pass_energy = 35.000000
     work_function = 4.2
