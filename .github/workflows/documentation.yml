@@ -51,7 +51,6 @@ jobs:
           sudo wget https://github.com/jgm/pandoc/releases/download/3.1.8/pandoc-3.1.8-1-amd64.deb
           sudo dpkg -i pandoc-3.1.8-1-amd64.deb
 
-      # rm because hextof_workflow notebook can not run outside maxwell
       - name: copy tutorial files to docs
         run: |
           cp -r $GITHUB_WORKSPACE/tutorial $GITHUB_WORKSPACE/docs/
@@ -75,16 +74,11 @@ jobs:
     needs: build
     steps:
       - name: Checkout docs repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           repository: ${{ github.repository_owner }}/docs
           token: ${{ secrets.GITHUB_TOKEN }}
           path: 'docs-repo'
-
-      - name: Set up Python 3.10
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.10"
 
       - name: Setup SSH
         uses: webfactory/ssh-agent@v0.9.0

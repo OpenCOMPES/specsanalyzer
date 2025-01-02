@@ -19,6 +19,8 @@ jobs:
     steps:
       # Check out repo and set up Python
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
 # see https://stackoverflow.com/questions/57612428/cloning-private-github-repository-within-organisation-in-actions and https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent#generating-a-new-ssh-key
       - name: Fetch test data
@@ -40,7 +42,7 @@ jobs:
 
       - name: Install package
         run: |
-          uv pip install ".[dev]"
+          uv pip install -e ".[dev]"
 
       # Run pytest with coverage report, saving to xml
       - name: Run tests on python 3.8
