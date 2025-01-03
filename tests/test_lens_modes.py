@@ -8,7 +8,6 @@ import xarray as xr
 from specsanalyzer import SpecsAnalyzer
 
 test_dir = os.path.dirname(__file__)
-# noqa: EF841
 
 lensmodes_angle = [
     "LowAngularDispersion",

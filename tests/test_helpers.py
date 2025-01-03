@@ -7,7 +7,6 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-import specsscan
 from specsscan.core import load_images
 from specsscan.core import parse_lut_to_df
 

@@ -4,7 +4,6 @@ import os
 import numpy as np
 import pytest
 
-import specsanalyzer
 from specsanalyzer import SpecsAnalyzer
 from specsanalyzer.convert import calculate_matrix_correction
 from specsanalyzer.convert import calculate_polynomial_coef_da

@@ -2,18 +2,17 @@
 """
 import importlib.metadata
 import os
+from importlib.util import find_spec
 
 import numpy as np
 import pytest
 from pynxtools.dataconverter.convert import ValidationFailed
 
-import specsscan
 from specsanalyzer.core import create_fft_params
 from specsscan import __version__
 from specsscan import SpecsScan
 
-package_dir = os.path.dirname(specsscan.__file__)
-test_dir = package_dir + "/../../tests/data/"
+package_dir = os.path.dirname(find_spec("specsscan").origin)
 test_dir = os.path.dirname(__file__)
 data_dir = os.fspath(f"{test_dir}/data/")
 fft_filter_peaks = create_fft_params(amplitude=1, pos_x=82, pos_y=116, sigma_x=15, sigma_y=23)
