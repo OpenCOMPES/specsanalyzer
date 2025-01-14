@@ -2,19 +2,16 @@
 from __future__ import annotations
 
 import datetime as dt
-import json
 from pathlib import Path
 from typing import Any
 from typing import Sequence
-from urllib.error import HTTPError
-from urllib.error import URLError
-from urllib.request import urlopen
 
 import numpy as np
 import pandas as pd
 from tqdm.auto import tqdm
 
 from specsanalyzer.config import complete_dictionary
+from specsscan.metadata import MetadataRetriever
 
 
 def get_scan_path(path: Path | str, scan: int, basepath: Path | str) -> Path:
@@ -348,11 +345,13 @@ def handle_meta(
     df_lut: pd.DataFrame,
     scan_info: dict,
     config: dict,
+    scan: int,
     fast_axes: list[str],
     slow_axes: list[str],
     projection: str,
     metadata: dict = None,
     collect_metadata: bool = False,
+    token: str = None,
 ) -> dict:
     """Helper function for the handling metadata from different files
 
@@ -361,16 +360,18 @@ def handle_meta(
             from ``parse_lut_to_df()``
         scan_info (dict): scan_info class dict containing containing the contents of info.txt file
         config (dict): config dictionary containing the contents of config.yaml file
+        scan (int): Scan number
         fast_axes (list[str]): The fast-axis dimensions of the scan
         slow_axes (list[str]): The slow-axis dimensions of the scan
         metadata (dict, optional): Metadata dictionary with additional metadata for the scan.
             Defaults to empty dictionary.
         collect_metadata (bool, optional): Option to collect further metadata e.g. from EPICS
             archiver needed for NeXus conversion. Defaults to False.
+        token (str, optional):: The elabFTW api token to use for fetching metadata
 
     Returns:
         dict: metadata dictionary containing additional metadata from the EPICS
-        archive.
+        archive and elabFTW.
     """
 
     if metadata is None:
@@ -421,53 +422,18 @@ def handle_meta(
     }
 
     if collect_metadata:
-        # Get metadata from Epics archive if not present already
-        start = dt.datetime.utcfromtimestamp(ts_from).isoformat()
+        metadata_retriever = MetadataRetriever(config, token)
 
-        # replace metadata names by epics channels
-        try:
-            replace_dict = config["epics_channels"]
-            for key in list(metadata["scan_info"]):
-                if key.lower() in replace_dict:
-                    metadata["scan_info"][replace_dict[key.lower()]] = metadata["scan_info"][key]
-                    metadata["scan_info"].pop(key)
-            epics_channels = replace_dict.values()
-        except KeyError:
-            epics_channels = []
+        metadata = metadata_retriever.fetch_epics_metadata(
+            ts_from=ts_from,
+            ts_to=ts_to,
+            metadata=metadata,
+        )
 
-        channels_missing = set(epics_channels) - set(metadata["scan_info"].keys())
-        if channels_missing:
-            print("Collecting data from the EPICS archive...")
-            for channel in channels_missing:
-                try:
-                    _, vals = get_archiver_data(
-                        archiver_url=config.get("archiver_url"),
-                        archiver_channel=channel,
-                        ts_from=ts_from,
-                        ts_to=ts_to,
-                    )
-                    metadata["scan_info"][f"{channel}"] = np.mean(vals)
-
-                except IndexError:
-                    metadata["scan_info"][f"{channel}"] = np.nan
-                    print(
-                        f"Data for channel {channel} doesn't exist for time {start}",
-                    )
-                except HTTPError as exc:
-                    print(
-                        f"Incorrect URL for the archive channel {channel}. "
-                        "Make sure that the channel name and file start and end times are "
-                        "correct.",
-                    )
-                    print("Error code: ", exc)
-                except URLError as exc:
-                    print(
-                        f"Cannot access the archive URL for channel {channel}. "
-                        f"Make sure that you are within the FHI network."
-                        f"Skipping over channels {channels_missing}.",
-                    )
-                    print("Error code: ", exc)
-                    break
+        metadata = metadata_retriever.fetch_elab_metadata(
+            scan=scan,
+            metadata=metadata,
+        )
 
     metadata["scan_info"]["energy_scan_mode"] = energy_scan_mode
 
@@ -482,34 +448,6 @@ def handle_meta(
     print("Done!")
 
     return metadata
-
-
-def get_archiver_data(
-    archiver_url: str,
-    archiver_channel: str,
-    ts_from: float,
-    ts_to: float,
-) -> tuple[np.ndarray, np.ndarray]:
-    """Extract time stamps and corresponding data from and EPICS archiver instance
-
-    Args:
-        archiver_url (str): URL of the archiver data extraction interface
-        archiver_channel (str): EPICS channel to extract data for
-        ts_from (float): starting time stamp of the range of interest
-        ts_to (float): ending time stamp of the range of interest
-
-    Returns:
-        tuple[List, List]: The extracted time stamps and corresponding data
-    """
-    iso_from = dt.datetime.utcfromtimestamp(ts_from).isoformat()
-    iso_to = dt.datetime.utcfromtimestamp(ts_to).isoformat()
-    req_str = archiver_url + archiver_channel + "&from=" + iso_from + "Z&to=" + iso_to + "Z"
-    with urlopen(req_str) as req:
-        data = json.load(req)
-        secs = [x["secs"] + x["nanos"] * 1e-9 for x in data[0]["data"]]
-        vals = [x["val"] for x in data[0]["data"]]
-
-    return (np.asarray(secs), np.asarray(vals))
 
 
 def find_scan(path: Path, scan: int) -> list[Path]:

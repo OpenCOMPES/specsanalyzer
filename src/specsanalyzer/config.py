@@ -8,8 +8,16 @@ from importlib.util import find_spec
 from pathlib import Path
 
 import yaml
+from platformdirs import user_config_path
+
+from specsanalyzer.logging import setup_logging
 
 package_dir = os.path.dirname(find_spec("specsanalyzer").origin)
+
+USER_CONFIG_PATH = user_config_path(appname="specsscan", appauthor="OpenCOMPES", ensure_exists=True)
+
+# Configure logging
+logger = setup_logging("config")
 
 
 def parse_config(
@@ -61,7 +69,7 @@ def parse_config(
     else:
         config_dict = load_config(config)
         if verbose:
-            print(f"Configuration loaded from: [{str(Path(config).resolve())}]")
+            logger.info(f"Configuration loaded from: [{str(Path(config).resolve())}]")
 
     folder_dict: dict = None
     if isinstance(folder_config, dict):
@@ -72,7 +80,7 @@ def parse_config(
         if Path(folder_config).exists():
             folder_dict = load_config(folder_config)
             if verbose:
-                print(f"Folder config loaded from: [{str(Path(folder_config).resolve())}]")
+                logger.info(f"Folder config loaded from: [{str(Path(folder_config).resolve())}]")
 
     user_dict: dict = None
     if isinstance(user_config, dict):
@@ -85,7 +93,7 @@ def parse_config(
         if Path(user_config).exists():
             user_dict = load_config(user_config)
             if verbose:
-                print(f"User config loaded from: [{str(Path(user_config).resolve())}]")
+                logger.info(f"User config loaded from: [{str(Path(user_config).resolve())}]")
 
     system_dict: dict = None
     if isinstance(system_config, dict):
@@ -105,14 +113,14 @@ def parse_config(
         if Path(system_config).exists():
             system_dict = load_config(system_config)
             if verbose:
-                print(f"System config loaded from: [{str(Path(system_config).resolve())}]")
+                logger.info(f"System config loaded from: [{str(Path(system_config).resolve())}]")
 
     if isinstance(default_config, dict):
         default_dict = default_config
     else:
         default_dict = load_config(default_config)
         if verbose:
-            print(f"Default config loaded from: [{str(Path(default_config).resolve())}]")
+            logger.info(f"Default config loaded from: [{str(Path(default_config).resolve())}]")
 
     if folder_dict is not None:
         config_dict = complete_dictionary(
@@ -226,3 +234,78 @@ def complete_dictionary(dictionary: dict, base_dictionary: dict) -> dict:
                     dictionary[k] = v
 
     return dictionary
+
+
+def _parse_env_file(file_path: Path) -> dict:
+    """Helper function to parse a .env file into a dictionary.
+
+    Args:
+        file_path (Path): Path to the .env file
+
+    Returns:
+        dict: Dictionary of environment variables from the file
+    """
+    env_content = {}
+    if file_path.exists():
+        with open(file_path) as f:
+            for line in f:
+                line = line.strip()
+                if line and "=" in line:
+                    key, val = line.split("=", 1)
+                    env_content[key.strip()] = val.strip()
+    return env_content
+
+
+def read_env_var(var_name: str) -> str | None:
+    """Read an environment variable from multiple locations in order:
+    1. OS environment variables
+    2. .env file in current directory
+    3. .env file in user config directory
+
+    Args:
+        var_name (str): Name of the environment variable to read
+
+    Returns:
+        str | None: Value of the environment variable or None if not found
+    """
+    # First check OS environment variables
+    value = os.getenv(var_name)
+    if value is not None:
+        logger.debug(f"Found {var_name} in OS environment variables")
+        return value
+
+    # Then check .env in current directory
+    local_vars = _parse_env_file(Path(".env"))
+    if var_name in local_vars:
+        logger.debug(f"Found {var_name} in ./.env file")
+        return local_vars[var_name]
+
+    # Finally check .env in user config directory
+    user_vars = _parse_env_file(USER_CONFIG_PATH / ".env")
+    if var_name in user_vars:
+        logger.debug(f"Found {var_name} in user config .env file")
+        return user_vars[var_name]
+
+    logger.debug(f"Environment variable {var_name} not found in any location")
+    return None
+
+
+def save_env_var(var_name: str, value: str) -> None:
+    """Save an environment variable to the .env file in the user config directory.
+    If the file exists, preserves other variables. If not, creates a new file.
+
+    Args:
+        var_name (str): Name of the environment variable to save
+        value (str): Value to save for the environment variable
+    """
+    env_path = USER_CONFIG_PATH / ".env"
+    env_content = _parse_env_file(env_path)
+
+    # Update or add new variable
+    env_content[var_name] = value
+
+    # Write all variables back to file
+    with open(env_path, "w") as f:
+        for key, val in env_content.items():
+            f.write(f"{key}={val}\n")
+    logger.debug(f"Environment variable {var_name} saved to .env file")
