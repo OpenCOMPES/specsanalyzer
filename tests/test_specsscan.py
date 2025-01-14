@@ -1,24 +1,26 @@
 """This is a code that performs several tests for the SpecsScan core class functions
 """
+import importlib.metadata
 import os
+from importlib.util import find_spec
 
 import numpy as np
 import pytest
 from pynxtools.dataconverter.convert import ValidationFailed
 
-import specsscan
 from specsanalyzer.core import create_fft_params
 from specsscan import __version__
 from specsscan import SpecsScan
 
-package_dir = os.path.dirname(specsscan.__file__)
-test_dir = package_dir + "/../tests/data/"
+package_dir = os.path.dirname(find_spec("specsscan").origin)
+test_dir = os.path.dirname(__file__)
+data_dir = os.fspath(f"{test_dir}/data/")
 fft_filter_peaks = create_fft_params(amplitude=1, pos_x=82, pos_y=116, sigma_x=15, sigma_y=23)
 
 
 def test_version():
     """Test if the package has the correct version string."""
-    assert __version__ == "0.1.0"
+    assert __version__ == importlib.metadata.version("specsanalyzer")
 
 
 def test_default_config():
@@ -31,41 +33,27 @@ def test_default_config():
 
 def test_conversion_2d():
     """Test the conversion of a single-image scan"""
-    sps = SpecsScan(
-        config=test_dir + "config.yaml",
-        user_config={},
-        system_config={},
-    )
-    res_xarray = sps.load_scan(
-        scan=3610,
-        path=test_dir,
-    )
+    config_path = os.fspath(f"{test_dir}/data/config.yaml")
+    calib_config = {"spa_params": {"calib2d_file": f"{test_dir}/data/phoibos150.calib2d"}}
+    sps = SpecsScan(config=calib_config, user_config=config_path, system_config={})
+    res_xarray = sps.load_scan(scan=3610, path=data_dir)
     assert res_xarray.dims == ("Angle", "Ekin")
 
     with pytest.raises(IndexError):
-        res_xarray = sps.load_scan(
-            scan=3610,
-            path=test_dir,
-            iterations=[0],
-        )
+        res_xarray = sps.load_scan(scan=3610, path=data_dir, iterations=[0])
 
 
 def test_conversion_3d():
     """Test the conversion of a 3D scan"""
-    sps = SpecsScan(
-        config=test_dir + "config.yaml",
-        user_config={},
-        system_config={},
-    )
-    res_xarray = sps.load_scan(
-        scan=4450,
-        path=test_dir,
-    )
+    config_path = os.fspath(f"{test_dir}/data/config.yaml")
+    calib_config = {"spa_params": {"calib2d_file": f"{test_dir}/data/phoibos150.calib2d"}}
+    sps = SpecsScan(config=calib_config, user_config=config_path, system_config={})
+    res_xarray = sps.load_scan(scan=4450, path=data_dir)
     assert res_xarray.dims == ("Angle", "Ekin", "mirrorX")
 
     res_xarray2 = sps.load_scan(
         scan=4450,
-        path=test_dir,
+        path=data_dir,
         iterations=[0],
     )
     np.testing.assert_raises(
@@ -77,7 +65,7 @@ def test_conversion_3d():
 
     res_xarray2 = sps.load_scan(
         scan=4450,
-        path=test_dir,
+        path=data_dir,
         iterations=np.s_[0:2],
     )
     np.testing.assert_allclose(res_xarray, res_xarray2)
@@ -86,7 +74,7 @@ def test_conversion_3d():
         sps.load_scan(
             scan=4450,
             iterations=range(1, 20),
-            path=test_dir,
+            path=data_dir,
         )
 
 
@@ -100,7 +88,7 @@ def test_conversion_from_convert_dict():
     with pytest.raises(ValueError):
         res_xarray = sps.load_scan(
             scan=4450,
-            path=test_dir,
+            path=data_dir,
         )
 
     conversion_parameters = {
@@ -132,7 +120,7 @@ def test_conversion_from_convert_dict():
 
     res_xarray = sps.load_scan(
         scan=4450,
-        path=test_dir,
+        path=data_dir,
         conversion_parameters=conversion_parameters,
     )
 
@@ -142,16 +130,14 @@ def test_conversion_from_convert_dict():
 
 def test_checkscan():
     """Test the check_scan function"""
-    sps = SpecsScan(
-        config=test_dir + "config.yaml",
-        user_config={},
-        system_config={},
-    )
+    config_path = os.fspath(f"{test_dir}/data/config.yaml")
+    calib_config = {"spa_params": {"calib2d_file": f"{test_dir}/data/phoibos150.calib2d"}}
+    sps = SpecsScan(config=calib_config, user_config=config_path, system_config={})
 
     res_xarray = sps.check_scan(
         scan=4450,
         delays=[0],
-        path=test_dir,
+        path=data_dir,
     )
     assert res_xarray.dims == ("Angle", "Ekin", "Iteration")
 
@@ -159,23 +145,21 @@ def test_checkscan():
         sps.check_scan(
             scan=4450,
             delays=range(1, 20),
-            path=test_dir,
+            path=data_dir,
         )
 
 
 def test_checkscan_2d_raises():
     """Test that the check_scan function raises if a single image is loaded"""
-    sps = SpecsScan(
-        config=test_dir + "config.yaml",
-        user_config={},
-        system_config={},
-    )
+    config_path = os.fspath(f"{test_dir}/data/config.yaml")
+    calib_config = {"spa_params": {"calib2d_file": f"{test_dir}/data/phoibos150.calib2d"}}
+    sps = SpecsScan(config=calib_config, user_config=config_path, system_config={})
 
     with pytest.raises(ValueError):
         sps.check_scan(
             scan=3610,
             delays=[0],
-            path=test_dir,
+            path=data_dir,
         )
 
 
@@ -183,6 +167,7 @@ def test_process_sweep_scan():
     """Test the conversion of a sweep scan"""
     config = {
         "spa_params": {
+            "calib2d_file": f"{test_dir}/data/phoibos150.calib2d",
             "ek_range_min": 0.07597844332538357,
             "ek_range_max": 0.8965456312395133,
             "ang_range_min": 0.16732026143790849,
@@ -199,7 +184,7 @@ def test_process_sweep_scan():
     )
     res_xarray = sps.load_scan(
         scan=6455,
-        path=test_dir,
+        path=data_dir,
     )
     assert res_xarray.energy[0].values.item() == 20.953256232558136
     assert res_xarray.energy[-1].values.item() == 21.02424460465116
@@ -210,15 +195,13 @@ def test_process_sweep_scan():
 
 def test_crop_tool():
     """Test the crop tool"""
-    sps = SpecsScan(
-        config=test_dir + "config.yaml",
-        user_config={},
-        system_config={},
-    )
+    config_path = os.fspath(f"{test_dir}/data/config.yaml")
+    calib_config = {"spa_params": {"calib2d_file": f"{test_dir}/data/phoibos150.calib2d"}}
+    sps = SpecsScan(config=calib_config, user_config=config_path, system_config={})
 
     res_xarray = sps.load_scan(
         scan=3610,
-        path=test_dir,
+        path=data_dir,
         crop=True,
     )
 
@@ -231,7 +214,7 @@ def test_crop_tool():
 
     res_xarray = sps.load_scan(
         scan=3610,
-        path=test_dir,
+        path=data_dir,
         ek_range_min=0.1,
         ek_range_max=0.9,
         ang_range_min=0.1,
@@ -255,7 +238,7 @@ def test_crop_tool():
 
     res_xarray = sps.load_scan(
         scan=3610,
-        path=test_dir,
+        path=data_dir,
     )
     assert res_xarray.Angle[0] == -14.34375
     assert res_xarray.Angle[-1] == 14.203125
@@ -267,15 +250,12 @@ def test_crop_tool():
 
 def test_fft_tool():
     """Test the fft tool"""
-
-    sps = SpecsScan(
-        config=test_dir + "config.yaml",
-        user_config={},
-        system_config={},
-    )
+    config_path = os.fspath(f"{test_dir}/data/config.yaml")
+    calib_config = {"spa_params": {"calib2d_file": f"{test_dir}/data/phoibos150.calib2d"}}
+    sps = SpecsScan(config=calib_config, user_config=config_path, system_config={})
     res_xarray = sps.load_scan(
         scan=3610,
-        path=test_dir,
+        path=data_dir,
         apply_fft_filter=False,
     )
 
@@ -283,7 +263,7 @@ def test_fft_tool():
 
     res_xarray = sps.load_scan(
         scan=3610,
-        path=test_dir,
+        path=data_dir,
         fft_filter_peaks=fft_filter_peaks,
         apply_fft_filter=True,
     )
@@ -299,13 +279,16 @@ def test_fft_tool():
     )
     assert sps.config["spa_params"]["fft_filter_peaks"] == fft_filter_peaks
     assert sps.spa.config["fft_filter_peaks"] == fft_filter_peaks
-    res_xarray = sps.load_scan(scan=3610, path=test_dir, apply_fft_filter=True)
+    res_xarray = sps.load_scan(scan=3610, path=data_dir, apply_fft_filter=True)
     np.testing.assert_almost_equal(res_xarray.data.sum(), 62197237155.50347, decimal=3)
 
 
 def test_conversion_and_save_to_nexus():
     """Test the conversion of a tilt scan and saving as NeXus"""
-    config = {"nexus": {"input_files": [package_dir + "/config/NXmpes_arpes_config.json"]}}
+    config = {
+        "nexus": {"input_files": [package_dir + "/config/NXmpes_arpes_config.json"]},
+        "spa_params": {"calib2d_file": f"{test_dir}/data/phoibos150.calib2d"},
+    }
     sps = SpecsScan(
         config=config,
         user_config=package_dir + "/config/example_config_FHI.yaml",
@@ -314,7 +297,7 @@ def test_conversion_and_save_to_nexus():
 
     res_xarray = sps.load_scan(
         scan=1496,
-        path=test_dir,
+        path=data_dir,
         crop=True,
     )
 
@@ -356,7 +339,7 @@ def test_conversion_and_save_to_nexus():
     metadata["scan_info"]["trARPES:Sample:Measure"] = 0
     res_xarray = sps.load_scan(
         scan=1496,
-        path=test_dir,
+        path=data_dir,
         crop=True,
         metadata=metadata,
         collect_metadata=True,

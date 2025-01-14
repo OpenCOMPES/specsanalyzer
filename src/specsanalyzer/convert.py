@@ -91,7 +91,7 @@ def get_damatrix_from_calib2d(
         dims = ["Position", "Ekin"]
 
     else:
-        raise ValueError(f"Unrecognized lens mode '{lens_mode}")
+        raise ValueError(f"Unrecognized lens mode '{lens_mode}'")
 
     return a_inner, da_matrix, retardation_ratio, source, dims
 
@@ -424,8 +424,8 @@ def calculate_matrix_correction(
 
     angle_axis = np.linspace(angle_low, angle_high, ny_pixels, endpoint=False)
 
-    mcp_position_mm_matrix = np.zeros([nx_pixels, ny_pixels])
-    angular_correction_matrix = np.zeros([nx_pixels, ny_pixels])
+    mcp_position_mm_matrix = np.zeros([nx_pixels, ny_pixels], dtype=float)
+    angular_correction_matrix = np.zeros([nx_pixels, ny_pixels], dtype=float)
     e_correction = np.zeros(ek_axis.shape)
 
     # create a meshgrid for vectorized evaluation

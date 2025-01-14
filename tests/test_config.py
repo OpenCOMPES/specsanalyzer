@@ -1,7 +1,6 @@
 """This is a code that performs several tests for the settings loader."""
 import os
 import tempfile
-from importlib.util import find_spec
 from pathlib import Path
 
 import pytest
@@ -11,7 +10,7 @@ from specsanalyzer.config import load_config
 from specsanalyzer.config import parse_config
 from specsanalyzer.config import save_config
 
-package_dir = os.path.dirname(find_spec("specsanalyzer").origin)
+test_dir = os.path.dirname(__file__)
 default_config_keys = [
     "calib2d_file",
     "nx_pixel",
@@ -44,10 +43,10 @@ def test_load_dict():
 def test_load_config():
     """Test if the config loader can handle json and yaml files."""
     config_json = load_config(
-        f"{package_dir}/../tests/data/config/config.json",
+        f"{test_dir}/data/config/config.json",
     )
     config_yaml = load_config(
-        f"{package_dir}/../tests/data/config/config.yaml",
+        f"{test_dir}/data/config/config.yaml",
     )
     assert config_json == config_yaml
 
@@ -55,7 +54,7 @@ def test_load_config():
 def test_load_config_raise():
     """Test if the config loader raises an error for a wrong file type."""
     with pytest.raises(TypeError):
-        load_config(f"{package_dir}/../README.md")
+        load_config(f"{test_dir}/../README.md")
 
 
 def test_complete_dictionary():

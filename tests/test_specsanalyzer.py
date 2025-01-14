@@ -1,16 +1,13 @@
 """This is a code that performs several tests for the SpecsAnalyzer core class functions"""
-import os
-from importlib.util import find_spec
+import importlib.metadata
 
 from specsanalyzer import __version__
 from specsanalyzer import SpecsAnalyzer
 
-package_dir = os.path.dirname(find_spec("specsanalyzer").origin)
-
 
 def test_version():
     """Test if the package has the correct version string."""
-    assert __version__ == "0.1.0"
+    assert __version__ == importlib.metadata.version("specsanalyzer")
 
 
 def test_default_config():
