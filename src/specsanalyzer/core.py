@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import os
 from typing import Any
-from typing import Generator
 
 import imutils
 import ipywidgets as ipw
@@ -382,6 +381,8 @@ class SpecsAnalyzer:
                 - ek_range_max
                 - ang_range_min
                 - ang_range_max
+                - angle_offset_px
+                - rotation_angle
 
                 Other parameters are passed to ``convert_image()``.
         """
@@ -410,18 +411,10 @@ class SpecsAnalyzer:
         linev2 = ax.axvline(x=data_array.Ekin[-1])
 
         try:
-            ang_range_min = (
-                kwds["ang_range_min"] if "ang_range_min" in kwds else self._config["ang_range_min"]
-            )
-            ang_range_max = (
-                kwds["ang_range_max"] if "ang_range_max" in kwds else self._config["ang_range_max"]
-            )
-            ek_range_min = (
-                kwds["ek_range_min"] if "ek_range_min" in kwds else self._config["ek_range_min"]
-            )
-            ek_range_max = (
-                kwds["ek_range_max"] if "ek_range_max" in kwds else self._config["ek_range_max"]
-            )
+            ang_range_min = kwds.get("ang_range_min", self._config["ang_range_min"])
+            ang_range_max = kwds.get("ang_range_max", self._config["ang_range_max"])
+            ek_range_min = kwds.get("ek_range_min", self._config["ek_range_min"])
+            ek_range_max = kwds.get("ek_range_max", self._config["ek_range_max"])
             ang_min = (
                 ang_range_min
                 * (
@@ -473,6 +466,15 @@ class SpecsAnalyzer:
         vline_range = [ek_min, ek_max]
         hline_range = [ang_min, ang_max]
 
+        angle_offset_px = kwds.get("angle_offset_px", self._config.get("angle_offset_px", 0))
+        rotation_angle = kwds.get("rotation_angle", self._config.get("rotation_angle", 0))
+
+        clim_slider = ipw.FloatRangeSlider(
+            description="colorbar limits",
+            value=[data_array.data.min(), data_array.data.max()],
+            min=data_array.data.min(),
+            max=data_array.data.max(),
+        )
         vline_slider = ipw.FloatRangeSlider(
             description="Ekin",
             value=vline_range,
@@ -487,14 +489,33 @@ class SpecsAnalyzer:
             max=data_array.Angle[-1],
             step=0.1,
         )
-        clim_slider = ipw.FloatRangeSlider(
-            description="colorbar limits",
-            value=[data_array.data.min(), data_array.data.max()],
-            min=data_array.data.min(),
-            max=data_array.data.max(),
+        ang_offset_slider = ipw.FloatSlider(
+            description="Angle offset",
+            value=angle_offset_px,
+            min=-20,
+            max=20,
+            step=1,
+        )
+        rotation_slider = ipw.FloatSlider(
+            description="Rotation angle",
+            value=rotation_angle,
+            min=-5,
+            max=5,
+            step=0.1,
         )
 
-        def update(hline, vline, v_vals):
+        def update(hline, vline, v_vals, angle_offset_px, rotation_angle):
+            data_array = self.convert_image(
+                raw_img=raw_img,
+                lens_mode=lens_mode,
+                kinetic_energy=kinetic_energy,
+                pass_energy=pass_energy,
+                work_function=work_function,
+                crop=False,
+                angle_offset_px=angle_offset_px,
+                rotation_angle=rotation_angle,
+            )
+            mesh_obj.update({"array": data_array.data})
             lineh1.set_ydata([hline[0]])
             lineh2.set_ydata([hline[1]])
             linev1.set_xdata([vline[0]])
@@ -507,9 +528,11 @@ class SpecsAnalyzer:
             hline=hline_slider,
             vline=vline_slider,
             v_vals=clim_slider,
+            angle_offset_px=ang_offset_slider,
+            rotation_angle=rotation_slider,
         )
 
-        def cropit(val):  # pylint: disable=unused-argument
+        def cropit(val):  # noqa: ARG001
             ang_min = min(hline_slider.value)
             ang_max = max(hline_slider.value)
             ek_min = min(vline_slider.value)
@@ -552,6 +575,8 @@ class SpecsAnalyzer:
                 )
             ).item()
             self._config["crop"] = True
+            self._config["angle_offset_px"] = ang_offset_slider.value
+            self._config["rotation_angle"] = rotation_slider.value
 
             ax.cla()
             self._data_array.plot(ax=ax, add_colorbar=False)
@@ -561,6 +586,8 @@ class SpecsAnalyzer:
             hline_slider.close()
             clim_slider.close()
             apply_button.close()
+            ang_offset_slider.close()
+            rotation_slider.close()
 
         apply_button = ipw.Button(description="Crop")
         display(apply_button)
@@ -727,7 +754,7 @@ class SpecsAnalyzer:
             v_vals=clim_slider,
         )
 
-        def apply_fft(apply: bool):  # pylint: disable=unused-argument
+        def apply_fft(apply: bool):  # noqa: ARG001
             amplitude = amplitude_slider.value
             pos_x = pos_x_slider.value
             pos_y = pos_y_slider.value
