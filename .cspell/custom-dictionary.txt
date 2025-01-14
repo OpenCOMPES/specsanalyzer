@@ -2,6 +2,8 @@
 allclose
 ALLUSERSPROFILE
 amperemeter
+appauthor
+appname
 arange
 archiver
 argwhere
@@ -38,10 +40,14 @@ dxde
 dyda
 dyde
 Ekin
+elab
+elabapi
+elabid
 electronanalyser
 elems
 endstation
 energydispersion
+entityid
 eshift
 faddr
 Faradayweg
@@ -72,6 +78,7 @@ kwds
 labview
 Laurenz
 lensmodes
+levelname
 lineh
 linev
 listf
@@ -102,6 +109,7 @@ Nxpix
 Nxpixels
 Nypixels
 OPCPA
+orcid
 pcolormesh
 Phoibos
 polyfit
@@ -120,6 +128,7 @@ rrvec
 rtol
 rtype
 scanvector
+sharelink
 specsanalyzer
 Specslab
 specsscan
@@ -134,6 +143,7 @@ tqdm
 typehints
 TZCYXS
 undoc
+userid
 venv
 viewcode
 vline

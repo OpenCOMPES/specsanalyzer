@@ -17,9 +17,11 @@ from tqdm.auto import tqdm
 
 from specsanalyzer import SpecsAnalyzer
 from specsanalyzer.config import parse_config
+from specsanalyzer.config import save_config
 from specsanalyzer.io import to_h5
 from specsanalyzer.io import to_nexus
 from specsanalyzer.io import to_tiff
+from specsanalyzer.logging import setup_logging
 from specsscan.helpers import get_coords
 from specsscan.helpers import get_scan_path
 from specsscan.helpers import handle_meta
@@ -29,6 +31,9 @@ from specsscan.helpers import parse_lut_to_df
 
 
 package_dir = os.path.dirname(find_spec("specsscan").origin)
+
+# Configure logging
+logger = setup_logging("specsscan")
 
 
 class SpecsScan:
@@ -144,6 +149,7 @@ class SpecsScan:
             xr.DataArray: xarray DataArray object with kinetic energy, angle/position and
             optionally a third scanned axis (for ex., delay, temperature) as coordinates.
         """
+        token = kwds.pop("token", None)
         scan_path = get_scan_path(path, scan, self._config["data_path"])
         df_lut = parse_lut_to_df(scan_path)
 
@@ -269,14 +275,16 @@ class SpecsScan:
 
         self.metadata.update(
             **handle_meta(
-                df_lut,
-                self._scan_info,
-                self.config,
+                df_lut=df_lut,
+                scan_info=self._scan_info,
+                config=self.config["metadata"],
+                scan=scan,
                 fast_axes=list(fast_axes),  # type: ignore
                 slow_axes=list(slow_axes),
                 projection=projection,
                 metadata=copy.deepcopy(metadata),
                 collect_metadata=collect_metadata,
+                token=token,
             ),
             **{"loader": loader_dict},
             **{"conversion_parameters": conversion_metadata},
@@ -323,6 +331,38 @@ class SpecsScan:
             **kwds,
         )
 
+    def save_crop_params(
+        self,
+        filename: str = None,
+        overwrite: bool = False,
+    ):
+        """Save the generated crop parameters to the folder config file.
+
+        Args:
+            filename (str, optional): Filename of the config dictionary to save to.
+                Defaults to "specs_config.yaml" in the current folder.
+            overwrite (bool, optional): Option to overwrite the present dictionary.
+                Defaults to False.
+        """
+        if filename is None:
+            filename = "specs_config.yaml"
+        if "ek_range_min" not in self.spa.config:
+            raise ValueError("No crop parameters to save!")
+
+        config = {
+            "spa_params": {
+                "crop": self.spa.config["crop"],
+                "ek_range_min": self.spa.config["ek_range_min"],
+                "ek_range_max": self.spa.config["ek_range_max"],
+                "ang_range_min": self.spa.config["ang_range_min"],
+                "ang_range_max": self.spa.config["ang_range_max"],
+                "angle_offset_px": self.spa.config["angle_offset_px"],
+                "rotation_angle": self.spa.config["rotation_angle"],
+            },
+        }
+        save_config(config, filename, overwrite)
+        logger.info(f'Saved crop parameters to "{filename}".')
+
     def fft_tool(self, scan: int = None, path: Path | str = "", **kwds):
         """FFT tool to play around with the peak parameters in the Fourier plane. Built to filter
         out the meshgrid appearing in the raw data images. The optimized parameters are stored in
@@ -360,6 +400,33 @@ class SpecsScan:
             **kwds,
         )
 
+    def save_fft_params(
+        self,
+        filename: str = None,
+        overwrite: bool = False,
+    ):
+        """Save the generated fft filter parameters to the folder config file.
+
+        Args:
+            filename (str, optional): Filename of the config dictionary to save to.
+                Defaults to "specs_config.yaml" in the current folder.
+            overwrite (bool, optional): Option to overwrite the present dictionary.
+                Defaults to False.
+        """
+        if filename is None:
+            filename = "specs_config.yaml"
+        if len(self.spa.config["fft_filter_peaks"]) == 0:
+            raise ValueError("No fft parameters to save!")
+
+        config = {
+            "spa_params": {
+                "fft_filter_peaks": self.spa.config["fft_filter_peaks"],
+                "apply_fft_filter": self.spa.config["apply_fft_filter"],
+            },
+        }
+        save_config(config, filename, overwrite)
+        logger.info(f'Saved fft parameters to "{filename}".')
+
     def check_scan(
         self,
         scan: int,
@@ -390,6 +457,7 @@ class SpecsScan:
         Returns:
             xr.DataArray: 3-D xarray of dimensions (Ekin, Angle, Iterations)
         """
+        token = kwds.pop("token", None)
         scan_path = get_scan_path(path, scan, self._config["data_path"])
         df_lut = parse_lut_to_df(scan_path)
 
@@ -437,7 +505,7 @@ class SpecsScan:
 
         conversion_metadata = xr_list[0].attrs["conversion_parameters"]
 
-        dims = get_coords(
+        dims = get_coords(  # noqa: F841
             scan_path=scan_path,
             scan_type=scan_type,
             scan_info=self._scan_info,
@@ -465,14 +533,16 @@ class SpecsScan:
 
         self.metadata.update(
             **handle_meta(
-                df_lut,
-                self._scan_info,
-                self.config,
+                df_lut=df_lut,
+                scan_info=self._scan_info,
+                config=self.config["metadata"],
+                scan=scan,
                 fast_axes=list(fast_axes),  # type: ignore
                 slow_axes=list(slow_axes),
                 projection=projection,
-                metadata=metadata,
+                metadata=copy.deepcopy(metadata),
                 collect_metadata=collect_metadata,
+                token=token,
             ),
             **{"loader": loader_dict},
             **{"conversion_parameters": conversion_metadata},
@@ -616,7 +686,7 @@ class SpecsScan:
             )
             or not self.spa.config["crop"]
         ):
-            warn("No valid cropping parameters found, consider using crop_tool() to set.")
+            logger.warning("No valid cropping parameters found, consider using crop_tool() to set.")
 
         e_step = converted.Ekin[1] - converted.Ekin[0]
         e0 = converted.Ekin[-1] - ekin_step
