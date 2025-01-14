@@ -187,7 +187,7 @@ class MetadataRetriever:
             if item.metadata is not None:
                 metadata_json = json.loads(item.metadata)
                 for key, val in metadata_json["extra_fields"].items():
-                    if val["value"] and val["value"] != ["None"]:
+                    if val["value"] is not None and val["value"] != "" and val["value"] != ["None"]:
                         try:
                             metadata["elabFTW"][category][key] = float(val["value"])
                         except ValueError:
