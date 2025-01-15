@@ -36,19 +36,22 @@ units:
   spatial0: "mm"
   voltage: "V"
 
-# URL of the epics archiver request engine
-archiver_url: "http://__epicsarchiver_host__:17668/retrieval/data/getData.json?pv="
-# dictionary containing axis names with Epics channels to request from the EPICS archiver
-epics_channels:
-  tempa: "trARPES:Carving:TEMP_RBV"
-  x: "trARPES:Carving:TRX.RBV"
-  y: "trARPES:Carving:TRY.RBV"
-  z: "trARPES:Carving:TRZ.RBV"
-  polar: "trARPES:Carving:THT.RBV"
-  tilt: "trARPES:Carving:PHI.RBV"
-  azimuth: "trARPES:Carving:OMG.RBV"
-  drain_current: "trARPES:Sample:Measure"
-  pressure: "trARPES:XGS600:PressureAC:P_RD"
+metadata:
+  # URL of the elabFTW instance API interface
+  elab_url: "https://__elabftw_host__/api/v2"
+  # URL of the epics archiver request engine
+  archiver_url: "http://__epicsarchiver_host__:17668/retrieval/data/getData.json?pv="
+  # dictionary containing axis names with Epics channels to request from the EPICS archiver
+  epics_channels:
+    tempa: "trARPES:Carving:TEMP_RBV"
+    x: "trARPES:Carving:TRX.RBV"
+    y: "trARPES:Carving:TRY.RBV"
+    z: "trARPES:Carving:TRZ.RBV"
+    polar: "trARPES:Carving:THT.RBV"
+    tilt: "trARPES:Carving:PHI.RBV"
+    azimuth: "trARPES:Carving:OMG.RBV"
+    drain_current: "trARPES:Sample:Measure"
+    pressure: "trARPES:XGS600:PressureAC:P_RD"
 
 # parameters for NeXus conversion
 nexus:
