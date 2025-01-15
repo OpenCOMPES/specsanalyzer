@@ -12,6 +12,7 @@ from urllib.request import urlopen
 
 import elabapi_python
 import numpy as np
+from urllib3.exceptions import MaxRetryError
 
 from specsanalyzer.config import read_env_var
 from specsanalyzer.config import save_env_var
@@ -152,6 +153,9 @@ class MetadataRetriever:
             experiment = self.experimentsApi.read_experiments(q=f"'Phoibos scan {scan}'")[0]
         except IndexError:
             logger.warning(f"No elabFTW entry found for run {scan}")
+            return metadata
+        except MaxRetryError:
+            logger.warning("Connection to elabFTW could not be established. Check accessibility")
             return metadata
 
         if "elabFTW" not in metadata:

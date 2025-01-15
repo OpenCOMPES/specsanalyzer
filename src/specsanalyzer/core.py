@@ -411,10 +411,18 @@ class SpecsAnalyzer:
         linev2 = ax.axvline(x=data_array.Ekin[-1])
 
         try:
-            ang_range_min = kwds.get("ang_range_min", self._config["ang_range_min"])
-            ang_range_max = kwds.get("ang_range_max", self._config["ang_range_max"])
-            ek_range_min = kwds.get("ek_range_min", self._config["ek_range_min"])
-            ek_range_max = kwds.get("ek_range_max", self._config["ek_range_max"])
+            ang_range_min = (
+                kwds["ang_range_min"] if "ang_range_min" in kwds else self._config["ang_range_min"]
+            )
+            ang_range_max = (
+                kwds["ang_range_max"] if "ang_range_max" in kwds else self._config["ang_range_max"]
+            )
+            ek_range_min = (
+                kwds["ek_range_min"] if "ek_range_min" in kwds else self._config["ek_range_min"]
+            )
+            ek_range_max = (
+                kwds["ek_range_max"] if "ek_range_max" in kwds else self._config["ek_range_max"]
+            )
             ang_min = (
                 ang_range_min
                 * (

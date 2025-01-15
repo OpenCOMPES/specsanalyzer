@@ -277,7 +277,7 @@ class SpecsScan:
             **handle_meta(
                 df_lut=df_lut,
                 scan_info=self._scan_info,
-                config=self.config["metadata"],
+                config=self.config.get("metadata", {}),
                 scan=scan,
                 fast_axes=list(fast_axes),  # type: ignore
                 slow_axes=list(slow_axes),
@@ -535,7 +535,7 @@ class SpecsScan:
             **handle_meta(
                 df_lut=df_lut,
                 scan_info=self._scan_info,
-                config=self.config["metadata"],
+                config=self.config.get("metadata", {}),
                 scan=scan,
                 fast_axes=list(fast_axes),  # type: ignore
                 slow_axes=list(slow_axes),
