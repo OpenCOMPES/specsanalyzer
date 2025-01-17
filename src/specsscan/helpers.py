@@ -2,16 +2,21 @@
 from __future__ import annotations
 
 import datetime as dt
+import logging
 from pathlib import Path
 from typing import Any
 from typing import Sequence
 
 import numpy as np
 import pandas as pd
+import xarray as xr
 from tqdm.auto import tqdm
 
 from specsanalyzer.config import complete_dictionary
 from specsscan.metadata import MetadataRetriever
+
+# Configure logging
+logger = logging.getLogger("specsanalyzer.specsscan")
 
 
 def get_scan_path(path: Path | str, scan: int, basepath: Path | str) -> Path:
@@ -123,7 +128,7 @@ def load_images(
                 "load_scan method.",
             ) from exc
 
-        print(f"Averaging over {avg_dim}...")
+        logger.info(f"Averaging over {avg_dim}...")
         for dim in tqdm(raw_2d_sliced):
             avg_list = []
             for image in tqdm(dim, leave=False, disable=not tqdm_enable_nested):
@@ -210,14 +215,14 @@ def parse_lut_to_df(scan_path: Path) -> pd.DataFrame:
         df_lut.reset_index(inplace=True)
 
         new_cols = df_lut.columns.to_list()[1:]
-        new_cols[new_cols.index("delaystage")] = "Delay"
+        new_cols[new_cols.index("delaystage")] = "DelayStage"
         new_cols.insert(3, "delay (fs)")  # Create label to drop the column later
 
         df_lut = df_lut.set_axis(new_cols, axis="columns")
         df_lut.drop(columns="delay (fs)", inplace=True)
 
     except FileNotFoundError:
-        print(
+        logger.info(
             "LUT.txt not found. Storing metadata from info.txt",
         )
         return None
@@ -265,7 +270,7 @@ def get_coords(
             return (np.array([]), "")
 
         if df_lut is not None:
-            print("scanvector.txt not found. Obtaining coordinates from LUT")
+            logger.info("scanvector.txt not found. Obtaining coordinates from LUT")
 
             df_new: pd.DataFrame = df_lut.loc[:, df_lut.columns[2:]]
 
@@ -276,11 +281,16 @@ def get_coords(
             raise FileNotFoundError("scanvector.txt file not found!") from exc
 
     if scan_type == "delay":
-        t_0 = scan_info["TimeZero"]
-        coords -= t_0
-        coords *= 2 / 3e11 * 1e15
+        t0 = scan_info["TimeZero"]
+        coords = mm_to_fs(coords, t0)
 
     return coords, dim
+
+
+def mm_to_fs(delaystage: xr.DataArray | np.ndarray | float, t0: float) -> float:
+    delay = delaystage - t0
+    delay *= 2 / 2.99792458e11 * 1e15
+    return delay
 
 
 def compare_coords(axis_data: np.ndarray) -> tuple[np.ndarray, int]:
@@ -338,6 +348,9 @@ def parse_info_to_dict(path: Path) -> dict:
     except FileNotFoundError as exc:
         raise FileNotFoundError("info.txt file not found.") from exc
 
+    if "DelayStage" in info_dict and "TimeZero" in info_dict:
+        info_dict["delay"] = mm_to_fs(info_dict["DelayStage"], info_dict["TimeZero"])
+
     return info_dict
 
 
@@ -377,7 +390,7 @@ def handle_meta(
     if metadata is None:
         metadata = {}
 
-    print("Gathering metadata from different locations")
+    logger.info("Gathering metadata from different locations")
     # get metadata from LUT dataframe
     lut_meta = {}
     energy_scan_mode = "snapshot"
@@ -395,10 +408,10 @@ def handle_meta(
 
     metadata["scan_info"] = complete_dictionary(
         metadata.get("scan_info", {}),
-        complete_dictionary(lut_meta, scan_info),
+        complete_dictionary(scan_info, lut_meta),
     )  # merging dictionaries
 
-    print("Collecting time stamps...")
+    logger.info("Collecting time stamps...")
     if "time" in metadata["scan_info"]:
         time_list = [metadata["scan_info"]["time"][0], metadata["scan_info"]["time"][-1]]
     elif "StartTime" in metadata["scan_info"]:
@@ -445,8 +458,6 @@ def handle_meta(
     metadata["scan_info"]["slow_axes"] = slow_axes
     metadata["scan_info"]["fast_axes"] = fast_axes
 
-    print("Done!")
-
     return metadata
 
 
@@ -460,7 +471,7 @@ def find_scan(path: Path, scan: int) -> list[Path]:
     Returns:
         List[Path]: scan_path: Path object pointing to the scan folder
     """
-    print("Scan path not provided, searching directories...")
+    logger.info("Scan path not provided, searching directories...")
     for file in path.iterdir():
         if file.is_dir():
             try:
@@ -474,7 +485,7 @@ def find_scan(path: Path, scan: int) -> list[Path]:
                     file.glob(f"*/*/Raw Data/{scan}"),
                 )
                 if scan_path:
-                    print("Scan found at path:", scan_path[0])
+                    logger.info(f"Scan found at path: {scan_path[0]}")
                     break
     else:
         scan_path = []
