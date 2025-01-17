@@ -90,7 +90,7 @@ class MetadataRetriever:
             for key in list(metadata["scan_info"]):
                 if key.lower() in replace_dict:
                     metadata["scan_info"][replace_dict[key.lower()]] = metadata["scan_info"][key]
-                    metadata["scan_info"].pop(key)
+                    del metadata["scan_info"][key]
             epics_channels = replace_dict.values()
         except KeyError:
             epics_channels = []
