@@ -20,8 +20,13 @@ from specsanalyzer.convert import get_damatrix_from_calib2d
 from specsanalyzer.convert import physical_unit_data
 from specsanalyzer.img_tools import crop_xarray
 from specsanalyzer.img_tools import fourier_filter_2d
+from specsanalyzer.logging import set_verbosity
+from specsanalyzer.logging import setup_logging
 
 package_dir = os.path.dirname(__file__)
+
+# Configure logging
+logger = setup_logging("specsanalyzer")
 
 
 class SpecsAnalyzer:
@@ -38,6 +43,7 @@ class SpecsAnalyzer:
         self,
         metadata: dict[Any, Any] = {},
         config: dict[Any, Any] | str = {},
+        verbose: bool = True,
         **kwds,
     ):
         """SpecsAnalyzer constructor.
@@ -45,12 +51,14 @@ class SpecsAnalyzer:
         Args:
             metadata (dict, optional): Metadata dictionary. Defaults to {}.
             config (dict | str, optional): Metadata dictionary or file path. Defaults to {}.
+            verbose (bool, optional): Disable info logs if set to False.
             **kwds: Keyword arguments passed to ``parse_config``.
         """
         self._config = parse_config(
             config,
             **kwds,
         )
+        set_verbosity(logger, verbose)
         self.metadata = metadata
         self._data_array = None
         self.print_msg = True
@@ -286,7 +294,7 @@ class SpecsAnalyzer:
                 ek_min = range_dict["ek_min"]
                 ek_max = range_dict["ek_max"]
                 if self.print_msg:
-                    print("Using saved crop parameters...")
+                    logger.info("Using saved crop parameters...")
                 data_array = crop_xarray(data_array, ang_min, ang_max, ek_min, ek_max)
             except KeyError:
                 try:
@@ -343,11 +351,13 @@ class SpecsAnalyzer:
                         + data_array.coords[data_array.dims[1]][0]
                     )
                     if self.print_msg:
-                        print("Cropping parameters not found, using cropping ranges from config...")
+                        logger.info(
+                            "Cropping parameters not found, using cropping ranges from config...",
+                        )
                     data_array = crop_xarray(data_array, ang_min, ang_max, ek_min, ek_max)
                 except KeyError:
                     if self.print_msg:
-                        print(
+                        logger.warning(
                             "Warning: Cropping parameters not found, "
                             "use method crop_tool() after loading.",
                         )
@@ -402,7 +412,7 @@ class SpecsAnalyzer:
         try:
             mesh_obj = data_array.plot(ax=ax)
         except AttributeError:
-            print("Load the scan first!")
+            logger.info("Load the scan first!")
             raise
 
         lineh1 = ax.axhline(y=data_array.Angle[0])
@@ -650,7 +660,7 @@ class SpecsAnalyzer:
 
             filtered = fourier_filter_2d(raw_image, peaks=fft_filter_peaks, ret="filtered")
         except IndexError:
-            print("Load the scan first!")
+            logger.warning("Load the scan first!")
             raise
 
         fig = plt.figure()

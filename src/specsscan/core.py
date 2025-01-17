@@ -21,6 +21,7 @@ from specsanalyzer.config import save_config
 from specsanalyzer.io import to_h5
 from specsanalyzer.io import to_nexus
 from specsanalyzer.io import to_tiff
+from specsanalyzer.logging import set_verbosity
 from specsanalyzer.logging import setup_logging
 from specsscan.helpers import get_coords
 from specsscan.helpers import get_scan_path
@@ -50,6 +51,7 @@ class SpecsScan:
         self,
         metadata: dict = {},
         config: dict | str = {},
+        verbose: bool = True,
         **kwds,
     ):
         """SpecsScan constructor.
@@ -57,6 +59,7 @@ class SpecsScan:
         Args:
             metadata (dict, optional): Metadata dictionary. Defaults to {}.
             config (Union[dict, str], optional): Metadata dictionary or file path. Defaults to {}.
+            verbose (bool, optional): Disable info logs if set to False.
             **kwds: Keyword arguments passed to ``parse_config``.
         """
         self._config = parse_config(
@@ -64,6 +67,8 @@ class SpecsScan:
             default_config=f"{package_dir}/config/default.yaml",
             **kwds,
         )
+
+        set_verbosity(logger, verbose)
 
         self.metadata = metadata
 
@@ -75,12 +80,14 @@ class SpecsScan:
                 folder_config={},
                 user_config={},
                 system_config={},
+                verbose=verbose,
             )
         except KeyError:
             self.spa = SpecsAnalyzer(
                 folder_config={},
                 user_config={},
                 system_config={},
+                verbose=verbose,
             )
 
         self._result: xr.DataArray = None
@@ -242,10 +249,11 @@ class SpecsScan:
             k: coordinate_mapping[k] for k in coordinate_mapping.keys() if k in res_xarray.dims
         }
         depends_dict = {
-            rename_dict[k]: coordinate_depends[k]
+            rename_dict.get(k, k): coordinate_depends[k]
             for k in coordinate_depends.keys()
             if k in res_xarray.dims
         }
+
         res_xarray = res_xarray.rename(rename_dict)
         for k, v in coordinate_mapping.items():
             if k in fast_axes:
@@ -260,6 +268,7 @@ class SpecsScan:
             "/entry/sample/transformations/sample_polar": "Polar",
             "/entry/sample/transformations/sample_tilt": "Tilt",
             "/entry/sample/transformations/sample_azimuth": "Azimuth",
+            "/entry/instrument/beam_pump/pulse_delay": "delay",
         }
 
         # store data for resolved axis coordinates
