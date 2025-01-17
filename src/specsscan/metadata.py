@@ -250,7 +250,7 @@ class MetadataRetriever:
                 metadata["elabFTW"]["scan"]["probe_polarization"] = 0
 
         # remove pump information if pump not applied:
-        if not metadata["elabFTW"]["scan"].get("pump_status", 0):
+        if not metadata["elabFTW"]["scan"].get("pump_status", 1):
             if "pump_photon_energy" in metadata["elabFTW"].get("laser_status", {}):
                 del metadata["elabFTW"]["laser_status"]["pump_photon_energy"]
 
