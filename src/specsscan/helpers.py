@@ -9,7 +9,6 @@ from typing import Sequence
 
 import numpy as np
 import pandas as pd
-import xarray as xr
 from tqdm.auto import tqdm
 
 from specsanalyzer.config import complete_dictionary
@@ -287,7 +286,7 @@ def get_coords(
     return coords, dim
 
 
-def mm_to_fs(delaystage: xr.DataArray | np.ndarray | float, t0: float) -> float:
+def mm_to_fs(delaystage, t0):
     delay = delaystage - t0
     delay *= 2 / 2.99792458e11 * 1e15
     return delay
