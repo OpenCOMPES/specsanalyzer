@@ -51,7 +51,7 @@ dependencies = [
 
 [project.urls]
 repository = "https://github.com/OpenCOMPES/specsanalyzer"
-documentation = "https://opencompes.github.io/docs/specsanalyzer/latest/"
+documentation = "https://opencompes.github.io/docs/specsanalyzer/stable/"
 
 [project.optional-dependencies]
 dev = [

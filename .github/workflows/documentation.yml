@@ -98,19 +98,19 @@ jobs:
             VERSION=${GITHUB_REF#refs/tags/}
             echo "folder=specsanalyzer/$VERSION" >> $GITHUB_OUTPUT
             if [[ $VERSION == *a* ]]; then
-              rm docs-repo/specsanalyzer/latest
+              rm -rf docs-repo/specsanalyzer/latest
               ln -s -r docs-repo/specsanalyzer/$VERSION docs-repo/specsanalyzer/latest
             else
-              rm docs-repo/specsanalyzer/stable
-              rm docs-repo/specsanalyzer/latest
+              rm -rf docs-repo/specsanalyzer/stable
+              rm -rf docs-repo/specsanalyzer/latest
               ln -s -r docs-repo/specsanalyzer/$VERSION docs-repo/specsanalyzer/stable
               ln -s -r docs-repo/specsanalyzer/$VERSION docs-repo/specsanalyzer/latest
             fi
           elif [[ $GITHUB_REF == refs/heads/main ]]; then
-            rm docs-repo/specsanalyzer/latest
+            rm -rf docs-repo/specsanalyzer/latest
             echo "folder=specsanalyzer/latest" >> $GITHUB_OUTPUT
           else
-            rm docs-repo/specsanalyzer/develop
+            rm -rf docs-repo/specsanalyzer/develop
             echo "folder=specsanalyzer/develop" >> $GITHUB_OUTPUT
           fi
 
