@@ -10,8 +10,6 @@ import logging
 import os
 import sys
 from datetime import datetime
-from functools import wraps
-from typing import Callable
 
 # Default log directory
 DEFAULT_LOG_DIR = os.path.join(os.getcwd(), "logs")
@@ -101,22 +99,3 @@ def set_verbosity(logger: logging.Logger, verbose: bool) -> None:
         handler.setLevel(logging.INFO)
     else:
         handler.setLevel(logging.WARNING)
-
-
-def call_logger(logger: logging.Logger):
-    def log_call(func: Callable):
-        @wraps(func)
-        def new_func(*args, **kwargs):
-            saved_args = locals()
-            args_str = ""
-            for arg in saved_args["args"][1:]:
-                args_str += f"{arg}, "
-            for name, arg in saved_args["kwargs"].items():
-                args_str += f"{name}={arg}, "
-            args_str = args_str.rstrip(", ")
-            logger.debug(f"Call {func.__name__}({args_str})")
-            return func(*args, **kwargs)
-
-        return new_func
-
-    return log_call
