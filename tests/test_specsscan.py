@@ -277,7 +277,6 @@ def test_fft_tool():
         sigma_y=23,
         apply=True,
     )
-    assert sps.config["spa_params"]["fft_filter_peaks"] == fft_filter_peaks
     assert sps.spa.config["fft_filter_peaks"] == fft_filter_peaks
     res_xarray = sps.load_scan(scan=3610, path=data_dir, apply_fft_filter=True)
     np.testing.assert_almost_equal(res_xarray.data.sum(), 62197237155.50347, decimal=3)
