@@ -142,3 +142,6 @@ dmypy.json
 
 # installation
 specsanalyzer.egg-info
+
+# test data
+tests/data
