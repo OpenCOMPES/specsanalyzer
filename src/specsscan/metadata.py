@@ -194,7 +194,7 @@ class MetadataRetriever:
                     if val["value"] is not None and val["value"] != "" and val["value"] != ["None"]:
                         try:
                             metadata["elabFTW"][category][key] = float(val["value"])
-                        except ValueError:
+                        except (ValueError, TypeError):
                             metadata["elabFTW"][category][key] = val["value"]
 
         # group beam profiles:
