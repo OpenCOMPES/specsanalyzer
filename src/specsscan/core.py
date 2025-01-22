@@ -282,6 +282,9 @@ class SpecsScan:
             except KeyError:
                 pass
 
+        # reset metadata
+        self.metadata = {}
+
         self.metadata.update(
             **handle_meta(
                 df_lut=df_lut,
@@ -539,6 +542,9 @@ class SpecsScan:
         slow_axes = {"Iteration"}
         fast_axes = set(res_xarray.dims) - slow_axes
         projection = "reciprocal" if "Angle" in fast_axes else "real"
+
+        # reset metadata
+        self.metadata = {}
 
         self.metadata.update(
             **handle_meta(

@@ -1,6 +1,7 @@
 """This module contains a config library for loading yaml/json files into dicts"""
 from __future__ import annotations
 
+import copy
 import json
 import os
 import platform
@@ -75,7 +76,7 @@ def parse_config(
         config = {}
 
     if isinstance(config, dict):
-        config_dict = config
+        config_dict = copy.deepcopy(config)
     else:
         config_dict = load_config(config)
         if verbose:
@@ -83,7 +84,7 @@ def parse_config(
 
     folder_dict: dict = None
     if isinstance(folder_config, dict):
-        folder_dict = folder_config
+        folder_dict = copy.deepcopy(folder_config)
     else:
         if folder_config is None:
             folder_config = "./specs_config.yaml"
@@ -94,7 +95,7 @@ def parse_config(
 
     user_dict: dict = None
     if isinstance(user_config, dict):
-        user_dict = user_config
+        user_dict = copy.deepcopy(user_config)
     else:
         if user_config is None:
             user_config = str(USER_CONFIG_PATH.joinpath("config_v1.yaml"))
@@ -105,7 +106,7 @@ def parse_config(
 
     system_dict: dict = None
     if isinstance(system_config, dict):
-        system_dict = system_config
+        system_dict = copy.deepcopy(system_config)
     else:
         if system_config is None:
             system_config = str(SYSTEM_CONFIG_PATH.joinpath("config_v1.yaml"))
@@ -115,7 +116,7 @@ def parse_config(
                 logger.info(f"System config loaded from: [{str(Path(system_config).resolve())}]")
 
     if isinstance(default_config, dict):
-        default_dict = default_config
+        default_dict = copy.deepcopy(default_config)
     else:
         default_dict = load_config(default_config)
         if verbose:
