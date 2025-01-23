@@ -216,6 +216,15 @@ class MetadataRetriever:
                 float(metadata["elabFTW"]["laser_status"]["probe_profile_x"]),
                 float(metadata["elabFTW"]["laser_status"]["probe_profile_y"]),
             ]
+        if (
+            "laser_status" in metadata["elabFTW"]
+            and "pump2_profile_x" in metadata["elabFTW"]["laser_status"]
+            and "pump2_profile_y" in metadata["elabFTW"]["laser_status"]
+        ):
+            metadata["elabFTW"]["laser_status"]["pump2_profile"] = [
+                float(metadata["elabFTW"]["laser_status"]["pump2_profile_x"]),
+                float(metadata["elabFTW"]["laser_status"]["pump2_profile_y"]),
+            ]
 
         # fix preparation date
         if "sample" in metadata["elabFTW"] and "preparation_date" in metadata["elabFTW"]["sample"]:
@@ -249,10 +258,24 @@ class MetadataRetriever:
             elif metadata["elabFTW"]["scan"]["probe_polarization"] == "p":
                 metadata["elabFTW"]["scan"]["probe_polarization"] = 0
 
+        if (
+            "scan" in metadata["elabFTW"]
+            and "pump2_polarization" in metadata["elabFTW"]["scan"]
+            and isinstance(metadata["elabFTW"]["scan"]["pump2_polarization"], str)
+        ):
+            if metadata["elabFTW"]["scan"]["pump2_polarization"] == "s":
+                metadata["elabFTW"]["scan"]["pump2_polarization"] = 90
+            elif metadata["elabFTW"]["scan"]["pump2_polarization"] == "p":
+                metadata["elabFTW"]["scan"]["pump2_polarization"] = 0
+
         # remove pump information if pump not applied:
-        if not metadata["elabFTW"]["scan"].get("pump_status", 1):
+        if metadata["elabFTW"]["scan"].get("pump_status", "closed") == "closed":
             if "pump_photon_energy" in metadata["elabFTW"].get("laser_status", {}):
                 del metadata["elabFTW"]["laser_status"]["pump_photon_energy"]
+
+        if metadata["elabFTW"]["scan"].get("pump2_status", "closed") == "closed":
+            if "pump2_photon_energy" in metadata["elabFTW"].get("laser_status", {}):
+                del metadata["elabFTW"]["laser_status"]["pump2_photon_energy"]
 
         return metadata
 

@@ -254,6 +254,10 @@ class SpecsScan:
             if k in res_xarray.dims
         }
 
+        # store data for resolved axis coordinates
+        for axis in res_xarray.dims:
+            self._scan_info[axis] = res_xarray.coords[axis].data
+
         res_xarray = res_xarray.rename(rename_dict)
         for k, v in coordinate_mapping.items():
             if k in fast_axes:
@@ -263,18 +267,6 @@ class SpecsScan:
                 slow_axes.remove(k)
                 slow_axes.add(v)
         self._scan_info["coordinate_depends"] = depends_dict
-
-        axis_dict = {
-            "/entry/sample/transformations/sample_polar": "Polar",
-            "/entry/sample/transformations/sample_tilt": "Tilt",
-            "/entry/sample/transformations/sample_azimuth": "Azimuth",
-            "/entry/instrument/beam_pump/pulse_delay": "delay",
-        }
-
-        # store data for resolved axis coordinates
-        for k, v in depends_dict.items():
-            if v in axis_dict:
-                self._scan_info[axis_dict[v]] = res_xarray.coords[k].data
 
         for name in res_xarray.dims:
             try:
