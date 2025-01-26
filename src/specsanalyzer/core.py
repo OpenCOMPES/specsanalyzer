@@ -280,7 +280,7 @@ class SpecsAnalyzer:
             },
             dims=conversion_parameters["dims"],
             attrs={"conversion_parameters": conversion_parameters},
-        )
+        ).astype(np.float32)
 
         # Handle cropping based on parameters stored in correction dictionary
         crop = kwds.pop("crop", self._config.get("crop", False))

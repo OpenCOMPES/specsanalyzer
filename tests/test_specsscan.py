@@ -68,7 +68,7 @@ def test_conversion_3d():
         path=data_dir,
         iterations=np.s_[0:2],
     )
-    np.testing.assert_allclose(res_xarray, res_xarray2)
+    np.testing.assert_allclose(res_xarray, res_xarray2, rtol=1e-6)
 
     with pytest.raises(IndexError):
         sps.load_scan(
@@ -259,7 +259,7 @@ def test_fft_tool():
         apply_fft_filter=False,
     )
 
-    np.testing.assert_almost_equal(res_xarray.data.sum(), 62145561928.15108, decimal=3)
+    np.testing.assert_allclose(res_xarray.data.sum(), 62145556000.0)
 
     res_xarray = sps.load_scan(
         scan=3610,
@@ -267,7 +267,7 @@ def test_fft_tool():
         fft_filter_peaks=fft_filter_peaks,
         apply_fft_filter=True,
     )
-    np.testing.assert_almost_equal(res_xarray.data.sum(), 62197237155.50347, decimal=3)
+    np.testing.assert_allclose(res_xarray.data.sum(), 62197240000.0)
 
     sps.fft_tool(
         amplitude=1,
@@ -279,7 +279,7 @@ def test_fft_tool():
     )
     assert sps.spa.config["fft_filter_peaks"] == fft_filter_peaks
     res_xarray = sps.load_scan(scan=3610, path=data_dir, apply_fft_filter=True)
-    np.testing.assert_almost_equal(res_xarray.data.sum(), 62197237155.50347, decimal=3)
+    np.testing.assert_allclose(res_xarray.data.sum(), 62197240000.0)
 
 
 def test_conversion_and_save_to_nexus():
