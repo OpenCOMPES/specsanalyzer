@@ -100,7 +100,7 @@ def test_fetch_epics_metadata(mock_get_archiver_data, metadata_retriever):
     assert updated_metadata["scan_info"]["channel1"] == 10
 
 
-@patch("sed.loader.mpes.metadata.get_archiver_data")
+@patch("specsscan.metadata.get_archiver_data")
 def test_fetch_epics_metadata_missing_channels(mock_get_archiver_data, metadata_retriever):
     """Test fetch_epics_metadata with missing EPICS channels."""
     mock_get_archiver_data.return_value = (np.array([1.5]), np.array([10]))
