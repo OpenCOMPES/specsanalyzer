@@ -84,12 +84,6 @@ all = [
     "specsanalyzer[dev,docs,notebook]",
 ]
 
-[tool.coverage.report]
-omit = [
-    "config.py",
-    "config-3.py",
-]
-
 [tool.ruff]
 include = ["specsanalyzer/*.py", "specsscan/*.py", "tests/*.py"]
 lint.select = [
