@@ -11,6 +11,7 @@ import pytest
 
 from specsscan.metadata import get_archiver_data
 from specsscan.metadata import MetadataRetriever
+from tests.test_config import mock_env_file  # noqa: F401
 
 
 @pytest.fixture
@@ -33,13 +34,37 @@ def metadata_config():
 
 
 @pytest.fixture
-def metadata_retriever(metadata_config):
+def metadata_retriever(metadata_config, mock_env_file):  # noqa: ARG001
     return MetadataRetriever(metadata_config, "dummy_token")
 
 
 def test_metadata_retriever_init(metadata_retriever):
     assert metadata_retriever.token == "dummy_token"
     assert metadata_retriever.url == "http://example.com"
+
+
+def test_metadata_retriever_no_token(metadata_config, tmp_path, monkeypatch):
+    monkeypatch.setattr("specsanalyzer.config.ENV_DIR", tmp_path / ".dummy_env")
+    monkeypatch.setattr("specsanalyzer.config.SYSTEM_CONFIG_PATH", tmp_path / "system")
+    monkeypatch.setattr("specsanalyzer.config.USER_CONFIG_PATH", tmp_path / "user")
+    retriever = MetadataRetriever(metadata_config)
+    assert retriever.token is None
+
+    metadata = {}
+    runs = ["run1"]
+    updated_metadata = retriever.fetch_elab_metadata(runs, metadata)
+    assert updated_metadata == metadata
+
+
+def test_metadata_retriever_no_url(metadata_config, mock_env_file):  # noqa: ARG001
+    metadata_config.pop("elab_url")
+    retriever = MetadataRetriever(metadata_config, "dummy_token")
+    assert retriever.url is None
+
+    metadata = {}
+    runs = ["run1"]
+    updated_metadata = retriever.fetch_elab_metadata(runs, metadata)
+    assert updated_metadata == metadata
 
 
 @patch("specsscan.metadata.urlopen")
@@ -75,8 +100,21 @@ def test_fetch_epics_metadata(mock_get_archiver_data, metadata_retriever):
     assert updated_metadata["scan_info"]["channel1"] == 10
 
 
+@patch("sed.loader.mpes.metadata.get_archiver_data")
+def test_fetch_epics_metadata_missing_channels(mock_get_archiver_data, metadata_retriever):
+    """Test fetch_epics_metadata with missing EPICS channels."""
+    mock_get_archiver_data.return_value = (np.array([1.5]), np.array([10]))
+    metadata = {"file": {"channel1": 10}}
+    ts_from = datetime.datetime(2023, 1, 1).timestamp()
+    ts_to = datetime.datetime(2023, 1, 2).timestamp()
+
+    updated_metadata = metadata_retriever.fetch_epics_metadata(ts_from, ts_to, metadata)
+
+    assert "channel1" in updated_metadata["file"]
+
+
 @patch("specsscan.metadata.elabapi_python")
-def test_fetch_elab_metadata(mock_elabapi_python, metadata_config):
+def test_fetch_elab_metadata(mock_elabapi_python, metadata_config, mock_env_file):  # noqa: ARG001
     """Test fetch_elab_metadata using a mock of elabapi_python."""
     mock_experiment = MagicMock()
     mock_experiment.id = 1

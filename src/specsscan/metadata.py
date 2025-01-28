@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import datetime
 import json
+from copy import deepcopy
 from urllib.error import HTTPError
 from urllib.error import URLError
 from urllib.request import urlopen
@@ -36,6 +37,8 @@ class MetadataRetriever:
             token (str, optional): The token to use for fetching metadata. If provided,
                 will be saved to .env file for future use.
         """
+        self._config = deepcopy(metadata_config)
+
         # Token handling
         if token:
             self.token = token
@@ -44,17 +47,24 @@ class MetadataRetriever:
             # Try to load token from config or .env file
             self.token = read_env_var("ELAB_TOKEN")
 
-        self._config = metadata_config
+        if not self.token:
+            logger.warning(
+                "No valid token provided for elabFTW. Fetching elabFTW metadata will be skipped.",
+            )
+            return
 
-        self.url = str(metadata_config.get("elab_url"))
+        self.url = metadata_config.get("elab_url")
         if not self.url:
-            raise ValueError("No URL provided for fetching metadata from elabFTW.")
+            logger.warning(
+                "No URL provided for elabFTW. Fetching elabFTW metadata will be skipped.",
+            )
+            return
 
         # Config
         self.configuration = elabapi_python.Configuration()
         self.configuration.api_key["api_key"] = self.token
         self.configuration.api_key_prefix["api_key"] = "Authorization"
-        self.configuration.host = self.url
+        self.configuration.host = str(self.url)
         self.configuration.debug = False
         self.configuration.verify_ssl = False
 
@@ -95,7 +105,7 @@ class MetadataRetriever:
         except KeyError:
             epics_channels = []
 
-        channels_missing = set(epics_channels) - set(metadata["scan_info"].keys())
+        channels_missing = set(epics_channels) - set(metadata.get("scan_info", {}).keys())
         if channels_missing:
             logger.info("Collecting data from the EPICS archive...")
             for channel in channels_missing:
@@ -147,6 +157,14 @@ class MetadataRetriever:
                 "a token parameter or set the ELAB_TOKEN environment variable.",
             )
             return metadata
+
+        if not self.url:
+            logger.warning(
+                "No URL provided for fetching metadata from elabFTW. "
+                "Fetching elabFTW metadata will be skipped.",
+            )
+            return metadata
+
         logger.info("Collecting data from the elabFTW instance...")
         # Get the experiment
         try:
