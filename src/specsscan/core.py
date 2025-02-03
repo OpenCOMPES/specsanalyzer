@@ -5,7 +5,6 @@ import copy
 import os
 import pathlib
 from importlib.util import find_spec
-from logging import warn
 from pathlib import Path
 from typing import Any
 from typing import Sequence
@@ -671,7 +670,7 @@ class SpecsScan:
         """
         ekin_step = kinetic_energy[1] - kinetic_energy[0]
         if not (np.diff(kinetic_energy) == ekin_step).all():
-            warn(
+            logger.warning(
                 "Conversion of sweep scans with non-equidistant energy steps "
                 "might produce wrong results!",
             )

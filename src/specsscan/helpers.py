@@ -423,12 +423,8 @@ def handle_meta(
     ts_from = dt.datetime.timestamp(datetime_list[0])  # POSIX timestamp
     ts_to = dt.datetime.timestamp(datetime_list[-1])  # POSIX timestamp
     metadata["timing"] = {
-        "acquisition_start": dt.datetime.utcfromtimestamp(ts_from)
-        .replace(tzinfo=dt.timezone.utc)
-        .isoformat(),
-        "acquisition_stop": dt.datetime.utcfromtimestamp(ts_to)
-        .replace(tzinfo=dt.timezone.utc)
-        .isoformat(),
+        "acquisition_start": dt.datetime.fromtimestamp(ts_from, dt.timezone.utc).isoformat(),
+        "acquisition_stop": dt.datetime.fromtimestamp(ts_to, dt.timezone.utc).isoformat(),
         "acquisition_duration": int(ts_to - ts_from),
         "collection_time": float(ts_to - ts_from),
     }
