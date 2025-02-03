@@ -753,8 +753,7 @@ class SpecsAnalyzer:
             fft_filt.set_data(np.abs(fft_filtered_new.T))
 
             nonlocal cont
-            for path in cont.get_paths():
-                path.remove()
+            cont.remove()
             cont = ax.contour(msk.T)
 
             edc.set_ydata(np.sum(filtered_new, 0))
