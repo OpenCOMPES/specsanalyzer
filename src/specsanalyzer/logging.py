@@ -50,7 +50,10 @@ def setup_logging(
             user_log_path = DEFAULT_LOG_DIR
         try:
             os.makedirs(user_log_path, exist_ok=True)
-            log_file = os.path.join(user_log_path, f"sed_{datetime.now().strftime('%Y-%m-%d')}.log")
+            log_file = os.path.join(
+                user_log_path,
+                f"specsanalyzer_{datetime.now().strftime('%Y-%m-%d')}.log",
+            )
 
             # Create file handler and set level to debug
             file_handler = logging.FileHandler(log_file)
