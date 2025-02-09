@@ -38,9 +38,9 @@ units:
 
 metadata:
   # URL of the elabFTW instance API interface
-  elab_url: "https://__elabftw_host__/api/v2"
+  # elab_url: "https://__elabftw_host__/api/v2"
   # URL of the epics archiver request engine
-  archiver_url: "http://__epicsarchiver_host__:17668/retrieval/data/getData.json?pv="
+  # archiver_url: "http://__epicsarchiver_host__:17668/retrieval/data/getData.json?pv="
   # dictionary containing axis names with Epics channels to request from the EPICS archiver
   epics_channels:
     tempa: "trARPES:Carving:TEMP_RBV"

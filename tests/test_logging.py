@@ -68,7 +68,7 @@ def test_logger_has_base_logger(logger_):
 
 def test_logger_creates_logfile(tmp_path):
     logger = setup_logging("test_logger", set_base_handler=True, user_log_path=tmp_path)
-    log_file = os.path.join(tmp_path, f"sed_{datetime.now().strftime('%Y-%m-%d')}.log")
+    log_file = os.path.join(tmp_path, f"specsanalyzer_{datetime.now().strftime('%Y-%m-%d')}.log")
     assert os.path.exists(log_file)
     with open(log_file) as f:
         assert f.read() == ""
