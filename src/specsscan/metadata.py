@@ -265,6 +265,13 @@ class MetadataRetriever:
                 metadata["elabFTW"]["scan"]["pump_polarization"] = 90
             elif metadata["elabFTW"]["scan"]["pump_polarization"] == "p":
                 metadata["elabFTW"]["scan"]["pump_polarization"] = 0
+            else:
+                try:
+                    metadata["elabFTW"]["scan"]["pump_polarization"] = float(
+                        metadata["elabFTW"]["scan"]["pump_polarization"],
+                    )
+                except ValueError:
+                    pass
 
         if (
             "scan" in metadata["elabFTW"]
@@ -275,6 +282,13 @@ class MetadataRetriever:
                 metadata["elabFTW"]["scan"]["probe_polarization"] = 90
             elif metadata["elabFTW"]["scan"]["probe_polarization"] == "p":
                 metadata["elabFTW"]["scan"]["probe_polarization"] = 0
+            else:
+                try:
+                    metadata["elabFTW"]["scan"]["probe_polarization"] = float(
+                        metadata["elabFTW"]["scan"]["probe_polarization"],
+                    )
+                except ValueError:
+                    pass
 
         if (
             "scan" in metadata["elabFTW"]
@@ -285,19 +299,26 @@ class MetadataRetriever:
                 metadata["elabFTW"]["scan"]["pump2_polarization"] = 90
             elif metadata["elabFTW"]["scan"]["pump2_polarization"] == "p":
                 metadata["elabFTW"]["scan"]["pump2_polarization"] = 0
+            else:
+                try:
+                    metadata["elabFTW"]["scan"]["pump2_polarization"] = float(
+                        metadata["elabFTW"]["scan"]["pump2_polarization"],
+                    )
+                except ValueError:
+                    pass
 
         # fix pump status
         if "scan" in metadata["elabFTW"] and "pump_status" in metadata["elabFTW"]["scan"]:
             try:
                 metadata["elabFTW"]["scan"]["pump_status"] = (
-                    "opened" if int(metadata["elabFTW"]["scan"]["pump_status"]) else "closed"
+                    "open" if int(metadata["elabFTW"]["scan"]["pump_status"]) else "closed"
                 )
             except ValueError:
                 pass
         if "scan" in metadata["elabFTW"] and "pump2_status" in metadata["elabFTW"]["scan"]:
             try:
                 metadata["elabFTW"]["scan"]["pump2_status"] = (
-                    "opened" if int(metadata["elabFTW"]["scan"]["pump2_status"]) else "closed"
+                    "open" if int(metadata["elabFTW"]["scan"]["pump2_status"]) else "closed"
                 )
             except ValueError:
                 pass
