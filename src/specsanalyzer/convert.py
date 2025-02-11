@@ -1,8 +1,13 @@
 """Specsanalyzer image conversion module"""
 from __future__ import annotations
 
+import logging
+
 import numpy as np
 from scipy.ndimage import map_coordinates
+
+# Configure logging
+logger = logging.getLogger("specsanalyzer.specsscan")
 
 
 def get_damatrix_from_calib2d(
@@ -82,7 +87,7 @@ def get_damatrix_from_calib2d(
 
     elif lens_mode in supported_space_modes:
         # use the mode defaults
-        print("This is a spatial mode, using default " + lens_mode + " config")
+        logger.info("This is a spatial mode, using default " + lens_mode + " config")
         rr_vec, da_matrix_full = get_rr_da(lens_mode, calib2d_dict)
         a_inner = da_matrix_full[0][0]
         da_matrix = da_matrix_full[1:][:]
