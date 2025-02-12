@@ -256,7 +256,7 @@ class SpecsScan:
         }
         label_dict = {
             rename_dict.get(k, k): coordinate_labels[k]
-            for k in coordinate_depends.keys()
+            for k in coordinate_labels.keys()
             if k in res_xarray.dims
         }
 
