@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import datetime as dt
+import importlib
 import logging
 from pathlib import Path
 from typing import Any
@@ -410,6 +411,11 @@ def handle_meta(
         complete_dictionary(scan_info, lut_meta),
     )  # merging dictionaries
 
+    # store program version
+    metadata["scan_info"]["program_name"] = "specsanalyzer"
+    metadata["scan_info"]["program_version"] = importlib.metadata.version("specsanalyzer")
+
+    # timing
     logger.info("Collecting time stamps...")
     if "time" in metadata["scan_info"]:
         time_list = [metadata["scan_info"]["time"][0], metadata["scan_info"]["time"][-1]]
