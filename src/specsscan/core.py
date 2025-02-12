@@ -245,11 +245,17 @@ class SpecsScan:
         # rename coords and store mapping information, if available
         coordinate_mapping = self._config.get("coordinate_mapping", {})
         coordinate_depends = self._config.get("coordinate_depends", {})
+        coordinate_labels = self._config.get("coordinate_labels", {})
         rename_dict = {
             k: coordinate_mapping[k] for k in coordinate_mapping.keys() if k in res_xarray.dims
         }
         depends_dict = {
             rename_dict.get(k, k): coordinate_depends[k]
+            for k in coordinate_depends.keys()
+            if k in res_xarray.dims
+        }
+        label_dict = {
+            rename_dict.get(k, k): coordinate_labels[k]
             for k in coordinate_depends.keys()
             if k in res_xarray.dims
         }
@@ -267,10 +273,12 @@ class SpecsScan:
                 slow_axes.remove(k)
                 slow_axes.add(v)
         self._scan_info["coordinate_depends"] = depends_dict
+        self._scan_info["coordinate_label"] = label_dict
 
         for name in res_xarray.dims:
             try:
                 res_xarray[name].attrs["unit"] = self._config["units"][name]
+                res_xarray[name].attrs["long_name"] = label_dict[name]
             except KeyError:
                 pass
 
@@ -293,6 +301,32 @@ class SpecsScan:
             **{"loader": loader_dict},
             **{"conversion_parameters": conversion_metadata},
         )
+
+        # shift energy axis
+        photon_energy = 0.0
+        try:
+            photon_energy = self.metadata["elabFTW"]["laser_status"]["probe_photon_energy"]
+        except KeyError:
+            try:
+                photon_energy = self.metadata["elabFTW"]["laser_status"]["probe_photon_energy"]
+            except KeyError:
+                pass
+
+        self.metadata["scan_info"]["reference_energy"] = "vacuum level"
+        if photon_energy and self._config["shift_by_photon_energy"]:
+            logger.info(f"Shifting energy axis by photon energy: -{photon_energy} eV")
+            res_xarray = res_xarray.assign_coords(
+                {
+                    rename_dict["Ekin"]: (
+                        rename_dict["Ekin"],
+                        res_xarray[rename_dict["Ekin"]].data - photon_energy,
+                        res_xarray[rename_dict["Ekin"]].attrs,
+                    ),
+                },
+            )
+            self.metadata["scan_info"]["reference_energy"] = "Fermi edge"
+            self.metadata["scan_info"]["coordinate_label"][rename_dict["Ekin"]] = "E-E_F"
+            res_xarray[rename_dict["Ekin"]].attrs["long_name"] = "E-E_F"
 
         res_xarray.attrs["metadata"] = self.metadata
         self._result = res_xarray

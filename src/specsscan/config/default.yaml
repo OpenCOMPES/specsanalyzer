@@ -2,6 +2,9 @@
 data_path: ""
 # option to enable nested progress bars
 enable_nested_progress_bar: false
+# option to shift by photon energy if available
+shift_by_photon_energy: false
+
 # dictionary containing parameters passed to the SpecsAnalyzer. Will be completed by the SpecsAnalyzer default config parameters
 spa_params:
   apply_fft_filter: false
