@@ -327,10 +327,14 @@ class MetadataRetriever:
         if metadata["elabFTW"]["scan"].get("pump_status", "closed") == "closed":
             if "pump_photon_energy" in metadata["elabFTW"].get("laser_status", {}):
                 del metadata["elabFTW"]["laser_status"]["pump_photon_energy"]
+            if "pump_repetition_rate" in metadata["elabFTW"].get("laser_status", {}):
+                del metadata["elabFTW"]["laser_status"]["pump_repetition_rate"]
 
         if metadata["elabFTW"]["scan"].get("pump2_status", "closed") == "closed":
             if "pump2_photon_energy" in metadata["elabFTW"].get("laser_status", {}):
                 del metadata["elabFTW"]["laser_status"]["pump2_photon_energy"]
+            if "pump2_repetition_rate" in metadata["elabFTW"].get("laser_status", {}):
+                del metadata["elabFTW"]["laser_status"]["pump2_repetition_rate"]
 
         return metadata
 
