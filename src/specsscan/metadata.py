@@ -92,7 +92,7 @@ class MetadataRetriever:
         Returns:
             dict: Updated metadata dictionary.
         """
-        start = datetime.datetime.utcfromtimestamp(ts_from)
+        start = datetime.datetime.fromtimestamp(ts_from, datetime.timezone.utc).isoformat()
 
         # replace metadata names by epics channels
         try:
@@ -355,8 +355,16 @@ def get_archiver_data(
     Returns:
         tuple[np.ndarray, np.ndarray]: The extracted time stamps and corresponding data
     """
-    iso_from = datetime.datetime.utcfromtimestamp(ts_from).isoformat()
-    iso_to = datetime.datetime.utcfromtimestamp(ts_to).isoformat()
+    iso_from = (
+        datetime.datetime.fromtimestamp(ts_from, datetime.timezone.utc)
+        .replace(tzinfo=None)
+        .isoformat()
+    )
+    iso_to = (
+        datetime.datetime.fromtimestamp(ts_to, datetime.timezone.utc)
+        .replace(tzinfo=None)
+        .isoformat()
+    )
     req_str = archiver_url + archiver_channel + "&from=" + iso_from + "Z&to=" + iso_to + "Z"
     with urlopen(req_str) as req:
         data = json.load(req)
