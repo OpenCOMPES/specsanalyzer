@@ -305,7 +305,7 @@ class SpecsScan:
         # shift energy axis
         photon_energy = 0.0
         try:
-            photon_energy = self.metadata["elabFTW"]["laser_status"]["probe_photon_energy"]
+            photon_energy = self.metadata["instrument"]["beam"]["probe"]["incident_energy"]
         except KeyError:
             try:
                 photon_energy = self.metadata["elabFTW"]["laser_status"]["probe_photon_energy"]
