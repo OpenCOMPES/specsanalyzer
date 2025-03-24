@@ -426,8 +426,16 @@ def handle_meta(
 
     dt_list_iso = [time.replace(".", "-").replace(" ", "T") for time in time_list]
     datetime_list = [dt.datetime.fromisoformat(dt_iso) for dt_iso in dt_list_iso]
-    ts_from = dt.datetime.timestamp(datetime_list[0])  # POSIX timestamp
-    ts_to = dt.datetime.timestamp(datetime_list[-1])  # POSIX timestamp
+    ts_from = dt.datetime.timestamp(min(datetime_list))  # POSIX timestamp
+    ts_to = dt.datetime.timestamp(max(datetime_list))  # POSIX timestamp
+    if ts_from == ts_to:
+        try:
+            ts_to = (
+                ts_from
+                + metadata["scan_info"]["Exposure"] / 1000 * metadata["scan_info"]["Averages"]
+            )
+        except KeyError:
+            pass
     metadata["timing"] = {
         "acquisition_start": dt.datetime.fromtimestamp(ts_from, dt.timezone.utc).isoformat(),
         "acquisition_stop": dt.datetime.fromtimestamp(ts_to, dt.timezone.utc).isoformat(),
