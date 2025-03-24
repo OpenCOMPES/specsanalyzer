@@ -18,8 +18,8 @@ coordinate_mapping:
 
 # dictionary of corresponding NeXus paths for the different axes
 coordinate_depends:
-  Ekin: "/entry/instrument/electronanalyser/energydispersion/kinetic_energy"
-  Angle: "/entry/instrument/electronanalyser/transformations/analyzer_dispersion"
+  Ekin: "/entry/instrument/electronanalyzer/energydispersion/kinetic_energy"
+  Angle: "/entry/instrument/electronanalyzer/transformations/analyzer_dispersion"
   polar: "/entry/sample/transformations/sample_polar"
   tilt: "/entry/sample/transformations/sample_tilt"
   azimuth: "/entry/sample/transformations/sample_azimuth"
