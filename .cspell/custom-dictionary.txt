@@ -45,7 +45,7 @@ Ekin
 elab
 elabapi
 elabid
-electronanalyser
+electronanalyzer
 elems
 endstation
 energydispersion
@@ -142,6 +142,7 @@ toctree
 tomlkit
 topfloor
 tqdm
+trarpes
 typehints
 TZCYXS
 undoc
