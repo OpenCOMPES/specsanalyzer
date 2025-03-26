@@ -432,10 +432,7 @@ def handle_meta(
         try:
             ts_to = (
                 ts_from
-                + metadata["scan_info"]["Exposure"]
-                / 1000
-                * metadata["scan_info"]["Averages"]
-                * metadata["scan_info"]["Repetitions"]
+                + metadata["scan_info"]["Exposure"] / 1000 * metadata["scan_info"]["Averages"]
             )
         except KeyError:
             pass
@@ -467,7 +464,7 @@ def handle_meta(
         "angular dispersive" if projection == "reciprocal" else "spatial dispersive"
     )
 
-    metadata["scan_info"]["slow_axes"] = slow_axes
+    metadata["scan_info"]["slow_axes"] = slow_axes if slow_axes else ""
     metadata["scan_info"]["fast_axes"] = fast_axes
 
     return metadata
