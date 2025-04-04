@@ -2,6 +2,8 @@
 data_path: "path/to/data"
 # option to enable nested progress bars
 enable_nested_progress_bar: false
+# option to shift by photon energy if available
+shift_by_photon_energy: true
 
 # dictionary containing renaming rules for axis names (to change the name in the xarrays)
 coordinate_mapping:
@@ -16,14 +18,25 @@ coordinate_mapping:
 
 # dictionary of corresponding NeXus paths for the different axes
 coordinate_depends:
-  Ekin: "/entry/instrument/electronanalyser/energydispersion/kinetic_energy"
-  Angle: "/entry/instrument/electronanalyser/transformations/analyzer_dispersion"
+  Ekin: "/entry/instrument/electronanalyzer/energydispersion/kinetic_energy"
+  Angle: "/entry/instrument/electronanalyzer/transformations/analyzer_dispersion"
   polar: "/entry/sample/transformations/sample_polar"
   tilt: "/entry/sample/transformations/sample_tilt"
   azimuth: "/entry/sample/transformations/sample_azimuth"
   X: "/entry/sample/transformations/trans_x"
   Y: "/entry/sample/transformations/trans_y"
   Z: "/entry/sample/transformations/trans_z"
+
+# dictionary of axis labels for the different axes
+coordinate_labels:
+  Ekin: "Kinetic Energy"
+  Angle: "Analyzer Dispersion"
+  polar: "Sample Polar"
+  tilt: "Sample Tilt"
+  azimuth: "Sample Azimuth"
+  X: "X Translation"
+  Y: "Y Translation"
+  Z: "Z Translation"
 
 # dictionary containing units for the respective axes
 units:
@@ -36,19 +49,22 @@ units:
   spatial0: "mm"
   voltage: "V"
 
-# URL of the epics archiver request engine
-archiver_url: "http://__epicsarchiver_host__:17668/retrieval/data/getData.json?pv="
-# dictionary containing axis names with Epics channels to request from the EPICS archiver
-epics_channels:
-  tempa: "trARPES:Carving:TEMP_RBV"
-  x: "trARPES:Carving:TRX.RBV"
-  y: "trARPES:Carving:TRY.RBV"
-  z: "trARPES:Carving:TRZ.RBV"
-  polar: "trARPES:Carving:THT.RBV"
-  tilt: "trARPES:Carving:PHI.RBV"
-  azimuth: "trARPES:Carving:OMG.RBV"
-  drain_current: "trARPES:Sample:Measure"
-  pressure: "trARPES:XGS600:PressureAC:P_RD"
+metadata:
+  # URL of the elabFTW instance API interface
+  # elab_url: "https://__elabftw_host__/api/v2"
+  # URL of the epics archiver request engine
+  # archiver_url: "http://__epicsarchiver_host__:17668/retrieval/data/getData.json?pv="
+  # dictionary containing axis names with Epics channels to request from the EPICS archiver
+  epics_channels:
+    tempa: "trARPES:Carving:TEMP_RBV"
+    x: "trARPES:Carving:TRX.RBV"
+    y: "trARPES:Carving:TRY.RBV"
+    z: "trARPES:Carving:TRZ.RBV"
+    polar: "trARPES:Carving:THT.RBV"
+    tilt: "trARPES:Carving:PHI.RBV"
+    azimuth: "trARPES:Carving:OMG.RBV"
+    drain_current: "trARPES:Sample:Measure"
+    pressure: "trARPES:XGS600:PressureAC:P_RD"
 
 # parameters for NeXus conversion
 nexus:

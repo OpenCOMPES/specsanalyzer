@@ -5,7 +5,6 @@ import copy
 import os
 import pathlib
 from importlib.util import find_spec
-from logging import warn
 from pathlib import Path
 from typing import Any
 from typing import Sequence
@@ -17,9 +16,12 @@ from tqdm.auto import tqdm
 
 from specsanalyzer import SpecsAnalyzer
 from specsanalyzer.config import parse_config
+from specsanalyzer.config import save_config
 from specsanalyzer.io import to_h5
 from specsanalyzer.io import to_nexus
 from specsanalyzer.io import to_tiff
+from specsanalyzer.logging import set_verbosity
+from specsanalyzer.logging import setup_logging
 from specsscan.helpers import get_coords
 from specsscan.helpers import get_scan_path
 from specsscan.helpers import handle_meta
@@ -29,6 +31,9 @@ from specsscan.helpers import parse_lut_to_df
 
 
 package_dir = os.path.dirname(find_spec("specsscan").origin)
+
+# Configure logging
+logger = setup_logging("specsscan")
 
 
 class SpecsScan:
@@ -45,6 +50,7 @@ class SpecsScan:
         self,
         metadata: dict = {},
         config: dict | str = {},
+        verbose: bool = True,
         **kwds,
     ):
         """SpecsScan constructor.
@@ -52,6 +58,7 @@ class SpecsScan:
         Args:
             metadata (dict, optional): Metadata dictionary. Defaults to {}.
             config (Union[dict, str], optional): Metadata dictionary or file path. Defaults to {}.
+            verbose (bool, optional): Disable info logs if set to False.
             **kwds: Keyword arguments passed to ``parse_config``.
         """
         self._config = parse_config(
@@ -59,6 +66,8 @@ class SpecsScan:
             default_config=f"{package_dir}/config/default.yaml",
             **kwds,
         )
+
+        set_verbosity(logger, verbose)
 
         self.metadata = metadata
 
@@ -70,12 +79,14 @@ class SpecsScan:
                 folder_config={},
                 user_config={},
                 system_config={},
+                verbose=verbose,
             )
         except KeyError:
             self.spa = SpecsAnalyzer(
                 folder_config={},
                 user_config={},
                 system_config={},
+                verbose=verbose,
             )
 
         self._result: xr.DataArray = None
@@ -144,6 +155,7 @@ class SpecsScan:
             xr.DataArray: xarray DataArray object with kinetic energy, angle/position and
             optionally a third scanned axis (for ex., delay, temperature) as coordinates.
         """
+        token = kwds.pop("token", None)
         scan_path = get_scan_path(path, scan, self._config["data_path"])
         df_lut = parse_lut_to_df(scan_path)
 
@@ -232,14 +244,25 @@ class SpecsScan:
         # rename coords and store mapping information, if available
         coordinate_mapping = self._config.get("coordinate_mapping", {})
         coordinate_depends = self._config.get("coordinate_depends", {})
+        coordinate_labels = self._config.get("coordinate_labels", {})
         rename_dict = {
             k: coordinate_mapping[k] for k in coordinate_mapping.keys() if k in res_xarray.dims
         }
         depends_dict = {
-            rename_dict[k]: coordinate_depends[k]
+            rename_dict.get(k, k): coordinate_depends[k]
             for k in coordinate_depends.keys()
             if k in res_xarray.dims
         }
+        label_dict = {
+            rename_dict.get(k, k): coordinate_labels[k]
+            for k in coordinate_labels.keys()
+            if k in res_xarray.dims
+        }
+
+        # store data for resolved axis coordinates
+        for axis in res_xarray.dims:
+            self._scan_info[axis] = res_xarray.coords[axis].data
+
         res_xarray = res_xarray.rename(rename_dict)
         for k, v in coordinate_mapping.items():
             if k in fast_axes:
@@ -249,38 +272,60 @@ class SpecsScan:
                 slow_axes.remove(k)
                 slow_axes.add(v)
         self._scan_info["coordinate_depends"] = depends_dict
-
-        axis_dict = {
-            "/entry/sample/transformations/sample_polar": "Polar",
-            "/entry/sample/transformations/sample_tilt": "Tilt",
-            "/entry/sample/transformations/sample_azimuth": "Azimuth",
-        }
-
-        # store data for resolved axis coordinates
-        for k, v in depends_dict.items():
-            if v in axis_dict:
-                self._scan_info[axis_dict[v]] = res_xarray.coords[k].data
+        self._scan_info["coordinate_label"] = label_dict
 
         for name in res_xarray.dims:
             try:
                 res_xarray[name].attrs["unit"] = self._config["units"][name]
+                res_xarray[name].attrs["long_name"] = label_dict[name]
             except KeyError:
                 pass
 
+        # reset metadata
+        self.metadata = {}
+
         self.metadata.update(
             **handle_meta(
-                df_lut,
-                self._scan_info,
-                self.config,
+                df_lut=df_lut,
+                scan_info=self._scan_info,
+                config=self.config.get("metadata", {}),
+                scan=scan,
                 fast_axes=list(fast_axes),  # type: ignore
                 slow_axes=list(slow_axes),
                 projection=projection,
                 metadata=copy.deepcopy(metadata),
                 collect_metadata=collect_metadata,
+                token=token,
             ),
             **{"loader": loader_dict},
             **{"conversion_parameters": conversion_metadata},
         )
+
+        # shift energy axis
+        photon_energy = 0.0
+        try:
+            photon_energy = self.metadata["instrument"]["beam"]["probe"]["incident_energy"]
+        except KeyError:
+            try:
+                photon_energy = self.metadata["elabFTW"]["laser_status"]["probe_photon_energy"]
+            except KeyError:
+                pass
+
+        self.metadata["scan_info"]["reference_energy"] = "vacuum level"
+        if photon_energy and self._config["shift_by_photon_energy"]:
+            logger.info(f"Shifting energy axis by photon energy: -{photon_energy} eV")
+            res_xarray = res_xarray.assign_coords(
+                {
+                    rename_dict["Ekin"]: (
+                        rename_dict["Ekin"],
+                        res_xarray[rename_dict["Ekin"]].data - photon_energy,
+                        res_xarray[rename_dict["Ekin"]].attrs,
+                    ),
+                },
+            )
+            self.metadata["scan_info"]["reference_energy"] = "Fermi edge"
+            self.metadata["scan_info"]["coordinate_label"][rename_dict["Ekin"]] = "E-E_F"
+            res_xarray[rename_dict["Ekin"]].attrs["long_name"] = "E-E_F"
 
         res_xarray.attrs["metadata"] = self.metadata
         self._result = res_xarray
@@ -323,6 +368,38 @@ class SpecsScan:
             **kwds,
         )
 
+    def save_crop_params(
+        self,
+        filename: str = None,
+        overwrite: bool = False,
+    ):
+        """Save the generated crop parameters to the folder config file.
+
+        Args:
+            filename (str, optional): Filename of the config dictionary to save to.
+                Defaults to "specs_config.yaml" in the current folder.
+            overwrite (bool, optional): Option to overwrite the present dictionary.
+                Defaults to False.
+        """
+        if filename is None:
+            filename = "specs_config.yaml"
+        if "ek_range_min" not in self.spa.config:
+            raise ValueError("No crop parameters to save!")
+
+        config = {
+            "spa_params": {
+                "crop": self.spa.config["crop"],
+                "ek_range_min": self.spa.config["ek_range_min"],
+                "ek_range_max": self.spa.config["ek_range_max"],
+                "ang_range_min": self.spa.config["ang_range_min"],
+                "ang_range_max": self.spa.config["ang_range_max"],
+                "angle_offset_px": self.spa.config["angle_offset_px"],
+                "rotation_angle": self.spa.config["rotation_angle"],
+            },
+        }
+        save_config(config, filename, overwrite)
+        logger.info(f'Saved crop parameters to "{filename}".')
+
     def fft_tool(self, scan: int = None, path: Path | str = "", **kwds):
         """FFT tool to play around with the peak parameters in the Fourier plane. Built to filter
         out the meshgrid appearing in the raw data images. The optimized parameters are stored in
@@ -360,6 +437,33 @@ class SpecsScan:
             **kwds,
         )
 
+    def save_fft_params(
+        self,
+        filename: str = None,
+        overwrite: bool = False,
+    ):
+        """Save the generated fft filter parameters to the folder config file.
+
+        Args:
+            filename (str, optional): Filename of the config dictionary to save to.
+                Defaults to "specs_config.yaml" in the current folder.
+            overwrite (bool, optional): Option to overwrite the present dictionary.
+                Defaults to False.
+        """
+        if filename is None:
+            filename = "specs_config.yaml"
+        if len(self.spa.config["fft_filter_peaks"]) == 0:
+            raise ValueError("No fft parameters to save!")
+
+        config = {
+            "spa_params": {
+                "fft_filter_peaks": self.spa.config["fft_filter_peaks"],
+                "apply_fft_filter": self.spa.config["apply_fft_filter"],
+            },
+        }
+        save_config(config, filename, overwrite)
+        logger.info(f'Saved fft parameters to "{filename}".')
+
     def check_scan(
         self,
         scan: int,
@@ -390,6 +494,7 @@ class SpecsScan:
         Returns:
             xr.DataArray: 3-D xarray of dimensions (Ekin, Angle, Iterations)
         """
+        token = kwds.pop("token", None)
         scan_path = get_scan_path(path, scan, self._config["data_path"])
         df_lut = parse_lut_to_df(scan_path)
 
@@ -437,7 +542,7 @@ class SpecsScan:
 
         conversion_metadata = xr_list[0].attrs["conversion_parameters"]
 
-        dims = get_coords(
+        dims = get_coords(  # noqa: F841
             scan_path=scan_path,
             scan_type=scan_type,
             scan_info=self._scan_info,
@@ -463,16 +568,21 @@ class SpecsScan:
         fast_axes = set(res_xarray.dims) - slow_axes
         projection = "reciprocal" if "Angle" in fast_axes else "real"
 
+        # reset metadata
+        self.metadata = {}
+
         self.metadata.update(
             **handle_meta(
-                df_lut,
-                self._scan_info,
-                self.config,
+                df_lut=df_lut,
+                scan_info=self._scan_info,
+                config=self.config.get("metadata", {}),
+                scan=scan,
                 fast_axes=list(fast_axes),  # type: ignore
                 slow_axes=list(slow_axes),
                 projection=projection,
-                metadata=metadata,
+                metadata=copy.deepcopy(metadata),
                 collect_metadata=collect_metadata,
+                token=token,
             ),
             **{"loader": loader_dict},
             **{"conversion_parameters": conversion_metadata},
@@ -594,7 +704,7 @@ class SpecsScan:
         """
         ekin_step = kinetic_energy[1] - kinetic_energy[0]
         if not (np.diff(kinetic_energy) == ekin_step).all():
-            warn(
+            logger.warning(
                 "Conversion of sweep scans with non-equidistant energy steps "
                 "might produce wrong results!",
             )
@@ -616,7 +726,7 @@ class SpecsScan:
             )
             or not self.spa.config["crop"]
         ):
-            warn("No valid cropping parameters found, consider using crop_tool() to set.")
+            logger.warning("No valid cropping parameters found, consider using crop_tool() to set.")
 
         e_step = converted.Ekin[1] - converted.Ekin[0]
         e0 = converted.Ekin[-1] - ekin_step

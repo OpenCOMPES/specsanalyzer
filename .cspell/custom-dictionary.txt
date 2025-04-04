@@ -2,6 +2,8 @@
 allclose
 ALLUSERSPROFILE
 amperemeter
+appauthor
+appname
 arange
 archiver
 argwhere
@@ -18,6 +20,7 @@ basepath
 bitshift
 bysource
 calib
+caplog
 checkscan
 clim
 codemirror
@@ -32,16 +35,21 @@ dapolymatrix
 dataconverter
 dataframe
 delaystage
+delenv
 dtype
 dxda
 dxde
 dyda
 dyde
 Ekin
-electronanalyser
+elab
+elabapi
+elabid
+electronanalyzer
 elems
 endstation
 energydispersion
+entityid
 eshift
 faddr
 Faradayweg
@@ -72,6 +80,7 @@ kwds
 labview
 Laurenz
 lensmodes
+levelname
 lineh
 linev
 listf
@@ -102,6 +111,7 @@ Nxpix
 Nxpixels
 Nypixels
 OPCPA
+orcid
 pcolormesh
 Phoibos
 polyfit
@@ -120,6 +130,7 @@ rrvec
 rtol
 rtype
 scanvector
+sharelink
 specsanalyzer
 Specslab
 specsscan
@@ -131,9 +142,11 @@ toctree
 tomlkit
 topfloor
 tqdm
+trarpes
 typehints
 TZCYXS
 undoc
+userid
 venv
 viewcode
 vline

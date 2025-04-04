@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import os
 from typing import Any
-from typing import Generator
 
 import imutils
 import ipywidgets as ipw
@@ -21,8 +20,13 @@ from specsanalyzer.convert import get_damatrix_from_calib2d
 from specsanalyzer.convert import physical_unit_data
 from specsanalyzer.img_tools import crop_xarray
 from specsanalyzer.img_tools import fourier_filter_2d
+from specsanalyzer.logging import set_verbosity
+from specsanalyzer.logging import setup_logging
 
 package_dir = os.path.dirname(__file__)
+
+# Configure logging
+logger = setup_logging("specsanalyzer")
 
 
 class SpecsAnalyzer:
@@ -39,6 +43,7 @@ class SpecsAnalyzer:
         self,
         metadata: dict[Any, Any] = {},
         config: dict[Any, Any] | str = {},
+        verbose: bool = True,
         **kwds,
     ):
         """SpecsAnalyzer constructor.
@@ -46,12 +51,14 @@ class SpecsAnalyzer:
         Args:
             metadata (dict, optional): Metadata dictionary. Defaults to {}.
             config (dict | str, optional): Metadata dictionary or file path. Defaults to {}.
+            verbose (bool, optional): Disable info logs if set to False.
             **kwds: Keyword arguments passed to ``parse_config``.
         """
         self._config = parse_config(
             config,
             **kwds,
         )
+        set_verbosity(logger, verbose)
         self.metadata = metadata
         self._data_array = None
         self.print_msg = True
@@ -273,7 +280,7 @@ class SpecsAnalyzer:
             },
             dims=conversion_parameters["dims"],
             attrs={"conversion_parameters": conversion_parameters},
-        )
+        ).astype(np.float32)
 
         # Handle cropping based on parameters stored in correction dictionary
         crop = kwds.pop("crop", self._config.get("crop", False))
@@ -287,7 +294,7 @@ class SpecsAnalyzer:
                 ek_min = range_dict["ek_min"]
                 ek_max = range_dict["ek_max"]
                 if self.print_msg:
-                    print("Using saved crop parameters...")
+                    logger.info("Using saved crop parameters...")
                 data_array = crop_xarray(data_array, ang_min, ang_max, ek_min, ek_max)
             except KeyError:
                 try:
@@ -344,11 +351,13 @@ class SpecsAnalyzer:
                         + data_array.coords[data_array.dims[1]][0]
                     )
                     if self.print_msg:
-                        print("Cropping parameters not found, using cropping ranges from config...")
+                        logger.info(
+                            "Cropping parameters not found, using cropping ranges from config...",
+                        )
                     data_array = crop_xarray(data_array, ang_min, ang_max, ek_min, ek_max)
                 except KeyError:
                     if self.print_msg:
-                        print(
+                        logger.warning(
                             "Warning: Cropping parameters not found, "
                             "use method crop_tool() after loading.",
                         )
@@ -382,6 +391,8 @@ class SpecsAnalyzer:
                 - ek_range_max
                 - ang_range_min
                 - ang_range_max
+                - angle_offset_px
+                - rotation_angle
 
                 Other parameters are passed to ``convert_image()``.
         """
@@ -401,7 +412,7 @@ class SpecsAnalyzer:
         try:
             mesh_obj = data_array.plot(ax=ax)
         except AttributeError:
-            print("Load the scan first!")
+            logger.info("Load the scan first!")
             raise
 
         lineh1 = ax.axhline(y=data_array.Angle[0])
@@ -473,6 +484,15 @@ class SpecsAnalyzer:
         vline_range = [ek_min, ek_max]
         hline_range = [ang_min, ang_max]
 
+        angle_offset_px = kwds.get("angle_offset_px", self._config.get("angle_offset_px", 0))
+        rotation_angle = kwds.get("rotation_angle", self._config.get("rotation_angle", 0))
+
+        clim_slider = ipw.FloatRangeSlider(
+            description="colorbar limits",
+            value=[data_array.data.min(), data_array.data.max()],
+            min=data_array.data.min(),
+            max=data_array.data.max(),
+        )
         vline_slider = ipw.FloatRangeSlider(
             description="Ekin",
             value=vline_range,
@@ -487,14 +507,33 @@ class SpecsAnalyzer:
             max=data_array.Angle[-1],
             step=0.1,
         )
-        clim_slider = ipw.FloatRangeSlider(
-            description="colorbar limits",
-            value=[data_array.data.min(), data_array.data.max()],
-            min=data_array.data.min(),
-            max=data_array.data.max(),
+        ang_offset_slider = ipw.FloatSlider(
+            description="Angle offset",
+            value=angle_offset_px,
+            min=-20,
+            max=20,
+            step=1,
+        )
+        rotation_slider = ipw.FloatSlider(
+            description="Rotation angle",
+            value=rotation_angle,
+            min=-5,
+            max=5,
+            step=0.1,
         )
 
-        def update(hline, vline, v_vals):
+        def update(hline, vline, v_vals, angle_offset_px, rotation_angle):
+            data_array = self.convert_image(
+                raw_img=raw_img,
+                lens_mode=lens_mode,
+                kinetic_energy=kinetic_energy,
+                pass_energy=pass_energy,
+                work_function=work_function,
+                crop=False,
+                angle_offset_px=angle_offset_px,
+                rotation_angle=rotation_angle,
+            )
+            mesh_obj.update({"array": data_array.data})
             lineh1.set_ydata([hline[0]])
             lineh2.set_ydata([hline[1]])
             linev1.set_xdata([vline[0]])
@@ -507,9 +546,11 @@ class SpecsAnalyzer:
             hline=hline_slider,
             vline=vline_slider,
             v_vals=clim_slider,
+            angle_offset_px=ang_offset_slider,
+            rotation_angle=rotation_slider,
         )
 
-        def cropit(val):  # pylint: disable=unused-argument
+        def cropit(val):  # noqa: ARG001
             ang_min = min(hline_slider.value)
             ang_max = max(hline_slider.value)
             ek_min = min(vline_slider.value)
@@ -552,6 +593,8 @@ class SpecsAnalyzer:
                 )
             ).item()
             self._config["crop"] = True
+            self._config["angle_offset_px"] = ang_offset_slider.value
+            self._config["rotation_angle"] = rotation_slider.value
 
             ax.cla()
             self._data_array.plot(ax=ax, add_colorbar=False)
@@ -561,6 +604,8 @@ class SpecsAnalyzer:
             hline_slider.close()
             clim_slider.close()
             apply_button.close()
+            ang_offset_slider.close()
+            rotation_slider.close()
 
         apply_button = ipw.Button(description="Crop")
         display(apply_button)
@@ -615,7 +660,7 @@ class SpecsAnalyzer:
 
             filtered = fourier_filter_2d(raw_image, peaks=fft_filter_peaks, ret="filtered")
         except IndexError:
-            print("Load the scan first!")
+            logger.warning("Load the scan first!")
             raise
 
         fig = plt.figure()
@@ -708,8 +753,7 @@ class SpecsAnalyzer:
             fft_filt.set_data(np.abs(fft_filtered_new.T))
 
             nonlocal cont
-            for i in range(len(cont.collections)):
-                cont.collections[i].remove()
+            cont.remove()
             cont = ax.contour(msk.T)
 
             edc.set_ydata(np.sum(filtered_new, 0))
@@ -727,7 +771,7 @@ class SpecsAnalyzer:
             v_vals=clim_slider,
         )
 
-        def apply_fft(apply: bool):  # pylint: disable=unused-argument
+        def apply_fft(apply: bool):  # noqa: ARG001
             amplitude = amplitude_slider.value
             pos_x = pos_x_slider.value
             pos_y = pos_y_slider.value
