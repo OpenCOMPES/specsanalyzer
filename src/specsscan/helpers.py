@@ -348,9 +348,6 @@ def parse_info_to_dict(path: Path) -> dict:
     except FileNotFoundError as exc:
         raise FileNotFoundError("info.txt file not found.") from exc
 
-    if "DelayStage" in info_dict and "TimeZero" in info_dict:
-        info_dict["delay"] = mm_to_fs(info_dict["DelayStage"], info_dict["TimeZero"])
-
     return info_dict
 
 
@@ -410,6 +407,13 @@ def handle_meta(
         metadata.get("scan_info", {}),
         complete_dictionary(scan_info, lut_meta),
     )  # merging dictionaries
+
+    # Store delay info
+    if "DelayStage" in metadata["scan_info"] and "TimeZero" in metadata["scan_info"]:
+        metadata["scan_info"]["delay"] = mm_to_fs(
+            metadata["scan_info"]["DelayStage"],
+            metadata["scan_info"]["TimeZero"],
+        )
 
     # store program version
     metadata["scan_info"]["program_name"] = "specsanalyzer"

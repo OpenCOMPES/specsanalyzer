@@ -318,15 +318,20 @@ def test_conversion_and_save_to_nexus():
     metadata["instrument"] = {}
     # energy resolution
     metadata["instrument"]["energy_resolution"] = 150.0
-    metadata["instrument"]["electronanalyser"] = {}
-    metadata["instrument"]["electronanalyser"]["energy_resolution"] = 120
-    metadata["instrument"]["electronanalyser"]["angular_resolution"] = 0.2
-    metadata["instrument"]["electronanalyser"]["spatial_resolution"] = 0.5
+    metadata["instrument"]["electronanalyzer"] = {}
+    metadata["instrument"]["electronanalyzer"]["energy_resolution"] = 120.0
+    metadata["instrument"]["electronanalyzer"]["angular_resolution"] = 0.2
+    metadata["instrument"]["electronanalyzer"]["spatial_resolution"] = 0.5
 
     # probe beam
     metadata["instrument"]["beam"] = {}
     metadata["instrument"]["beam"]["probe"] = {}
     metadata["instrument"]["beam"]["probe"]["incident_energy"] = 21.7
+    metadata["instrument"]["beam"]["probe"]["frequency"] = 500.0
+    metadata["instrument"]["beam"]["probe"]["incident_energy_spread"] = 0.11
+    metadata["instrument"]["beam"]["probe"]["pulse_duration"] = 20.0
+    metadata["instrument"]["beam"]["probe"]["incident_polarization"] = [1, 1, 0, 0]
+    metadata["instrument"]["beam"]["probe"]["extent"] = [80.0, 80.0]
 
     # sample
     metadata["sample"] = {}
@@ -334,8 +339,8 @@ def test_conversion_and_save_to_nexus():
 
     metadata["scan_info"] = {}
     metadata["scan_info"]["trARPES:XGS600:PressureAC:P_RD"] = 2.5e-11
-    metadata["scan_info"]["trARPES:Carving:TEMP_RBV"] = 70
-    metadata["scan_info"]["trARPES:Sample:Measure"] = 0
+    metadata["scan_info"]["trARPES:Carving:TEMP_RBV"] = 70.0
+    metadata["scan_info"]["trARPES:Sample:Measure"] = 0.0
     res_xarray = sps.load_scan(
         scan=1496,
         path=data_dir,
