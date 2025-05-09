@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import datetime as dt
+import importlib
 import logging
 from pathlib import Path
 from typing import Any
@@ -347,9 +348,6 @@ def parse_info_to_dict(path: Path) -> dict:
     except FileNotFoundError as exc:
         raise FileNotFoundError("info.txt file not found.") from exc
 
-    if "DelayStage" in info_dict and "TimeZero" in info_dict:
-        info_dict["delay"] = mm_to_fs(info_dict["DelayStage"], info_dict["TimeZero"])
-
     return info_dict
 
 
@@ -410,6 +408,18 @@ def handle_meta(
         complete_dictionary(scan_info, lut_meta),
     )  # merging dictionaries
 
+    # Store delay info
+    if "DelayStage" in metadata["scan_info"] and "TimeZero" in metadata["scan_info"]:
+        metadata["scan_info"]["delay"] = mm_to_fs(
+            metadata["scan_info"]["DelayStage"],
+            metadata["scan_info"]["TimeZero"],
+        )
+
+    # store program version
+    metadata["scan_info"]["program_name"] = "specsanalyzer"
+    metadata["scan_info"]["program_version"] = importlib.metadata.version("specsanalyzer")
+
+    # timing
     logger.info("Collecting time stamps...")
     if "time" in metadata["scan_info"]:
         time_list = [metadata["scan_info"]["time"][0], metadata["scan_info"]["time"][-1]]
@@ -426,10 +436,7 @@ def handle_meta(
         try:
             ts_to = (
                 ts_from
-                + metadata["scan_info"]["Exposure"]
-                / 1000
-                * metadata["scan_info"]["Averages"]
-                * metadata["scan_info"]["Repetitions"]
+                + metadata["scan_info"]["Exposure"] / 1000 * metadata["scan_info"]["Averages"]
             )
         except KeyError:
             pass
@@ -461,7 +468,7 @@ def handle_meta(
         "angular dispersive" if projection == "reciprocal" else "spatial dispersive"
     )
 
-    metadata["scan_info"]["slow_axes"] = slow_axes
+    metadata["scan_info"]["slow_axes"] = slow_axes if slow_axes else ""
     metadata["scan_info"]["fast_axes"] = fast_axes
 
     return metadata

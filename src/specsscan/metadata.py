@@ -119,7 +119,6 @@ class MetadataRetriever:
                     metadata["scan_info"][f"{channel}"] = np.mean(vals)
 
                 except IndexError:
-                    metadata["scan_info"][f"{channel}"] = np.nan
                     logger.info(
                         f"Data for channel {channel} doesn't exist for time {start}",
                     )
@@ -327,10 +326,32 @@ class MetadataRetriever:
         if metadata["elabFTW"]["scan"].get("pump_status", "closed") == "closed":
             if "pump_photon_energy" in metadata["elabFTW"].get("laser_status", {}):
                 del metadata["elabFTW"]["laser_status"]["pump_photon_energy"]
+            if "pump_repetition_rate" in metadata["elabFTW"].get("laser_status", {}):
+                del metadata["elabFTW"]["laser_status"]["pump_repetition_rate"]
+        else:
+            # add pulse energy if applicable
+            try:
+                metadata["elabFTW"]["scan"]["pump_pulse_energy"] = (
+                    metadata["scan_info"]["trARPES:Pump:Power.RBV"]
+                    / metadata["elabFTW"]["laser_status"]["pump_repetition_rate"]
+                )
+            except KeyError:
+                pass
 
         if metadata["elabFTW"]["scan"].get("pump2_status", "closed") == "closed":
             if "pump2_photon_energy" in metadata["elabFTW"].get("laser_status", {}):
                 del metadata["elabFTW"]["laser_status"]["pump2_photon_energy"]
+            if "pump2_repetition_rate" in metadata["elabFTW"].get("laser_status", {}):
+                del metadata["elabFTW"]["laser_status"]["pump2_repetition_rate"]
+        else:
+            # add pulse energy if applicable
+            try:
+                metadata["elabFTW"]["scan"]["pump2_pulse_energy"] = (
+                    metadata["scan_info"]["trARPES:Pump2:Power.RBV"]
+                    / metadata["elabFTW"]["laser_status"]["pump_repetition_rate"]
+                )
+            except KeyError:
+                pass
 
         return metadata
 

@@ -2,6 +2,8 @@
 data_path: "path/to/data"
 # option to enable nested progress bars
 enable_nested_progress_bar: false
+# option to shift by photon energy if available
+shift_by_photon_energy: true
 
 # dictionary containing renaming rules for axis names (to change the name in the xarrays)
 coordinate_mapping:
@@ -16,14 +18,25 @@ coordinate_mapping:
 
 # dictionary of corresponding NeXus paths for the different axes
 coordinate_depends:
-  Ekin: "/entry/instrument/electronanalyser/energydispersion/kinetic_energy"
-  Angle: "/entry/instrument/electronanalyser/transformations/analyzer_dispersion"
+  Ekin: "/entry/instrument/electronanalyzer/energydispersion/kinetic_energy"
+  Angle: "/entry/instrument/electronanalyzer/transformations/analyzer_dispersion"
   polar: "/entry/sample/transformations/sample_polar"
   tilt: "/entry/sample/transformations/sample_tilt"
   azimuth: "/entry/sample/transformations/sample_azimuth"
   X: "/entry/sample/transformations/trans_x"
   Y: "/entry/sample/transformations/trans_y"
   Z: "/entry/sample/transformations/trans_z"
+
+# dictionary of axis labels for the different axes
+coordinate_labels:
+  Ekin: "Kinetic Energy"
+  Angle: "Analyzer Dispersion"
+  polar: "Sample Polar"
+  tilt: "Sample Tilt"
+  azimuth: "Sample Azimuth"
+  X: "X Translation"
+  Y: "Y Translation"
+  Z: "Z Translation"
 
 # dictionary containing units for the respective axes
 units:
