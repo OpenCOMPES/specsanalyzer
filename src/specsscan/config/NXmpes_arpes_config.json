@@ -325,7 +325,7 @@
     "program": "@attrs:metadata/scan_info/program_name",
     "version": "@attrs:metadata/scan_info/program_version",
     "calibrated_axis": "@attrs:metadata/scan_info/Ekin",
-    "calibrated_axis/@units": "energy",
+    "calibrated_axis/@units": "eV",
     "physical_quantity": "energy",
     "PARAMETERS[conversion_parameters]":{
       "PARAMETER[*{apply_fft_filter,binning,rotation_angle,lens_mode,kinetic_energy,pass_energy,work_function,a_inner,da_matrix,retardation_ratio,source,dims,e_shift,de1,e_range,a_range,pixel_size,magnification,angle_offset_px,energy_offset_px}]": "@attrs:metadata/conversion_parameters/*"
@@ -333,16 +333,16 @@
   },
   "/ENTRY/CALIBRATION[angular0_calibration]":{
     "calibrated_axis": "@link:/entry/data/angular0",
-    "calibrated_axis/@units": "angle",
+    "calibrated_axis/@units": "deg",
     "physical_quantity": "angle"
   },
   "/ENTRY/CALIBRATION[energy_referencing]":{
     "calibrated_axis": "@link:/entry/data/energy",
-    "calibrated_axis/@units": "energy",
+    "calibrated_axis/@units": "eV",
     "physical_quantity": "energy",
     "reference_peak": "@attrs:metadata/scan_info/reference_energy",
     "binding_energy": 0.0,
-    "binding_energy/@units": "energy"
+    "binding_energy/@units": "eV"
   },
   "/ENTRY/DATA[data]": {
     "@axes": "@data:dims",
