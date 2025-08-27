@@ -5,7 +5,7 @@ on:
   push:
     branches: [ main ]
     paths-ignore:
-      pyproject.toml
+      - pyproject.toml
   pull_request:
     branches:
       - main

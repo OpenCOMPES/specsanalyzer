@@ -4,7 +4,7 @@ name: linting
 on:
   push:
     paths-ignore:
-      pyproject.toml
+      - pyproject.toml
 
 env:
   UV_SYSTEM_PYTHON: true
