@@ -33,7 +33,7 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "elabapi-python>=5.0",
+    "elabapi-python>=5.0,<5.2",
     "h5py>=3.6.0",
     "imutils>=0.5.4",
     "ipympl>=0.9.1",
