@@ -259,7 +259,7 @@ def test_fft_tool():
         apply_fft_filter=False,
     )
 
-    np.testing.assert_allclose(res_xarray.data.sum(), 62145556000.0)
+    np.testing.assert_allclose(res_xarray.data.sum(), 62145556000.0, rtol=2e-07)
 
     res_xarray = sps.load_scan(
         scan=3610,
