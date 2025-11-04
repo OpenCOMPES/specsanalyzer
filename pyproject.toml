@@ -21,9 +21,8 @@ authors = [
 readme = "README.md"
 keywords = ["specs", "phoibos", "arpes"]
 license = { file = "LICENSE" }
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 classifiers = [
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -40,8 +39,8 @@ dependencies = [
     "matplotlib>=3.5.1",
     "numpy>=2.0.0",
     "opencv-python>=4.8.1.78",
-    "pynxtools-mpes>=0.2.5",
-    "pynxtools>=0.11.1",
+    "pynxtools-mpes>=0.2.6",
+    "pynxtools>=0.12.0",
     "python-dateutil>=2.8.2",
     "pyyaml>=6.0",
     "xarray>=0.20.2",
