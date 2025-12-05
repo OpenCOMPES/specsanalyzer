@@ -182,7 +182,7 @@ class SpecsScan:
             self._scan_info["WorkFunction"],
         )
 
-        coords, dim = get_coords(
+        coords, dim, other_coords, other_dims = get_coords(
             scan_path=scan_path,
             scan_type=scan_type,
             scan_info=self._scan_info,
@@ -262,6 +262,9 @@ class SpecsScan:
         # store data for resolved axis coordinates
         for axis in res_xarray.dims:
             self._scan_info[axis] = res_xarray.coords[axis].data
+
+        for dim in other_dims:
+            self._scan_info[dim] = other_coords[other_dims.index(dim)]
 
         res_xarray = res_xarray.rename(rename_dict)
         for k, v in coordinate_mapping.items():

@@ -235,7 +235,7 @@ def get_coords(
     scan_type: str,
     scan_info: dict[Any, Any],
     df_lut: pd.DataFrame = None,
-) -> tuple[np.ndarray, str]:
+) -> tuple[np.ndarray, str, list, list]:
     """Reads the contents of scanvector.txt file into a numpy array.
 
     Args:
@@ -252,7 +252,11 @@ def get_coords(
         tuple[np.ndarray, str]:
             - coords: 1-D numpy array containing coordinates of the scanned axis.
             - dim: string containing the name of the coordinate
+            - other_coords: list of other coordinate means
+            - other_dims: list of other coordinate names
     """
+    other_dims = []
+    other_coords = []
     try:
         with open(scan_path.joinpath("scanvector.txt"), encoding="utf-8") as file:
             data = np.loadtxt(file, ndmin=2)
@@ -260,14 +264,18 @@ def get_coords(
         coords, index = compare_coords(data)
         if scan_type == "mirror":
             dim = ["mirrorX", "mirrorY"][index]
+            other_dims = [d for d in ["mirrorX", "mirrorY"] if d != dim]
+            other_coords = [np.mean(data[:, i]) for i in range(data.shape[1]) if i != index]
         elif scan_type == "manipulator":
             dim = ["X", "Y", "Z", "polar", "tilt", "azimuth"][index]
+            other_dims = [d for d in ["X", "Y", "Z", "polar", "tilt", "azimuth"] if d != dim]
+            other_coords = [np.mean(data[:, i]) for i in range(data.shape[1]) if i != index]
         else:
             dim = scan_type
 
     except FileNotFoundError as exc:
         if scan_type == "single":
-            return (np.array([]), "")
+            return (np.array([]), "", [], [])
 
         if df_lut is not None:
             logger.info("scanvector.txt not found. Obtaining coordinates from LUT")
@@ -284,7 +292,7 @@ def get_coords(
         t0 = scan_info["TimeZero"]
         coords = mm_to_fs(coords, t0)
 
-    return coords, dim
+    return coords, dim, other_coords, other_dims
 
 
 def mm_to_fs(delaystage, t0):
